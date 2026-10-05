@@ -1,0 +1,7 @@
+/.devcontainer
+/node_modules
+.env
+/output
+
+/dist
+*.tsbuildinfo

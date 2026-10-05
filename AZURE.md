@@ -73,3 +73,32 @@ curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/id2222.pdf?languag
 ```
 
 The PDF request requires a matching document page on `WEBAPP_BASE_URL`. `/health` verifies process availability; it does not render a document. Browser/library downloads on first startup can lengthen startup time; inspect App Service logs if startup fails.
+
+## GitLab runner example
+
+The root `.gitlab-ci.yml` builds the ZIP and deploys automatically:
+
+| Branch | Azure target                 |
+| ------ | ---------------------------- |
+| `main` | Production webapp            |
+| `dev`  | The same webapp's `dev` slot |
+
+Other branches and merge request pipelines do not run this pipeline. It has build and deploy stages, with no tests. Deployment jobs download the ZIP artifact produced by the build job. Deployments to each target are serialized with GitLab resource groups.
+
+Use a Linux GitLab runner with a Docker or Kubernetes executor that supports the configured container images. If your runner requires a tag, add its tag under `default: tags:` in `.gitlab-ci.yml`.
+
+Edit the `variables` block at the top of `.gitlab-ci.yml` for the subscription, resource group, webapp name, dev slot, branch names, and container images. `AZURE_ZIP_PATH` must match the build script output. GitLab CI/CD variables can override these defaults.
+
+Add credentials under **GitLab → Settings → CI/CD → Variables**:
+
+| Variable              | Value                                            |
+| --------------------- | ------------------------------------------------ |
+| `AZURE_CLIENT_ID`     | Azure service principal application/client ID    |
+| `AZURE_CLIENT_SECRET` | Service principal secret; mark masked and hidden |
+| `AZURE_TENANT_ID`     | Azure tenant ID                                  |
+
+Give the service principal deployment permissions for the webapp and its slots (for example, the Website Contributor role scoped to the webapp). If credentials are protected variables, protect both `main` and `dev` so both branches can access them. Variable environment scopes must cover `production` and `dev`.
+
+Create the `dev` slot in Azure before running the pipeline. Configure the Node.js runtime, `bash scripts/start-azure.sh` startup command, and `SCM_DO_BUILD_DURING_DEPLOYMENT=false` on both production and the slot. Set application variables such as `WEBAPP_BASE_URL` and `DATA_API_TOKEN` separately for each target in Azure; no `.env` file is packaged. Mark environment-specific values as deployment slot settings. Disable automatic slot swapping if `dev` should remain separate from production.
+
+See [GitLab branch rules](https://docs.gitlab.com/ci/jobs/job_rules/) and [Azure CLI ZIP deployment](https://learn.microsoft.com/en-us/cli/azure/webapp#az-webapp-deploy).

@@ -1,0 +1,77 @@
+# Edit these values for your Azure deployment.
+# Keep AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, and AZURE_TENANT_ID
+# in GitLab Settings > CI/CD > Variables.
+variables:
+  AZURE_SUBSCRIPTION_ID: 'YOUR_SUBSCRIPTION_ID'
+  AZURE_RESOURCE_GROUP: 'YOUR_RESOURCE_GROUP'
+  AZURE_WEBAPP_NAME: 'YOUR_WEBAPP_NAME'
+  AZURE_DEV_SLOT: 'dev'
+  PRODUCTION_BRANCH: 'main'
+  DEV_BRANCH: 'dev'
+  NODE_IMAGE: 'node:22-bookworm'
+  AZURE_CLI_IMAGE: 'mcr.microsoft.com/azure-cli:latest'
+  # Must match the output path in scripts/build-azure.mjs.
+  AZURE_ZIP_PATH: 'output/azure/generator-api.zip'
+
+stages:
+  - build
+  - deploy
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH'
+    - when: never
+
+build_zip:
+  stage: build
+  image: '$NODE_IMAGE'
+  script:
+    - npm ci --no-audit --no-fund
+    - npm run build:azure
+  artifacts:
+    paths:
+      - '$AZURE_ZIP_PATH'
+    expire_in: 1 week
+
+.azure_deploy:
+  stage: deploy
+  image:
+    name: '$AZURE_CLI_IMAGE'
+    entrypoint: ['']
+  needs:
+    - job: build_zip
+      artifacts: true
+  before_script:
+    - az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID" --output none
+    - az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+
+deploy_main:
+  extends: .azure_deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH'
+  environment:
+    name: production
+  resource_group: azure-production
+  script:
+    - >-
+      az webapp deploy
+      --resource-group "$AZURE_RESOURCE_GROUP"
+      --name "$AZURE_WEBAPP_NAME"
+      --src-path "$AZURE_ZIP_PATH"
+      --type zip
+
+deploy_dev:
+  extends: .azure_deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $DEV_BRANCH'
+  environment:
+    name: dev
+  resource_group: azure-dev
+  script:
+    - >-
+      az webapp deploy
+      --resource-group "$AZURE_RESOURCE_GROUP"
+      --name "$AZURE_WEBAPP_NAME"
+      --slot "$AZURE_DEV_SLOT"
+      --src-path "$AZURE_ZIP_PATH"
+      --type zip

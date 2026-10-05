@@ -128,6 +128,135 @@ Services are injected into `createApp`, keeping HTTP handling independent from d
 
 Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
 
+## Add a new endpoint: step-by-step
+
+The example below adds `GET /sales-report.pptx?title=Quarterly%20sales`. It reuses the current report-demo template so you can start with a working download, then replace the service's data generation with your own API calls. These are instructions for adding a future endpoint; `/sales-report.pptx` is not registered yet.
+
+### 1. Define the request schema
+
+Add this to `src/schemas.ts`, which already imports `z`:
+
+```ts
+export const salesReportSchema = z
+  .object({ title: z.string().min(1).max(5000).default('Sales report') })
+  .strict();
+
+export type SalesReportInput = z.infer<typeof salesReportSchema>;
+```
+
+Give optional parameters defaults so the URL also works without a query string. `.strict()` rejects misspelled or unknown parameters. Keep application defaults in `src/config.ts`; use environment settings for hosts, credentials, and runtime limits.
+
+### 2. Add the generation service
+
+Create `src/services/sales-report.ts`:
+
+```ts
+import type { SalesReportInput } from '../schemas.js';
+import { TemplateReportDemoService } from './template-report-demo.js';
+
+export class SalesReportService {
+  private readonly template: TemplateReportDemoService;
+
+  constructor(templatePath: string) {
+    this.template = new TemplateReportDemoService(templatePath);
+  }
+
+  generate(input: SalesReportInput): Promise<Buffer> {
+    return this.template.generate(input.title);
+  }
+}
+```
+
+This starting implementation puts `title` into `TEXT_ME` and uses the existing random table/chart data. For your real report, fetch data with `DataApiClient` and use the `src/pptx` helpers to populate named objects. Keep Express requests and responses out of the service; return the finished file as a `Buffer`.
+
+### 3. Declare the dependency
+
+In `src/http/types.ts`, add `SalesReportInput` to the existing import from `../schemas.js`, then add this property inside `AppOptions`:
+
+```ts
+salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
+```
+
+`RouteDependencies` inherits it automatically. Making the dependency optional lets unrelated route tests continue using their existing fixtures; the route below returns 404 when it is not configured.
+
+### 4. Wire the service at startup
+
+Import the service in `src/index.ts`:
+
+```ts
+import { SalesReportService } from './services/sales-report.js';
+```
+
+Add this property to the existing `createApp({ ... })` call:
+
+```ts
+salesReport: new SalesReportService(
+  fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
+),
+```
+
+For a different template, place its `.pptx` in the root `templates/` directory and use that path. The Azure build includes those files. Match its object names and chart/table structure to your service.
+
+### 5. Register the route
+
+In `src/routes/presentations.ts`, import `salesReportSchema` from `../schemas.js` and add `salesReport` to the destructured arguments of `createPresentationRoutes`. Insert this handler before `return router`:
+
+```ts
+router.get('/sales-report.pptx', async (req, res) => {
+  const input = salesReportSchema.parse(req.query);
+  if (!salesReport) {
+    throw new AppError(
+      404,
+      'REPORT_NOT_CONFIGURED',
+      'Sales report not configured',
+    );
+  }
+  await sendDownload(
+    res,
+    queues.presentations,
+    () => salesReport.generate(input),
+    'sales-report',
+    'pptx',
+  );
+});
+```
+
+The existing route module already imports `AppError` and `sendDownload`. The download helper handles queuing, disconnected clients, filename extensions, content type, and attachment headers. Use `queues.pdf` and format `'pdf'` for PDF downloads. For a JSON endpoint, validate the input and use `res.json(data)` instead.
+
+For a route supporting both GET query parameters and POST JSON, use `generationInput(req)` before schema validation and register the same handler with `.get(handler).post(handler)`. Its supported JSON query fields are currently `query`, `slides`, `replacements`, and `landscape`; explicitly decode any new nested query fields you introduce.
+
+Adding a handler to an existing router requires no change in `app.ts`. For a new route module, export a router factory and register it with `app.use(createYourRoutes(dependencies))` before the 404 handler and error middleware.
+
+### 6. Test and document it
+
+Add a `test/sales-report.test.ts` using `createApp` and Supertest, following `test/template-report-demo.test.ts`. Cover a successful download, the default title, a custom title, invalid parameters, and generation failures. Check that the PPTX contains the supplied text, rather than only checking HTTP 200.
+
+Add a file-producing case to `test/output-routes.ts`: configure `salesReport` in its `createApp` fixture and call `save('/sales-report.pptx?title=Sales%20demo', 'sales-report.pptx', 'Sales demo')` inside a subtest. Add the endpoint, accepted parameters, and a request example to `README-ENDPOINTS.md`.
+
+### 7. Verify and rebuild
+
+```bash
+npm run format
+npm run typecheck
+npm test
+npm run test:outputs
+npm run build
+```
+
+Start the API, then download the new report:
+
+```bash
+curl --fail-with-body 'http://localhost:3000/sales-report.pptx?title=Quarterly%20sales' \
+  --output sales-report.pptx
+```
+
+For Azure, rebuild and test the deployment package after adding the endpoint:
+
+```bash
+npm run build:azure
+npm run test:azure
+```
+
 ## Verification and production build
 
 For Linux Azure App Service, run `npm run build:azure` to create `output/azure/generator-api.zip`, then `npm run test:azure` to smoke-test the package. See [AZURE.md](AZURE.md) for startup and deployment settings.

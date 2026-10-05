@@ -1,20 +1,18 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../src/config.js';
-import { documentIdSchema } from '../src/pdf-route.js';
 import { DataApiClient } from '../src/services/data-api-client.js';
-import { reportDataSchema } from './report-data-schema.js';
+import type { ReportData } from './report-data.js';
 
 const config = loadConfig();
-const id = documentIdSchema.parse(process.argv[2] ?? 'id2222');
+const id = process.argv[2] ?? 'id2222';
 const language = process.argv[3] ?? config.defaultLanguage;
 const year = Number(process.argv[4] ?? 2026);
 const api = new DataApiClient(config.dataApi);
-const data = await api.get(
-  `/reports/${encodeURIComponent(id)}`,
-  { language, year },
-  reportDataSchema,
-);
+const data = await api.get<ReportData>(`/reports/${encodeURIComponent(id)}`, {
+  language,
+  year,
+});
 const directory = new URL('../output/data-api/', import.meta.url);
 await mkdir(directory, { recursive: true });
 const file = new URL(`${id}.json`, directory);

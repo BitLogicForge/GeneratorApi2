@@ -1,10 +1,9 @@
 import pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '../schemas.js';
+import type { PresentationInput } from '../types.js';
 export type PresentationTemplate = (
   deck: pptxgen,
   input: PresentationInput,
 ) => void | Promise<void>;
-import { AppError } from '../errors.js';
 import { briefTemplate } from '../templates/brief.js';
 export class GeneratedPresentationService {
   private readonly templates: Map<string, PresentationTemplate>;
@@ -15,19 +14,13 @@ export class GeneratedPresentationService {
   }
   async generate(template: string, input: PresentationInput) {
     const render = this.templates.get(template);
-    if (!render)
-      throw new AppError(
-        404,
-        'UNKNOWN_TEMPLATE',
-        'Presentation template not found',
-      );
     const deck = new pptxgen();
     deck.layout = 'LAYOUT_WIDE';
     deck.author = input.author;
     deck.subject = input.subtitle;
     deck.title = input.title;
     deck.theme = { headFontFace: 'Aptos Display', bodyFontFace: 'Aptos' };
-    await render(deck, input);
+    await render!(deck, input);
     return (await deck.write({
       outputType: 'nodebuffer',
       compression: true,

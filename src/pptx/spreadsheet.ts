@@ -1,5 +1,5 @@
 import type { Document } from '@xmldom/xmldom';
-import { spreadsheet, invalidTemplate } from './package.js';
+import { spreadsheet } from './package.js';
 
 /** Creates missing rows/cells while retaining existing cell styles. */
 export function setWorksheetCell(
@@ -7,9 +7,8 @@ export function setWorksheetCell(
   address: string,
   value: string | number,
 ) {
-  const match = /^([A-Z]+)(\d+)$/.exec(address);
+  const match = /^([A-Z]+)(\d+)$/.exec(address)!;
   const data = sheet.getElementsByTagNameNS(spreadsheet, 'sheetData')[0];
-  if (!match || !data) throw invalidTemplate();
   const rowNumber = Number(match[2]);
   const rows = Array.from(data.getElementsByTagNameNS(spreadsheet, 'row'));
   let row = rows.find((item) => Number(item.getAttribute('r')) === rowNumber);

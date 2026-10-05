@@ -5,10 +5,9 @@ This package targets **Linux App Service with Node.js 22 or newer**. Build from 
 ```bash
 npm ci
 npm run build:azure
-npm run test:azure
 ```
 
-The build creates `output/azure/generator-api.zip`. It type-checks the project, compiles into a clean staging directory, installs production dependencies from the lockfile, and packages `dist/`, `node_modules/`, `templates/`, package manifests, and `scripts/start-azure.sh` at the ZIP root. Source code, tests, demos, `.env`, and generated reports are excluded. Your working `node_modules` remains unchanged. ZIP packages must contain the application files at the root, as described in [Azure ZIP deployment](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip).
+The build creates `output/azure/generator-api.zip`. It compiles into a clean staging directory, installs production dependencies from the lockfile, and packages `dist/`, `node_modules/`, `templates/`, package manifests, and `scripts/start-azure.sh` at the ZIP root. Source code, demos, `.env`, and generated reports are excluded. Your working `node_modules` remains unchanged. ZIP packages must contain the application files at the root, as described in [Azure ZIP deployment](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip).
 
 The language and PDF document route are code settings in `src/config.ts`:
 

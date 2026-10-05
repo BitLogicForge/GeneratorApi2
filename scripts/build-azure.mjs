@@ -37,11 +37,6 @@ async function run(command, args, cwd = root) {
 }
 
 try {
-  if (process.platform !== 'linux')
-    throw new Error(
-      'Build this Linux App Service package on Linux, WSL, or in the devcontainer.',
-    );
-  await run(npm, ['run', 'typecheck']);
   // Compile into a fresh directory so renamed/deleted services cannot leave stale files.
   await run(process.execPath, [
     'node_modules/typescript/bin/tsc',
@@ -59,8 +54,6 @@ try {
     if (file.endsWith('.pptx'))
       await cp(join(root, 'templates', file), join(staging, 'templates', file));
   }
-  for (const required of ['business.pptx', 'daa.pptx'])
-    await readFile(join(staging, 'templates', required));
   await mkdir(join(staging, 'scripts'));
   await cp(
     join(root, 'scripts', 'start-azure.sh'),

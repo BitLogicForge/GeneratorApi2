@@ -1,7 +1,6 @@
 import express from 'express';
 const app = express();
 app.get('/reports/quarterly', (req, res) => {
-  // The demo only interpolates validated numeric values.
   const year = Number(req.query.year) || 2026;
   const quarter = Number(req.query.quarter) || 3;
   res.type('html')
@@ -10,7 +9,7 @@ app.get('/reports/quarterly', (req, res) => {
   </head><body><main data-report-ready><small>PERFORMANCE REVIEW</small><h1>Quarter ${quarter}, ${year}</h1><div class="card">A focused quarter of growth and delivery.</div><table><tr><th>Metric</th><th>Result</th></tr><tr><td>Projects delivered</td><td>12</td></tr><tr><td>Customer satisfaction</td><td>96%</td></tr></table></main></body></html>`);
 });
 app.get('/documents/:id', (req, res) => {
-  const id = /^[A-Za-z0-9_-]+$/.test(req.params.id) ? req.params.id : 'unknown';
+  const id = req.params.id;
   res
     .type('html')
     .send(

@@ -3,8 +3,7 @@ import type {
   PdfInput,
   PresentationInput,
   TemplatePresentationInput,
-} from '../schemas.js';
-import type { GenerationQueues } from '../queue/generation-queue.js';
+} from '../types.js';
 
 export interface AppOptions {
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
@@ -19,11 +18,8 @@ export interface AppOptions {
     ): Promise<Buffer>;
   };
   config?: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
-  queues?: GenerationQueues;
-  logger?: Pick<Console, 'error'>;
 }
 
 export type RouteDependencies = AppOptions & {
   config: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
-  queues: GenerationQueues;
 };

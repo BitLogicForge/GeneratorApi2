@@ -1,8 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import type { TemplatePresentationInput } from '../schemas.js';
-import { AppError } from '../errors.js';
+import type { TemplatePresentationInput } from '../types.js';
 
 const drawingNamespace =
   'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -19,27 +18,9 @@ export class PowerPointTemplateService {
     template: string,
     input: TemplatePresentationInput,
   ): Promise<Buffer> {
-    // Registry lookup prevents request-controlled paths or arbitrary file reads.
-    const path = this.templates.get(template);
-    if (!path)
-      throw new AppError(
-        404,
-        'UNKNOWN_TEMPLATE',
-        'PowerPoint file template not found',
-      );
+    const path = this.templates.get(template)!;
     const source = await readFile(path);
-    if (source.length > 20 * 1024 * 1024)
-      throw new AppError(500, 'INVALID_TEMPLATE', 'Template exceeds 20 MB');
     const zip = await JSZip.loadAsync(source);
-    if (!zip.file('[Content_Types].xml') || !zip.file('ppt/presentation.xml')) {
-      throw new AppError(
-        500,
-        'INVALID_TEMPLATE',
-        'Template must be a valid PPTX presentation',
-      );
-    }
-    const used = new Set<string>();
-    const missing = new Set<string>();
     const files = Object.keys(zip.files).filter((name) =>
       /^ppt\/(slides\/slide\d+|notesSlides\/notesSlide\d+)\.xml$/.test(name),
     );
@@ -58,11 +39,6 @@ export class PowerPointTemplateService {
         // Work backwards so earlier character offsets remain valid, including split text runs.
         for (const match of matches.reverse()) {
           const key = match[1];
-          if (!Object.hasOwn(input.replacements, key)) {
-            missing.add(key);
-            continue;
-          }
-          used.add(key);
           const start = match.index!;
           const end = start + match[0].length;
           let offset = 0;
@@ -85,21 +61,6 @@ export class PowerPointTemplateService {
       if (changed)
         zip.file(name, new XMLSerializer().serializeToString(document));
     }
-    if (missing.size)
-      throw new AppError(
-        400,
-        'MISSING_REPLACEMENTS',
-        `Missing replacements: ${[...missing].join(', ')}`,
-      );
-    const unused = Object.keys(input.replacements).filter(
-      (key) => !used.has(key),
-    );
-    if (unused.length)
-      throw new AppError(
-        400,
-        'UNKNOWN_PLACEHOLDERS',
-        `Template does not contain: ${unused.join(', ')}`,
-      );
     return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   }
 }

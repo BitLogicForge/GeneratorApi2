@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
 import type { Element } from '@xmldom/xmldom';
-import { readXml, presentationNs, invalidTemplate } from './package.js';
+import { readXml, presentationNs } from './package.js';
 
 export interface NamedObject {
   path: string;
@@ -20,14 +20,10 @@ export async function findNamedObjects(zip: JSZip, names: string[]) {
     )) {
       const name = properties.getAttribute('name') ?? '';
       if (!names.includes(name)) continue;
-      if (objects.has(name)) throw invalidTemplate();
-      const element = properties.parentNode?.parentNode as Element | undefined;
-      if (!element || !['graphicFrame', 'sp'].includes(element.localName ?? ''))
-        throw invalidTemplate();
+      const element = properties.parentNode?.parentNode as Element;
       objects.set(name, { path, element });
     }
   }
 
-  for (const name of names) if (!objects.has(name)) throw invalidTemplate();
   return { slides, objects };
 }

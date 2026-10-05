@@ -1,5 +1,5 @@
 import type pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '../schemas.js';
+import type { PresentationInput } from '../types.js';
 export function briefTemplate(deck: pptxgen, input: PresentationInput) {
   const cover = deck.addSlide();
   cover.background = { color: '0F172A' };

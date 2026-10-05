@@ -1,26 +1,13 @@
 import express from 'express';
-import { z } from 'zod';
-import { documentIdSchema } from '../src/pdf-route.js';
 import { loadConfig } from '../src/config.js';
 
 const app = express();
-const querySchema = z
-  .object({
-    language: z.string().default('en'),
-    year: z.coerce.number().int().min(2000).max(2100).default(2026),
-  })
-  .strict();
 app.get('/api/reports/:id', (req, res) => {
-  const id = documentIdSchema.safeParse(req.params.id);
-  const query = querySchema.safeParse(req.query);
-  if (!id.success || !query.success) {
-    res.status(400).json({ error: 'Invalid report parameters' });
-    return;
-  }
   // Synthetic values for a runnable example; replace with your own database/API.
   res.json({
-    id: id.data,
-    ...query.data,
+    id: req.params.id,
+    language: req.query.language ?? 'en',
+    year: Number(req.query.year ?? 2026),
     tableData: Array.from({ length: 3 }, (_, row) =>
       Array.from({ length: 4 }, (_, column) => (row + 1) * 10 + column),
     ),

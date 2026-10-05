@@ -1,12 +1,11 @@
 import type { Element } from '@xmldom/xmldom';
-import { drawing, invalidTemplate } from './package.js';
+import { drawing } from './package.js';
 
 export function setText(element: Element, value: string) {
   const document = element.ownerDocument!;
   let texts = Array.from(element.getElementsByTagNameNS(drawing, 't'));
   if (!texts.length) {
     const paragraph = element.getElementsByTagNameNS(drawing, 'p')[0];
-    if (!paragraph) throw invalidTemplate();
     const run = document.createElementNS(drawing, 'a:r');
     const endProperties = paragraph.getElementsByTagNameNS(
       drawing,
@@ -41,17 +40,9 @@ export function fillTable(
   { startRow = 0 }: FillTableOptions = {},
 ) {
   const table = element.getElementsByTagNameNS(drawing, 'tbl')[0];
-  if (!table) throw invalidTemplate();
   const rows = Array.from(table.getElementsByTagNameNS(drawing, 'tr'));
-  if (
-    !Number.isInteger(startRow) ||
-    startRow < 0 ||
-    rows.length !== data.length + startRow
-  )
-    throw invalidTemplate();
   for (const [rowIndex, row] of rows.slice(startRow).entries()) {
     const cells = Array.from(row.getElementsByTagNameNS(drawing, 'tc'));
-    if (cells.length !== data[rowIndex].length) throw invalidTemplate();
     for (const [columnIndex, cell] of cells.entries()) {
       setText(cell, String(data[rowIndex][columnIndex]));
     }
@@ -59,6 +50,5 @@ export function fillTable(
 }
 
 export function fillTextShape(element: Element, text: string) {
-  if (element.localName !== 'sp') throw invalidTemplate();
   setText(element, text);
 }

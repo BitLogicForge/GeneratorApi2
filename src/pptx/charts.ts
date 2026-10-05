@@ -9,7 +9,6 @@ import {
   readXml,
   writeXml,
   resolveRelationship,
-  invalidTemplate,
 } from './package.js';
 
 interface LineChartOptions {
@@ -22,7 +21,6 @@ interface LineChartOptions {
 function fillCache(cache: Element, values: (string | number)[]) {
   const document = cache.ownerDocument!;
   const count = cache.getElementsByTagNameNS(chartNs, 'ptCount')[0];
-  if (!count) throw invalidTemplate();
   count.setAttribute('val', String(values.length));
   for (const point of Array.from(cache.getElementsByTagNameNS(chartNs, 'pt')))
     cache.removeChild(point);
@@ -49,17 +47,6 @@ export async function fillLineChart(
     categories,
   }: LineChartOptions = {},
 ) {
-  if (
-    !data.length ||
-    !data[0].length ||
-    data.some(
-      (row) =>
-        row.length !== data[0].length ||
-        row.some((value) => !Number.isFinite(value)),
-    )
-  )
-    throw invalidTemplate();
-  if (categories && categories.length !== data.length) throw invalidTemplate();
   const chartReference = chartObject.element.getElementsByTagNameNS(
     chartNs,
     'chart',
@@ -72,9 +59,7 @@ export async function fillLineChart(
   );
   const chart = await readXml(zip, chartPath);
   const lineChart = chart.getElementsByTagNameNS(chartNs, 'lineChart')[0];
-  if (!lineChart) throw invalidTemplate();
   const series = Array.from(lineChart.getElementsByTagNameNS(chartNs, 'ser'));
-  if (series.length !== data[0].length) throw invalidTemplate();
   const externalData = chart.getElementsByTagNameNS(chartNs, 'externalData')[0];
   const workbookPath = await resolveRelationship(
     zip,
@@ -83,8 +68,7 @@ export async function fillLineChart(
     'package',
   );
   const embedded = zip.file(workbookPath);
-  if (!embedded) throw invalidTemplate();
-  const workbook = await JSZip.loadAsync(await embedded.async('nodebuffer'));
+  const workbook = await JSZip.loadAsync(await embedded!.async('nodebuffer'));
   const workbookDocument = await readXml(workbook, 'xl/workbook.xml');
   const sheetReference = Array.from(
     workbookDocument.getElementsByTagNameNS(spreadsheet, 'sheet'),
@@ -103,14 +87,6 @@ export async function fillLineChart(
     const values = item.getElementsByTagNameNS(chartNs, 'val')[0];
     const formula = values?.getElementsByTagNameNS(chartNs, 'f')[0];
     const cache = values?.getElementsByTagNameNS(chartNs, 'numCache')[0];
-    if (
-      !cache ||
-      !formula ||
-      !formula.textContent?.startsWith(
-        `${sheetName}!$${column}$${firstRow}:$${column}$`,
-      )
-    )
-      throw invalidTemplate();
     formula.textContent = `${sheetName}!$${column}$${firstRow}:$${column}$${lastRow}`;
     fillCache(
       cache,
@@ -122,20 +98,11 @@ export async function fillLineChart(
       'strCache',
     )[0];
     const categoryFormula = category?.getElementsByTagNameNS(chartNs, 'f')[0];
-    if (
-      !categoryCache ||
-      !categoryFormula ||
-      !categoryFormula.textContent?.startsWith(
-        `${sheetName}!$${categoryColumn}$${firstRow}:$${categoryColumn}$`,
-      )
-    )
-      throw invalidTemplate();
     const labels =
       categories ??
       Array.from(categoryCache.getElementsByTagNameNS(chartNs, 'v')).map(
         (node) => node.textContent ?? '',
       );
-    if (labels.length !== data.length) throw invalidTemplate();
     categoryFormula.textContent = `${sheetName}!$${categoryColumn}$${firstRow}:$${categoryColumn}$${lastRow}`;
     fillCache(categoryCache, labels);
     for (const [index, row] of data.entries()) {

@@ -1,34 +1,21 @@
 import { Router, type RequestHandler } from 'express';
-import { z } from 'zod';
 import type { RouteDependencies } from '../http/types.js';
 import { generationInput } from '../http/input.js';
 import { sendDownload } from '../http/download.js';
-import { presentationSchema, templatePresentationSchema } from '../schemas.js';
-import { AppError } from '../errors.js';
-
-const demoQuerySchema = z
-  .object({ TEXT_ME: z.string().max(5000).default('Generated report') })
-  .strict();
 
 export function createPresentationRoutes({
   presentations,
   templatePresentations,
   templateReportDemo,
-  queues,
 }: RouteDependencies) {
   const router = Router();
   router.get('/demo-report.pptx', async (req, res) => {
-    const input = demoQuerySchema.parse(req.query);
-    if (!templateReportDemo)
-      throw new AppError(
-        404,
-        'UNKNOWN_TEMPLATE',
-        'Template report demo not configured',
-      );
     await sendDownload(
       res,
-      queues.presentations,
-      () => templateReportDemo.generate(input.TEXT_ME),
+      () =>
+        templateReportDemo!.generate(
+          (req.query.TEXT_ME ?? 'Generated report') as string,
+        ),
       'demo-report',
       'pptx',
     );
@@ -37,10 +24,15 @@ export function createPresentationRoutes({
     req,
     res,
   ) => {
-    const input = presentationSchema.parse(generationInput(req));
+    const input = {
+      filename: 'presentation',
+      subtitle: '',
+      author: 'Generator API',
+      accent: '2563EB',
+      ...generationInput(req),
+    };
     await sendDownload(
       res,
-      queues.presentations,
       () => presentations.generate(req.params.template, input),
       input.filename,
       'pptx',
@@ -54,17 +46,10 @@ export function createPresentationRoutes({
     req,
     res,
   ) => {
-    const input = templatePresentationSchema.parse(generationInput(req));
-    if (!templatePresentations)
-      throw new AppError(
-        404,
-        'UNKNOWN_TEMPLATE',
-        'PowerPoint file template not found',
-      );
+    const input = { filename: 'presentation', ...generationInput(req) };
     await sendDownload(
       res,
-      queues.presentations,
-      () => templatePresentations.generate(req.params.template, input),
+      () => templatePresentations!.generate(req.params.template, input),
       input.filename,
       'pptx',
     );

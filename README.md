@@ -25,13 +25,34 @@ curl -X POST http://localhost:3000/api/presentations/brief \
   --data-binary @examples/presentation.json --output presentation.pptx
 ```
 
+## Access from outside Docker
+
+Set the API listening address in `.env`:
+
+```dotenv
+HOST=0.0.0.0
+PORT=3000
+```
+
+`HOST` defaults to `0.0.0.0` so the API accepts connections through the container's network interface. The devcontainer publishes container port 3000 to `127.0.0.1:3000` on your computer. Rebuild the devcontainer after changing its port configuration, then start the API with `npm run dev` and test from a terminal outside Docker:
+
+```bash
+curl http://localhost:3000/health
+```
+
+For a container started manually, use `docker run -p 127.0.0.1:3000:3000 ...`. If you change `PORT`, change the Docker port mapping to match. To connect from another computer, publish to the host's network interface (for example `-p 3000:3000`) and use `http://<docker-host-ip>:3000`.
+
+`WEBAPP_BASE_URL` is the address Chromium uses from inside the container. If your webapp runs on your computer rather than in the container, configure an address reachable from Docker, such as `http://host.docker.internal:3001` on Docker Desktop. On Linux Docker Engine, add `--add-host=host.docker.internal:host-gateway`; the webapp must listen on an interface reachable from Docker.
+
 ## Endpoints
 
-| Endpoint | Input | Result |
-| --- | --- | --- |
-| `POST /api/pdf` | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape` | PDF attachment |
+All generation endpoints also support GET with query parameters. See [GET endpoint examples](README-ENDPOINTS.md) for every endpoint and copyable requests. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
+
+| Endpoint                            | Input                                                                                             | Result                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------ |
+| `POST /api/pdf`                     | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`          | PDF attachment           |
 | `POST /api/presentations/:template` | Template in route; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
-| `GET /health` | None | Process health |
+| `GET /health`                       | None                                                                                              | Process health           |
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
@@ -59,6 +80,8 @@ Services are injected into `createApp`, keeping HTTP handling independent from d
 Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
 
 ## Verification and production build
+
+Format all supported project files with `npm run format`. Use `npm run format:check` to check formatting without modifying files. Dependencies, builds, generated output, and PowerPoint template files are excluded.
 
 ```bash
 npm run typecheck
@@ -93,7 +116,15 @@ Register your own files in `src/index.ts` when constructing `TemplatePresentatio
 
 Only slide and speaker-note text is changed. Untouched ZIP parts, including media, masters, layouts, charts, and relationships, are preserved. This endpoint supports modern `.pptx`, not legacy `.ppt`. Placeholders in masters, layouts, chart data, or across paragraphs are not supported. Replacement strings are single-paragraph text; layout and text-box sizing remain the template author's responsibility. This initial manipulation service does not resize images, update chart data, or add/remove slides. It shares the existing PowerPoint queue and concurrency limit.
 
+## Random table and line chart from DAA template
+
+Open `http://localhost:3000/daa.pptx` to download `templates/daa.pptx` populated with random integers from 1–100. No query parameters are needed. Every table cell receives a value; the last three table columns feed the native line chart's three series across four categories. Category labels, series names, and template styling stay as authored. The embedded Excel workbook and chart cache are updated together, keeping **Edit Data** available in PowerPoint. The source file remains unchanged, and generation shares the PowerPoint queue.
+
+Run `npm run test:outputs` to save a sample to `output/routes/daa.pptx` along with the other route outputs.
+
 ## PDF download URLs
+
+Query parameters are optional. `/id2222.pdf` uses `DEFAULT_LANGUAGE=en`, configurable in `.env`; `/id2222.pdf?language=de` overrides it. A language already set in `PDF_ROUTE_PATTERN` stays authoritative. Other omitted query parameters use your webapp's defaults.
 
 `GET /:id.pdf` provides a direct download link such as `https://generator-host/id2222.pdf`. Configure the other webapp host and its document route in Azure application settings (or `.env` locally):
 

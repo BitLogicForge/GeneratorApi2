@@ -20,3 +20,10 @@ export const presentationSchema = z.object({
 
 export type PdfInput = z.infer<typeof pdfSchema>;
 export type PresentationInput = z.infer<typeof presentationSchema>;
+
+export const templatePresentationSchema = z.object({
+  filename: filename.default('presentation'),
+  replacements: z.record(z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,63}$/), z.string().max(5000))
+    .refine(value => Object.keys(value).length > 0 && Object.keys(value).length <= 100, 'Supply 1–100 replacements'),
+}).strict();
+export type TemplatePresentationInput = z.infer<typeof templatePresentationSchema>;

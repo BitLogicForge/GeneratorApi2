@@ -1,0 +1,8 @@
+{
+  "filename": "customer-proposal",
+  "replacements": {
+    "title": "A clearer path forward",
+    "subtitle": "A proposal built from our existing PowerPoint template",
+    "customer": "Acme Corporation"
+  }
+}

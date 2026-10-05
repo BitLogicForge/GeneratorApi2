@@ -5,7 +5,7 @@ import { AppError } from '../errors.js';
 export class PdfService {
   #browserPromise: Promise<Browser> | undefined;
   #active = 0;
-  constructor(private readonly config: Config) {}
+  constructor(private readonly config: Pick<Config, 'baseUrl' | 'concurrency' | 'timeout' | 'port'>) {}
   async browser() {
     if (!this.#browserPromise) {
       this.#browserPromise = chromium.launch().then(browser => {

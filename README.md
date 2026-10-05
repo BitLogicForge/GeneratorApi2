@@ -60,6 +60,49 @@ The PDF endpoint combines the route with the configured origin. Query values may
 
 Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
 
+## Fetch report data from another API
+
+The optional `DataApiClient` uses `config.dataApi` from `src/config.ts`:
+
+```dotenv
+DATA_API_BASE_URL=http://localhost:3002/api
+DATA_API_TOKEN=
+DATA_API_TIMEOUT_MS=10000
+```
+
+Set the base URL to your API, including its path prefix. A nonempty token is sent as a bearer token. The timeout covers fetching and reading the response. Leaving the base URL unset keeps this feature unconfigured without affecting document exports.
+
+Run the local example in two terminals:
+
+```bash
+# Terminal 1: start the synthetic data API
+npm run demo:data-api
+```
+
+```bash
+# Terminal 2: fetch by document ID, language, and year
+DATA_API_BASE_URL=http://localhost:3002/api npm run example:fetch-data -- id2222 en 2026
+```
+
+This calls `/api/reports/id2222?language=en&year=2026` and saves `output/data-api/id2222.json`. If the settings are already in `.env`, omit the inline environment variable. The example defaults to `id2222`, the configured language, and year 2026 when arguments are omitted.
+
+Use the client in a service like this:
+
+```ts
+const api = new DataApiClient(config.dataApi);
+const data = await api.get(
+  `/reports/${encodeURIComponent(id)}`,
+  { language: 'en', year: 2026 },
+  reportDataSchema,
+);
+```
+
+See `examples/fetch-report-data.ts` for imports and complete usage. Query values can be strings, numbers, booleans, or `undefined` (omitted); they are URL-encoded automatically. Adapt `examples/report-data-schema.ts` to your API's response. The example returns three table rows, twenty chart rows, and category labels, ready for the existing template helpers. Current demo exports continue using random numbers; fetching is available as a separate example for the future integration.
+
+The client preserves the configured URL prefix, rejects paths outside it, and does not follow redirects. HTTP failures, connection failures, invalid JSON, and invalid response data become 502 errors; timeouts become 504 errors.
+
+When the API is on your computer and Generator API runs in Docker, use a Docker-reachable hostname such as `host.docker.internal`, as described above for `WEBAPP_BASE_URL`.
+
 ## Structure and extension
 
 ```text

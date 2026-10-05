@@ -7,6 +7,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       DEFAULT_LANGUAGE: z.string().trim().min(1).max(100).default('en'),
       PORT: z.coerce.number().int().min(1).max(65535).default(3000),
       WEBAPP_BASE_URL: z.url().default('http://localhost:3001'),
+      DATA_API_BASE_URL: z.preprocess(
+        (value) => (value === '' ? undefined : value),
+        z.url().optional(),
+      ),
+      DATA_API_TOKEN: z.preprocess(
+        (value) => (value === '' ? undefined : value),
+        z.string().optional(),
+      ),
+      DATA_API_TIMEOUT_MS: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(120000)
+        .default(10000),
       PDF_ROUTE_PATTERN: pdfRoutePatternSchema.default('/documents/{id}'),
       PDF_CONCURRENCY: z.coerce.number().int().min(1).max(10).default(2),
       PPTX_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(4),
@@ -32,8 +46,26 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     base.password
   )
     throw new Error('WEBAPP_BASE_URL must be HTTP(S) without credentials');
+  if (c.DATA_API_BASE_URL) {
+    const url = new URL(c.DATA_API_BASE_URL);
+    if (
+      !['http:', 'https:'].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    )
+      throw new Error(
+        'DATA_API_BASE_URL must be HTTP(S) without credentials, query, or fragment',
+      );
+  }
   return {
     host: c.HOST,
+    dataApi: {
+      baseUrl: c.DATA_API_BASE_URL,
+      token: c.DATA_API_TOKEN,
+      timeoutMs: c.DATA_API_TIMEOUT_MS,
+    },
     defaultLanguage: c.DEFAULT_LANGUAGE,
     port: c.PORT,
     pdfRoutePattern: c.PDF_ROUTE_PATTERN,

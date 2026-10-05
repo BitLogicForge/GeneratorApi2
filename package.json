@@ -12,7 +12,9 @@
     "browser:install": "playwright install chromium",
     "build": "tsc",
     "typecheck": "tsc -p tsconfig.check.json",
-    "demo": "tsx examples/webapp.ts"
+    "demo": "tsx examples/webapp.ts",
+    "demo:data-api": "tsx --env-file-if-exists=.env examples/data-api.ts",
+    "example:fetch-data": "tsx --env-file-if-exists=.env examples/fetch-report-data.ts"
   },
   "keywords": [],
   "author": "",

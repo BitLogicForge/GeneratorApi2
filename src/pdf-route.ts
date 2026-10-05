@@ -7,7 +7,7 @@ export const pdfRoutePatternSchema = z
   .startsWith('/')
   .refine(
     (value) => value.includes('{id}'),
-    'PDF_ROUTE_PATTERN must contain {id}',
+    'pdfRoutePattern must contain {id}',
   )
   .refine(
     (value) =>

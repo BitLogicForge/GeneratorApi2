@@ -1,10 +1,22 @@
 import { z } from 'zod';
 import { pdfRoutePatternSchema } from './pdf-route.js';
+
+// Application behavior: edit these values here, then rebuild the deployment package.
+export const documentSettings = {
+  defaultLanguage: 'en',
+  pdfRoutePattern: '/documents/{id}',
+};
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
+  const documents = z
+    .object({
+      defaultLanguage: z.string().trim().min(1).max(100),
+      pdfRoutePattern: pdfRoutePatternSchema,
+    })
+    .parse(documentSettings);
   const c = z
     .object({
       HOST: z.string().trim().min(1).default('0.0.0.0'),
-      DEFAULT_LANGUAGE: z.string().trim().min(1).max(100).default('en'),
       PORT: z.coerce.number().int().min(1).max(65535).default(3000),
       WEBAPP_BASE_URL: z.url().default('http://localhost:3001'),
       DATA_API_BASE_URL: z.preprocess(
@@ -21,7 +33,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
         .min(1)
         .max(120000)
         .default(10000),
-      PDF_ROUTE_PATTERN: pdfRoutePatternSchema.default('/documents/{id}'),
       PDF_CONCURRENCY: z.coerce.number().int().min(1).max(10).default(2),
       PPTX_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(4),
       QUEUE_MAX_PENDING: z.coerce.number().int().min(0).max(2000).default(200),
@@ -66,9 +77,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       token: c.DATA_API_TOKEN,
       timeoutMs: c.DATA_API_TIMEOUT_MS,
     },
-    defaultLanguage: c.DEFAULT_LANGUAGE,
+    defaultLanguage: documents.defaultLanguage,
     port: c.PORT,
-    pdfRoutePattern: c.PDF_ROUTE_PATTERN,
+    pdfRoutePattern: documents.pdfRoutePattern,
     baseUrl: base.origin,
     concurrency: c.PDF_CONCURRENCY,
     timeout: c.RENDER_TIMEOUT_MS,

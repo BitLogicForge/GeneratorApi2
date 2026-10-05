@@ -8,10 +8,11 @@ import type { PdfInput } from '../src/schemas.js';
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {
   const inputs: PdfInput[] = [];
   const app = createApp({
-    config: loadConfig({
-      PDF_ROUTE_PATTERN: pdfRoutePattern,
-      DEFAULT_LANGUAGE: defaultLanguage,
-    }),
+    config: {
+      ...loadConfig({}),
+      ...(pdfRoutePattern !== undefined && { pdfRoutePattern }),
+      ...(defaultLanguage !== undefined && { defaultLanguage }),
+    },
     pdf: {
       generate: async (input) => {
         inputs.push(input);
@@ -67,16 +68,25 @@ test('unsafe IDs and repeated query values are rejected before rendering', async
 test('configuration validates relative PDF route patterns', () => {
   const config = loadConfig({
     WEBAPP_BASE_URL: 'https://other-host.example',
-    PDF_ROUTE_PATTERN: '/document?id={id}',
   });
   assert.equal(config.baseUrl, 'https://other-host.example');
-  assert.equal(config.pdfRoutePattern, '/document?id={id}');
+  assert.equal(config.pdfRoutePattern, '/documents/{id}');
+  assert.equal(config.defaultLanguage, 'en');
   for (const pattern of [
     'https://example.com/{id}',
     '//example.com/{id}',
     '/document',
     '/\\example.com/{id}',
   ]) {
-    assert.throws(() => loadConfig({ PDF_ROUTE_PATTERN: pattern }));
+    assert.throws(() => fixture(pattern));
   }
+});
+
+test('document settings come from code rather than environment overrides', () => {
+  const config = loadConfig({
+    DEFAULT_LANGUAGE: 'de',
+    PDF_ROUTE_PATTERN: '/ignored/{id}',
+  });
+  assert.equal(config.defaultLanguage, 'en');
+  assert.equal(config.pdfRoutePattern, '/documents/{id}');
 });

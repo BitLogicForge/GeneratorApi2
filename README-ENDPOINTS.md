@@ -31,7 +31,7 @@ http://localhost:3000/id2222.pdf?language=en
 
 The document ID is the filename. Add ordinary query parameters as needed:
 
-Query parameters are optional: `http://localhost:3000/id2222.pdf` uses `DEFAULT_LANGUAGE=en` from the server configuration. Change that setting in `.env` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
+Query parameters are optional: `http://localhost:3000/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/config.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
 
 ```text
 http://localhost:3000/id2222.pdf?language=en&year=2026
@@ -58,7 +58,7 @@ In a second terminal, start the included webapp for the PDF examples:
 npm run demo
 ```
 
-The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and `PDF_ROUTE_PATTERN=/documents/{id}`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
+The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and `documentSettings.pdfRoutePattern = "/documents/{id}"` in `src/config.ts`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
 
 ## Query parameter format
 
@@ -125,13 +125,21 @@ curl --fail-with-body 'http://localhost:3000/id2222.pdf?language=en' \
 
 With the default configuration, these render `/documents/id2222` and `/documents/id2222?language=en` on the configured webapp host. The demo supports the document route, though it does not use the language parameter.
 
-The ID must contain 1–80 letters, numbers, underscores, or hyphens. Query values must be strings; duplicate query keys are rejected. Keys already present in `PDF_ROUTE_PATTERN` cannot be overridden.
+The ID must contain 1–80 letters, numbers, underscores, or hyphens. Query values must be strings; duplicate query keys are rejected. Keys already present in `documentSettings.pdfRoutePattern` cannot be overridden.
 
-For a webapp that expects the document ID in a query parameter, set:
+For a webapp that expects the document ID in a query parameter, configure the host in `.env` and the route in `src/config.ts`:
 
 ```dotenv
 WEBAPP_BASE_URL=https://other-host.example
-PDF_ROUTE_PATTERN=/document?id={id}
+```
+
+In `src/config.ts`:
+
+```ts
+export const documentSettings = {
+  defaultLanguage: 'en',
+  pdfRoutePattern: '/document?id={id}',
+};
 ```
 
 Then `/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en`. That route must exist on your webapp; it is not provided by the demo.

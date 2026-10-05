@@ -6,7 +6,7 @@ export type PresentationTemplate = (
 ) => void | Promise<void>;
 import { AppError } from '../errors.js';
 import { briefTemplate } from '../templates/brief.js';
-export class PresentationService {
+export class GeneratedPresentationService {
   private readonly templates: Map<string, PresentationTemplate>;
   constructor(
     templates: Record<string, PresentationTemplate> = { brief: briefTemplate },

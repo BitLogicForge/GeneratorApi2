@@ -6,12 +6,12 @@ import { join } from 'node:path';
 import JSZip from 'jszip';
 import request from 'supertest';
 import { DOMParser } from '@xmldom/xmldom';
-import { TemplatePresentationService } from '../src/services/template-presentation.js';
+import { PowerPointTemplateService } from '../src/services/powerpoint-template.js';
 import { templatePresentationSchema } from '../src/schemas.js';
 import { createApp } from '../src/app.js';
 
 const path = new URL('../templates/business.pptx', import.meta.url).pathname;
-const service = new TemplatePresentationService({ business: path });
+const service = new PowerPointTemplateService({ business: path });
 const input = templatePresentationSchema.parse({
   replacements: {
     title: 'Revenue & growth <2026>',
@@ -62,7 +62,7 @@ test('split and repeated placeholders preserve text-run formatting and escape re
     );
     const file = join(dir, 'split.pptx');
     await writeFile(file, await zip.generateAsync({ type: 'nodebuffer' }));
-    const editor = new TemplatePresentationService({ split: file });
+    const editor = new PowerPointTemplateService({ split: file });
     const result = await JSZip.loadAsync(
       await editor.generate(
         'split',
@@ -116,17 +116,17 @@ test('template endpoint returns an edited PPTX attachment', async () => {
     presentations: { generate: async () => Buffer.alloc(0) },
   });
   const response = await request(app)
-    .post('/api/presentation-templates/business')
+    .post('/api/exports/pptx/templates/business')
     .send(input)
     .expect(200);
   assert.match(response.headers['content-disposition'], /presentation.pptx/);
   assert.match(response.headers['content-type'], /presentationml/);
   await request(app)
-    .post('/api/presentation-templates/business')
+    .post('/api/exports/pptx/templates/business')
     .send({ replacements: {} })
     .expect(400);
   await request(app)
-    .post('/api/presentation-templates/unknown')
+    .post('/api/exports/pptx/templates/unknown')
     .send(input)
     .expect(404);
 });

@@ -6,10 +6,10 @@ import type { AddressInfo } from 'node:net';
 import express from 'express';
 import JSZip from 'jszip';
 import { createApp } from '../src/app.js';
-import { DaaPresentationService } from '../src/services/daa-presentation.js';
-import { PdfService } from '../src/services/pdf.js';
-import { PresentationService } from '../src/services/presentation.js';
-import { TemplatePresentationService } from '../src/services/template-presentation.js';
+import { TemplateReportDemoService } from '../src/services/template-report-demo.js';
+import { WebPagePdfService } from '../src/services/web-page-pdf.js';
+import { GeneratedPresentationService } from '../src/services/generated-presentation.js';
+import { PowerPointTemplateService } from '../src/services/powerpoint-template.js';
 
 const outputDir = new URL('../output/routes/', import.meta.url);
 
@@ -26,19 +26,19 @@ test('download real documents from HTTP routes and save output files', async (t)
   });
   const upstream = webapp.listen(0, '127.0.0.1');
   await new Promise<void>((resolve) => upstream.once('listening', resolve));
-  const pdf = new PdfService({
+  const pdf = new WebPagePdfService({
     baseUrl: `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`,
     port: 3000,
     concurrency: 2,
     timeout: 10000,
   });
   const app = createApp({
-    daaPresentations: new DaaPresentationService(
+    templateReportDemo: new TemplateReportDemoService(
       fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
     ),
     pdf,
-    presentations: new PresentationService(),
-    templatePresentations: new TemplatePresentationService({
+    presentations: new GeneratedPresentationService(),
+    templatePresentations: new PowerPointTemplateService({
       business: fileURLToPath(
         new URL('../templates/business.pptx', import.meta.url),
       ),
@@ -111,7 +111,7 @@ test('download real documents from HTTP routes and save output files', async (t)
         format: 'Letter',
         landscape: 'true',
       });
-      await save(`/api/pdf?${params}`, 'custom-report.pdf');
+      await save(`/api/exports/pdf?${params}`, 'custom-report.pdf');
     });
     await t.test('generated editable PowerPoint', async () => {
       const payload = JSON.parse(
@@ -127,7 +127,7 @@ test('download real documents from HTTP routes and save output files', async (t)
         ]),
       );
       await save(
-        `/api/presentations/brief?${params}`,
+        `/api/exports/pptx/generated/brief?${params}`,
         'quarterly-review.pptx',
         'A clearer path forward',
       );
@@ -144,14 +144,21 @@ test('download real documents from HTTP routes and save output files', async (t)
         replacements: JSON.stringify(payload.replacements),
       });
       await save(
-        `/api/presentation-templates/business?${params}`,
+        `/api/exports/pptx/templates/business?${params}`,
         'customer-proposal.pptx',
         'Acme Corporation',
       );
     });
-    await t.test('DAA table and line chart with random data', async () => {
-      await save('/daa.pptx', 'daa.pptx');
-    });
+    await t.test(
+      'Template report demo with random table and chart data',
+      async () => {
+        await save(
+          '/demo-report.pptx?TEXT_ME=Example%20report',
+          'demo-report.pptx',
+          'Example report',
+        );
+      },
+    );
     await writeFile(
       new URL('manifest.json', outputDir),
       JSON.stringify(manifest, null, 2) + '\n',

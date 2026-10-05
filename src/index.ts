@@ -1,34 +1,33 @@
 import { fileURLToPath } from 'node:url';
-import { TemplatePresentationService } from './services/template-presentation.js';
-import { DaaPresentationService } from './services/daa-presentation.js';
+import { PowerPointTemplateService } from './services/powerpoint-template.js';
+import { TemplateReportDemoService } from './services/template-report-demo.js';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
-import { PdfService } from './services/pdf.js';
-import { PresentationService } from './services/presentation.js';
+import { WebPagePdfService } from './services/web-page-pdf.js';
+import { GeneratedPresentationService } from './services/generated-presentation.js';
 import { createGenerationQueues } from './queue/generation-queue.js';
 const config = loadConfig();
-const pdf = new PdfService(config);
+const pdf = new WebPagePdfService(config);
 const queues = createGenerationQueues({
   pdfConcurrency: config.concurrency,
   presentationConcurrency: config.presentationConcurrency,
   maxPending: config.maxPending,
   waitTimeoutMs: config.waitTimeoutMs,
 });
-const templatePresentations = new TemplatePresentationService({
+const templatePresentations = new PowerPointTemplateService({
   business: fileURLToPath(
     new URL('../templates/business.pptx', import.meta.url),
   ),
 });
 const server = createApp({
-  daaPresentations: new DaaPresentationService(
+  templateReportDemo: new TemplateReportDemoService(
     fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
   ),
-  defaultLanguage: config.defaultLanguage,
-  pdfRoutePattern: config.pdfRoutePattern,
+  config,
   templatePresentations,
   queues,
   pdf,
-  presentations: new PresentationService(),
+  presentations: new GeneratedPresentationService(),
 }).listen(config.port, config.host, () =>
   console.log(`Generator API listening on ${config.host}:${config.port}`),
 );

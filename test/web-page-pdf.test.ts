@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
-import { PdfService } from '../src/services/pdf.js';
+import { WebPagePdfService } from '../src/services/web-page-pdf.js';
 import { pdfSchema } from '../src/schemas.js';
 test('real Chromium PDF, query parameters, upstream errors and readiness timeout', async () => {
   const webapp = express();
@@ -12,7 +12,7 @@ test('real Chromium PDF, query parameters, upstream errors and readiness timeout
   });
   const server = webapp.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
-  const pdf = new PdfService({
+  const pdf = new WebPagePdfService({
     baseUrl: `http://127.0.0.1:${(server.address() as import('node:net').AddressInfo).port}`,
     port: 3000,
     concurrency: 1,

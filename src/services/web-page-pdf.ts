@@ -7,7 +7,7 @@ import {
 import type { Config } from '../config.js';
 import type { PdfInput } from '../schemas.js';
 import { AppError } from '../errors.js';
-export class PdfService {
+export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
   #active = 0;
   constructor(

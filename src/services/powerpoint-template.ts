@@ -9,7 +9,7 @@ const drawingNamespace =
 const tokenPattern = /\{\{([A-Za-z][A-Za-z0-9_]{0,63})\}\}/g;
 
 /** Mutates only text in slides and speaker notes; preserves all other ZIP parts. */
-export class TemplatePresentationService {
+export class PowerPointTemplateService {
   private readonly templates: Map<string, string>;
   constructor(templates: Record<string, string>) {
     this.templates = new Map(Object.entries(templates));

@@ -8,8 +8,10 @@ import type { PdfInput } from '../src/schemas.js';
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {
   const inputs: PdfInput[] = [];
   const app = createApp({
-    pdfRoutePattern,
-    defaultLanguage,
+    config: loadConfig({
+      PDF_ROUTE_PATTERN: pdfRoutePattern,
+      DEFAULT_LANGUAGE: defaultLanguage,
+    }),
     pdf: {
       generate: async (input) => {
         inputs.push(input);

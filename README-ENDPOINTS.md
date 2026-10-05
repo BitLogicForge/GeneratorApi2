@@ -13,10 +13,10 @@ The test starts local HTTP servers, downloads real files from the routes, valida
 
 - `id2222.pdf` — default language, from `/id2222.pdf`.
 - `id2222-de.pdf` — language override, from `/id2222.pdf?language=de`.
-- `custom-report.pdf` — readiness selector and print options, from GET `/api/pdf`.
-- `quarterly-review.pptx` — editable presentation, from GET `/api/presentations/brief`.
-- `customer-proposal.pptx` — edited template, from GET `/api/presentation-templates/business`.
-- `daa.pptx` — native table and line chart with random data, from GET `/daa.pptx`.
+- `custom-report.pdf` — readiness selector and print options, from GET `/api/exports/pdf`.
+- `quarterly-review.pptx` — editable presentation, from GET `/api/exports/pptx/generated/brief`.
+- `customer-proposal.pptx` — edited template, from GET `/api/exports/pptx/templates/business`.
+- `demo-report.pptx` — native table and line chart with random data, from GET `/demo-report.pptx`.
 - `manifest.json` — exact request URLs, output paths, and file sizes.
 
 The tests provide their own local webapp and need no running demo server. Output files are ignored by Git. The short `/id2222.pptx` route is not implemented yet; these tests cover the existing PowerPoint routes.
@@ -72,24 +72,24 @@ For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The i
 
 ### Random table and chart download
 
-Open `http://localhost:3000/daa.pptx` or download it:
+Open `http://localhost:3000/demo-report.pptx` or download it:
 
 ```bash
-curl --fail-with-body http://localhost:3000/daa.pptx --output daa.pptx
+curl --fail-with-body http://localhost:3000/demo-report.pptx --output demo-report.pptx
 ```
 
-No parameters are required. Every request fills all 16 cells of `templates/daa.pptx`'s 4×4 table with random integers from 1–100. The table's last three columns feed the line chart's three series across four categories. Original category labels, series names, and styles are preserved. The chart cache and embedded Excel workbook are both updated so the chart remains native and editable using PowerPoint's **Edit Data**. This route uses the PowerPoint queue and leaves the source template unchanged.
+No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/demo-report.pptx?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. Every request preserves the first row of `templates/daa.pptx`'s 4×4 table and fills only the last three rows (12 cells) with random integers from 1–100. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and styles are preserved; category labels and ranges expand to 20 rows. The chart cache and embedded Excel workbook are both updated so the chart remains native and editable using PowerPoint's **Edit Data**. This route uses the PowerPoint queue and leaves the source template unchanged.
 
 ### All routes
 
 | Method | Endpoint                               | Successful response                               |
 | ------ | -------------------------------------- | ------------------------------------------------- |
 | GET    | `/health`                              | JSON process health                               |
-| GET    | `/daa.pptx`                            | Native table and line chart with random data      |
+| GET    | `/demo-report.pptx`                    | Native table and line chart with random data      |
 | GET    | `/:id.pdf`                             | PDF attachment for a document ID                  |
-| GET    | `/api/pdf`                             | PDF attachment for a webapp route                 |
-| GET    | `/api/presentations/brief`             | Generated editable PowerPoint attachment          |
-| GET    | `/api/presentation-templates/business` | PowerPoint attachment with template text replaced |
+| GET    | `/api/exports/pdf`                     | PDF attachment for a webapp route                 |
+| GET    | `/api/exports/pptx/generated/brief`    | Generated editable PowerPoint attachment          |
+| GET    | `/api/exports/pptx/templates/business` | PowerPoint attachment with template text replaced |
 
 `brief` and `business` are the currently registered template names. The route patterns accept other names only after those templates are registered in the server; an unknown name returns 404.
 
@@ -136,14 +136,14 @@ PDF_ROUTE_PATTERN=/document?id={id}
 
 Then `/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en`. That route must exist on your webapp; it is not provided by the demo.
 
-Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses A4 portrait output and has no per-request readiness selector; use GET /api/pdf for those options.
+Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses A4 portrait output and has no per-request readiness selector; use GET /api/exports/pdf for those options.
 
-## GET /api/pdf
+## GET /api/exports/pdf
 
 Minimal request using the included demo:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/pdf \
+curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
   --data-urlencode 'route=/reports/quarterly' \
   --output document.pdf
 ```
@@ -151,7 +151,7 @@ curl --fail-with-body --get http://localhost:3000/api/pdf \
 Request with all supported fields:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/pdf \
+curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
   --data-urlencode 'route=/reports/quarterly' \
   --data-urlencode 'query={"year":2026,"quarter":3,"print":true}' \
   --data-urlencode 'filename=quarterly-report' \
@@ -164,7 +164,7 @@ curl --fail-with-body --get http://localhost:3000/api/pdf \
 Equivalent GET request using the values in `examples/pdf.json`:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/pdf \
+curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
   --data-urlencode 'route=/reports/quarterly' \
   --data-urlencode 'query={"year":2026,"quarter":3,"print":true}' \
   --data-urlencode 'filename=quarterly-report' \
@@ -187,12 +187,12 @@ Query keys may contain up to 100 characters and string values up to 2,000 charac
 
 Success returns 200 with `Content-Type: application/pdf` and the requested attachment filename plus `.pdf`.
 
-## GET /api/presentations/brief
+## GET /api/exports/pptx/generated/brief
 
 Generate a new editable presentation:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/presentations/brief \
+curl --fail-with-body --get http://localhost:3000/api/exports/pptx/generated/brief \
   --data-urlencode 'filename=quarterly-review' \
   --data-urlencode 'title=Quarterly review' \
   --data-urlencode 'subtitle=Strategy and delivery' \
@@ -205,7 +205,7 @@ curl --fail-with-body --get http://localhost:3000/api/presentations/brief \
 Equivalent GET request using the existing example file values:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/presentations/brief \
+curl --fail-with-body --get http://localhost:3000/api/exports/pptx/generated/brief \
   --data-urlencode 'filename=quarterly-review' \
   --data-urlencode 'title=A clearer path forward' \
   --data-urlencode 'subtitle=Quarterly review · Strategy and delivery' \
@@ -231,12 +231,12 @@ Unknown query and slide fields are rejected. The `brief` template adds a cover f
 
 Success returns 200 with `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` and the attachment filename plus `.pptx`.
 
-## GET /api/presentation-templates/business
+## GET /api/exports/pptx/templates/business
 
 Replace text placeholders in the included `templates/business.pptx`:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/presentation-templates/business \
+curl --fail-with-body --get http://localhost:3000/api/exports/pptx/templates/business \
   --data-urlencode 'filename=customer-proposal' \
   --data-urlencode 'replacements={"title":"A clearer path forward","subtitle":"A proposal built from our existing PowerPoint template","customer":"Acme Corporation"}' \
   --output customer-proposal.pptx
@@ -245,7 +245,7 @@ curl --fail-with-body --get http://localhost:3000/api/presentation-templates/bus
 Equivalent GET request using the existing example file values:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/presentation-templates/business \
+curl --fail-with-body --get http://localhost:3000/api/exports/pptx/templates/business \
   --data-urlencode 'filename=customer-proposal' \
   --data-urlencode 'replacements={"title":"A clearer path forward","subtitle":"A proposal built from our existing PowerPoint template","customer":"Acme Corporation"}' \
   --output customer-proposal.pptx

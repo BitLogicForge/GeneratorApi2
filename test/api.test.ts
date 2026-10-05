@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import request from 'supertest';
 import JSZip from 'jszip';
 import { createApp } from '../src/app.js';
-import { PresentationService } from '../src/services/presentation.js';
+import { GeneratedPresentationService } from '../src/services/generated-presentation.js';
 import { AppError } from '../src/errors.js';
 const payload = {
   title: 'Roadmap',
@@ -17,13 +17,13 @@ const payload = {
 };
 const app = createApp({
   pdf: { generate: async () => Buffer.from('%PDF-1.7') },
-  presentations: new PresentationService(),
+  presentations: new GeneratedPresentationService(),
   logger: { error() {} },
 });
 test('health and PDF download contract', async () => {
   await request(app).get('/health').expect(200, { status: 'ok' });
   const res = await request(app)
-    .post('/api/pdf')
+    .post('/api/exports/pdf')
     .send({ route: '/report', filename: 'report' })
     .expect(200);
   assert.match(res.headers['content-type'], /application\/pdf/);
@@ -31,7 +31,7 @@ test('health and PDF download contract', async () => {
 });
 test('PowerPoint contains editable title, content and notes', async () => {
   const res = await request(app)
-    .post('/api/presentations/brief')
+    .post('/api/exports/pptx/generated/brief')
     .send(payload)
     .buffer(true)
     .parse((res, done) => {
@@ -60,22 +60,22 @@ test('invalid inputs, malformed JSON and unknown templates', async () => {
     '//example.com',
     '/\\example.com',
   ]) {
-    await request(app).post('/api/pdf').send({ route }).expect(400);
+    await request(app).post('/api/exports/pdf').send({ route }).expect(400);
   }
   await request(app)
-    .post('/api/pdf')
+    .post('/api/exports/pdf')
     .send({ route: '/ok', filename: '../bad' })
     .expect(400);
   await request(app)
-    .post('/api/presentations/brief')
+    .post('/api/exports/pptx/generated/brief')
     .send({ ...payload, slides: [] })
     .expect(400);
   await request(app)
-    .post('/api/presentations/missing')
+    .post('/api/exports/pptx/generated/missing')
     .send(payload)
     .expect(404);
   await request(app)
-    .post('/api/pdf')
+    .post('/api/exports/pdf')
     .set('Content-Type', 'application/json')
     .send('{')
     .expect(400);
@@ -87,11 +87,11 @@ test('service errors keep consistent response without leaking internals', async 
         throw new AppError(503, 'RENDER_BUSY', 'Renderer is busy');
       },
     },
-    presentations: new PresentationService(),
+    presentations: new GeneratedPresentationService(),
     logger: { error() {} },
   });
   const res = await request(failing)
-    .post('/api/pdf')
+    .post('/api/exports/pdf')
     .send({ route: '/ok' })
     .expect(503);
   assert.equal(res.body.error.code, 'RENDER_BUSY');
@@ -107,7 +107,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
         return Buffer.from('%PDF-1.7');
       },
     },
-    presentations: new PresentationService(),
+    presentations: new GeneratedPresentationService(),
     templatePresentations: {
       generate: async (template, input) => {
         inputs.push({ template, ...input });
@@ -116,7 +116,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
     },
   });
   const pdf = await request(getApp)
-    .get('/api/pdf')
+    .get('/api/exports/pdf')
     .query({
       route: '/report',
       query: JSON.stringify({ year: 2026, print: true }),
@@ -133,7 +133,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
     format: 'A4',
   });
   const deck = await request(getApp)
-    .get('/api/presentations/brief')
+    .get('/api/exports/pptx/generated/brief')
     .query({ title: payload.title, slides: JSON.stringify(payload.slides) })
     .buffer(true)
     .parse((res, done) => {
@@ -148,7 +148,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
     /Ship the API/,
   );
   const template = await request(getApp)
-    .get('/api/presentation-templates/business')
+    .get('/api/exports/pptx/templates/business')
     .query({
       replacements: JSON.stringify({ title: 'A & B' }),
       filename: 'proposal',
@@ -170,17 +170,17 @@ test('GET generation rejects malformed, duplicate, unknown and invalid query inp
     'route=/report&unknown=value',
     'route=https://example.com',
   ])
-    await request(app).get(`/api/pdf?${query}`).expect(400);
+    await request(app).get(`/api/exports/pdf?${query}`).expect(400);
   await request(app)
-    .get('/api/presentations/brief')
+    .get('/api/exports/pptx/generated/brief')
     .query({ title: 'Test', slides: '[]' })
     .expect(400);
   await request(app)
-    .get('/api/presentations/missing')
+    .get('/api/exports/pptx/generated/missing')
     .query({ title: payload.title, slides: JSON.stringify(payload.slides) })
     .expect(404);
   await request(app)
-    .get('/api/presentation-templates/business')
+    .get('/api/exports/pptx/templates/business')
     .query({ replacements: '{' })
     .expect(400);
 });

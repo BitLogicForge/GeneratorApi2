@@ -17,10 +17,10 @@ Set `WEBAPP_BASE_URL` to your webapp's origin. The API defaults to port 3000 and
 
 ```bash
 curl http://localhost:3000/health
-curl -X POST http://localhost:3000/api/pdf \
+curl -X POST http://localhost:3000/api/exports/pdf \
   -H 'Content-Type: application/json' \
   --data-binary @examples/pdf.json --output report.pdf
-curl -X POST http://localhost:3000/api/presentations/brief \
+curl -X POST http://localhost:3000/api/exports/pptx/generated/brief \
   -H 'Content-Type: application/json' \
   --data-binary @examples/presentation.json --output presentation.pptx
 ```
@@ -48,11 +48,11 @@ For a container started manually, use `docker run -p 127.0.0.1:3000:3000 ...`. I
 
 All generation endpoints also support GET with query parameters. See [GET endpoint examples](README-ENDPOINTS.md) for every endpoint and copyable requests. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
 
-| Endpoint                            | Input                                                                                             | Result                   |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------ |
-| `POST /api/pdf`                     | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`          | PDF attachment           |
-| `POST /api/presentations/:template` | Template in route; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
-| `GET /health`                       | None                                                                                              | Process health           |
+| Endpoint                                     | Input                                                                                             | Result                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------ |
+| `POST /api/exports/pdf`                      | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`          | PDF attachment           |
+| `POST /api/exports/pptx/generated/:template` | Template in route; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
+| `GET /health`                                | None                                                                                              | Process health           |
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
@@ -65,17 +65,23 @@ Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Valida
 ```text
 src/
   index.ts                 startup and shutdown
-  app.ts                   HTTP contracts and centralized errors
+  app.ts                   middleware setup and route registration
+  http/                    shared downloads, input parsing, errors, and contracts
+  routes/pdf.ts            document URLs and web-page PDF exports
+  routes/presentations.ts  generated decks, templates, and report demo
   config.ts                validated environment configuration
   schemas.ts               runtime validation and inferred input types
   errors.ts                application errors
   queue/generation-queue.ts bounded FIFO queues and admission control
-  services/pdf.ts          shared browser, isolated contexts, cleanup
-  services/presentation.ts template registry and PPTX serialization
+  services/web-page-pdf.ts          webapp PDF rendering and browser cleanup
+  services/generated-presentation.ts new PPTX decks from slide data
+  services/powerpoint-template.ts   text replacement in existing PPTX files
+  services/template-report-demo.ts demo of native tables, charts, and text
+  pptx/                            reusable template XML helpers
   templates/brief.ts       slide design
 ```
 
-Services are injected into `createApp`, keeping HTTP handling independent from document generation. To add a presentation template, implement the `PresentationTemplate` function type and register it in `PresentationService`. It receives a fresh deck and validated input. Add template-specific schemas when new templates need different fields. Add new output formats as separate services and routes.
+Services are injected into `createApp`, keeping HTTP handling independent from document generation. To add a presentation template, implement the `PresentationTemplate` function type and register it in `GeneratedPresentationService`. It receives a fresh deck and validated input. Add template-specific schemas when new templates need different fields. Add new output formats as separate services and routes.
 
 Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
 
@@ -102,25 +108,27 @@ Library references: [Playwright page API](https://playwright.dev/docs/api/class-
 
 ## Edit an existing PowerPoint template
 
-`POST /api/presentation-templates/:template` reads a registered `.pptx` file and modifies its text directly. The included `business` template is `templates/business.pptx`.
+`POST /api/exports/pptx/templates/:template` reads a registered `.pptx` file and modifies its text directly. The included `business` template is `templates/business.pptx`.
 
 ```bash
-curl -X POST http://localhost:3000/api/presentation-templates/business \
+curl -X POST http://localhost:3000/api/exports/pptx/templates/business \
   -H 'Content-Type: application/json' \
   --data-binary @examples/template-presentation.json --output proposal.pptx
 ```
 
 In PowerPoint, add placeholders such as `{{title}}`, `{{subtitle}}`, and `{{customer}}` to text boxes or table cells. Supply matching strings in the JSON `replacements` object. Placeholders can span formatting runs within a paragraph; replacement text inherits the formatting of the first run. Speaker-note placeholders are also replaced. Replacements are literal text, with XML characters escaped automatically. Missing replacements and unknown keys return 400, so spelling errors do not silently produce incomplete decks.
 
-Register your own files in `src/index.ts` when constructing `TemplatePresentationService`. The registry accepts trusted server-side paths; callers select a template name and cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/create-template.ts`.
+Register your own files in `src/index.ts` when constructing `PowerPointTemplateService`. The registry accepts trusted server-side paths; callers select a template name and cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/create-template.ts`.
 
 Only slide and speaker-note text is changed. Untouched ZIP parts, including media, masters, layouts, charts, and relationships, are preserved. This endpoint supports modern `.pptx`, not legacy `.ppt`. Placeholders in masters, layouts, chart data, or across paragraphs are not supported. Replacement strings are single-paragraph text; layout and text-box sizing remain the template author's responsibility. This initial manipulation service does not resize images, update chart data, or add/remove slides. It shares the existing PowerPoint queue and concurrency limit.
 
-## Random table and line chart from DAA template
+## Template report demo
 
-Open `http://localhost:3000/daa.pptx` to download `templates/daa.pptx` populated with random integers from 1–100. No query parameters are needed. Every table cell receives a value; the last three table columns feed the native line chart's three series across four categories. Category labels, series names, and template styling stay as authored. The embedded Excel workbook and chart cache are updated together, keeping **Edit Data** available in PowerPoint. The source file remains unchanged, and generation shares the PowerPoint queue.
+Open `http://localhost:3000/demo-report.pptx` to download `templates/daa.pptx` populated with random integers from 1–100. No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/demo-report.pptx?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. The first table row stays unchanged as the header; only the last three rows receive random values. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and template styling stay as authored. The embedded Excel workbook and chart cache are updated together, keeping **Edit Data** available in PowerPoint. The source file remains unchanged, and generation shares the PowerPoint queue.
 
-Run `npm run test:outputs` to save a sample to `output/routes/daa.pptx` along with the other route outputs.
+Run `npm run test:outputs` to save a sample to `output/routes/demo-report.pptx` along with the other route outputs.
+
+Reusable template helpers live in `src/pptx`: `objects.ts` finds uniquely named shapes across slides; `text-table.ts` fills text and tables; `charts.ts` synchronizes line-chart values with their embedded workbook; `package.ts` reads/writes XML parts and resolves file relationships. `TemplateReportDemoService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
 
 ## PDF download URLs
 
@@ -135,4 +143,4 @@ PDF_ROUTE_PATTERN=/document?id={id}
 
 With these settings, `https://generator-host/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en` and returns an `id2222.pdf` attachment. For path-based webapps, use `PDF_ROUTE_PATTERN=/documents/{id}` (the default). Additional query parameters are forwarded as strings. Query keys already configured in the pattern cannot be overridden by the caller. Duplicate query keys are rejected. IDs accept up to 80 letters, numbers, underscores, and hyphens.
 
-The GET endpoint uses the same PDF queue and rendering settings as `POST /api/pdf`. It does not cache documents or forward client cookies. The POST endpoint remains available for per-request readiness selectors and print options. For the included demo, start both servers and open `http://localhost:3000/id2222.pdf`.
+The GET endpoint uses the same PDF queue and rendering settings as `POST /api/exports/pdf`. It does not cache documents or forward client cookies. The POST endpoint remains available for per-request readiness selectors and print options. For the included demo, start both servers and open `http://localhost:3000/id2222.pdf`.

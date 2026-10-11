@@ -9,7 +9,7 @@ The findings below describe the original review baseline. Each fix is maintained
 | Finding | Status  | Regression coverage                                                          |
 | ------- | ------- | ---------------------------------------------------------------------------- |
 | R1      | Fixed   | Chromium redirects, frames, script navigation, popups, and renderer recovery |
-| R2      | Pending | —                                                                            |
+| R2      | Fixed   | GET/POST XML text validation, Unicode preservation, and serialization guard  |
 | R3      | Pending | —                                                                            |
 | R4      | Pending | —                                                                            |
 | R5      | Pending | —                                                                            |

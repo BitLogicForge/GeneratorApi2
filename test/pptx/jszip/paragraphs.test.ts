@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
+import JSZip from 'jszip';
 
 import { drawing } from '@/pptx/jszip/package/namespaces';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillParagraphs } from '@/pptx/jszip/text/fill-paragraphs';
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 
@@ -33,4 +35,17 @@ test('paragraph edits preserve run properties, escape text, and do not cross par
     element.getElementsByTagNameNS(drawing, 'pPr')[0].getAttribute('lvl'),
     '1',
   );
+});
+
+test('XML serialization refuses forbidden characters without writing a package part', () => {
+  const document = new DOMParser().parseFromString(
+    `<a:t xmlns:a="${drawing}">Safe</a:t>`,
+    'application/xml',
+  );
+  document.documentElement!.textContent = 'A\u0001B';
+  const zip = new JSZip();
+  assert.throws(() => writeXml(zip, 'part.xml', document), {
+    code: 'INVALID_TEMPLATE',
+  });
+  assert.equal(zip.file('part.xml'), null);
 });

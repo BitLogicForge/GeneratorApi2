@@ -2,12 +2,13 @@ import { z } from 'zod';
 
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
+import { documentTextSchema } from '@/validation/document-text';
 
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 
 const demoQuerySchema = z
-  .object({ TEXT_ME: z.string().max(5000).default('Generated report') })
+  .object({ TEXT_ME: documentTextSchema.max(5000).default('Generated report') })
   .strict();
 
 export default function createHandler({

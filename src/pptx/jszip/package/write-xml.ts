@@ -1,10 +1,16 @@
 import { XMLSerializer } from '@xmldom/xmldom';
 
+import { documentTextSchema } from '@/validation/document-text';
+
+import { invalidTemplate } from './invalid-template.ts';
+
 import type { Document } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
 
 export function writeXml(zip: JSZip, path: string, document: Document) {
-  zip.file(path, new XMLSerializer().serializeToString(document), {
+  const xml = new XMLSerializer().serializeToString(document);
+  if (!documentTextSchema.safeParse(xml).success) throw invalidTemplate();
+  zip.file(path, xml, {
     createFolders: false,
   });
 }

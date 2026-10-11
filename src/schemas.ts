@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { hasControlCharacters } from './validation/control-characters.ts';
+import { documentTextSchema } from './validation/document-text.ts';
 
 const filename = z
   .string()
@@ -34,9 +35,9 @@ export const pdfSchema = z
 export const presentationSchema = z
   .object({
     filename: filename.default('presentation'),
-    title: z.string().min(1).max(100),
-    subtitle: z.string().max(180).default(''),
-    author: z.string().max(100).default('Generator API'),
+    title: documentTextSchema.min(1).max(100),
+    subtitle: documentTextSchema.max(180).default(''),
+    author: documentTextSchema.max(100).default('Generator API'),
     accent: z
       .string()
       .regex(/^[0-9a-fA-F]{6}$/)
@@ -45,9 +46,9 @@ export const presentationSchema = z
       .array(
         z
           .object({
-            title: z.string().min(1).max(100),
-            bullets: z.array(z.string().min(1).max(220)).min(1).max(6),
-            notes: z.string().max(3000).optional(),
+            title: documentTextSchema.min(1).max(100),
+            bullets: z.array(documentTextSchema.min(1).max(220)).min(1).max(6),
+            notes: documentTextSchema.max(3000).optional(),
           })
           .strict(),
       )
@@ -65,7 +66,7 @@ export const templatePresentationSchema = z
     replacements: z
       .record(
         z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,63}$/),
-        z.string().max(5000),
+        documentTextSchema.max(5000),
       )
       .refine(
         (value) =>

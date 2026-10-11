@@ -20,6 +20,8 @@ Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Valida
 
 PDF navigation, including every redirect hop and frame, must stay on `WEBAPP_BASE_URL`'s origin. Same-origin redirects are supported; popups and navigation outside that origin fail with 502 `NAVIGATION_BLOCKED` before the destination is requested. External assets and data requests are still allowed.
 
+All PowerPoint text fields must contain XML 1.0-compatible characters. Forbidden controls, lone UTF-16 surrogates, U+FFFE, and U+FFFF return 400 `VALIDATION_ERROR`. Tabs, line endings, and valid Unicode, including emoji, are accepted and preserved.
+
 See [examples/README.md](../examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
 
 ## Generate test output files

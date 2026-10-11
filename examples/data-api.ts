@@ -3,7 +3,12 @@ import { z } from 'zod';
 import { documentIdSchema } from '../src/pdf-route.js';
 import { loadConfig } from '../src/config.js';
 
+import { createCustomerRoute } from './data-api/customer.js';
+import { createReportSummaryRoute } from './data-api/report-summary.js';
+
 const app = express();
+app.use('/api', createCustomerRoute());
+app.use('/api', createReportSummaryRoute());
 const querySchema = z
   .object({
     language: z.string().default('en'),

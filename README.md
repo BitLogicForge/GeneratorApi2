@@ -135,7 +135,15 @@ Define upstream endpoints in `src/data-api/endpoints.ts`, exposed as `config.dat
 ```ts
 const api = new DataApiClient(config.dataApi);
 const data = await api.get('report', { id }, { language: 'en', year: 2026 });
+const customer = await api.get('customer', { id: 'customer100' });
+const summary = await api.get(
+  'reportSummary',
+  { id },
+  { language: 'en', year: 2026 },
+);
 ```
+
+The demo API also serves `GET /api/customers/:id` (customer name, industry, and contact email; no query parameters) and `GET /api/reports/:id/summary` (revenue and growth; optional `language` and `year`, defaulting to `en` and `2026`). Their response schemas live beside the endpoint registry in `src/data-api/`.
 
 See `examples/fetch-report-data.ts` for imports and complete usage. Query values can be strings, numbers, booleans, or `undefined` (omitted); they are URL-encoded automatically. Adapt `src/data-api/report-data-schema.ts` to your API's response. The example returns three table rows, twenty chart rows, and category labels, ready for the existing template helpers. Current demo exports continue using random numbers; fetching is available as a separate example for the future integration.
 

@@ -21,7 +21,7 @@ export const pdfSchema = z
     query: z
       .record(
         z.string().max(100),
-        z.union([z.string().max(2000), z.number().finite(), z.boolean()]),
+        z.union([z.string().max(2000), z.number(), z.boolean()]),
       )
       .default({}),
     filename: filename.default('document'),

@@ -4,6 +4,9 @@ import express from 'express';
 import type { AddressInfo } from 'node:net';
 import { z } from 'zod';
 import { loadConfig } from '../src/config.js';
+import request from 'supertest';
+import { createCustomerRoute } from '../examples/data-api/customer.js';
+import { createReportSummaryRoute } from '../examples/data-api/report-summary.js';
 import { DataApiClient } from '../src/services/data-api-client.js';
 
 test('data API config validates URLs and supports an unconfigured API', () => {
@@ -163,4 +166,54 @@ test('data API client encodes parameters, authenticates, validates data, and han
     }),
     { code: 'DATA_API_TIMEOUT', status: 504 },
   );
+});
+
+test('configured customer and report summary endpoints fetch typed demo responses', async (t) => {
+  const app = express();
+  app.use('/api', createCustomerRoute());
+  app.use('/api', createReportSummaryRoute());
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>((resolve) => server.once('listening', resolve));
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+  const config = loadConfig({
+    DATA_API_BASE_URL: `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`,
+  });
+  const api = new DataApiClient(config.dataApi);
+  const customer = await api.get('customer', { id: 'customer100' });
+  const email: string = customer.contactEmail;
+  assert.equal(email, 'reports@example.com');
+  assert.deepEqual(customer, {
+    id: 'customer100',
+    name: 'Acme',
+    industry: 'Manufacturing',
+    contactEmail: 'reports@example.com',
+  });
+  const summary = await api.get(
+    'reportSummary',
+    { id: 'id2222' },
+    { language: 'pl', year: 2025 },
+  );
+  const revenue: number = summary.totalRevenue;
+  assert.equal(revenue, 1250000);
+  assert.deepEqual(summary, {
+    id: 'id2222',
+    language: 'pl',
+    year: 2025,
+    totalRevenue: 1250000,
+    growthPercent: 12.5,
+  });
+  const defaults = await api.get('reportSummary', { id: 'id2222' });
+  assert.equal(defaults.language, 'en');
+  assert.equal(defaults.year, 2026);
+  await request(app).get('/api/customers/bad%20id').expect(400);
+  await request(app).get('/api/customers/customer100?unknown=true').expect(400);
+  await request(app)
+    .get('/api/reports/id2222/summary?year=invalid')
+    .expect(400);
+  await request(app)
+    .get('/api/reports/id2222/summary?unknown=true')
+    .expect(400);
 });

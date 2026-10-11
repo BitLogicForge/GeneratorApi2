@@ -131,7 +131,7 @@ test('Azure ZIP includes production assets and runs real document downloads', as
     await deck.file('ppt/slides/slide1.xml')!.async('string'),
     /Azure smoke test/,
   );
-  const pdf = await fetch(`${baseUrl}/id2222.pdf`);
+  const pdf = await fetch(`${baseUrl}/api/exports/pdf/portrait/id2222.pdf`);
   assert.equal(pdf.status, 200, pdf.ok ? '' : await pdf.text());
   assert.equal(
     Buffer.from(await pdf.arrayBuffer())

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { resolvePdfPrintSettings } from './config.ts';
 import { hasControlCharacters } from './validation/control-characters.ts';
 import { documentTextSchema } from './validation/document-text.ts';
 
@@ -28,8 +29,10 @@ export const pdfSchema = z
       .default({}),
     filename: filename.default('document'),
     waitForSelector: z.string().min(1).max(300).optional(),
-    format: z.enum(['A4', 'Letter']).default('A4'),
-    landscape: z.boolean().default(false),
+    format: z
+      .enum(['A3', 'A4', 'A5', 'A6', 'Letter', 'Legal', 'Tabloid', 'Ledger'])
+      .default(() => resolvePdfPrintSettings().format),
+    landscape: z.boolean().default(() => resolvePdfPrintSettings().landscape),
   })
   .strict();
 export const presentationSchema = z

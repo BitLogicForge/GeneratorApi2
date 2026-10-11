@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import express from 'express';
 
+import { resolvePdfPrintSettings } from '@/config';
 import { pdfSchema } from '@/schemas';
 import { WebPagePdfService } from '@/services/pdf/web-page-pdf';
 
@@ -127,5 +128,58 @@ test('navigation stays within the configured origin across redirects, frames, an
           new Promise<void>((resolve) => instance.close(() => resolve())),
       ),
     );
+  }
+});
+
+test('configured PDF appearance controls images, page size and hidden elements', async () => {
+  const webapp = express();
+  webapp.get('/print', (req, res) =>
+    res.send(`
+    <style>@media print { body { background: blue; } }</style>
+    <div class="hide-me">Hidden in configured output</div>
+    <img id="image"><script>
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 20;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'red'; ctx.fillRect(0, 0, 20, 20);
+      document.querySelector('img').src = canvas.toDataURL();
+    </script>`),
+  );
+  const server = webapp.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const config = {
+    baseUrl: `http://127.0.0.1:${(server.address() as import('node:net').AddressInfo).port}`,
+    port: 3000,
+    concurrency: 1,
+    timeout: 5000,
+  };
+  const normal = new WebPagePdfService(config);
+  const custom = new WebPagePdfService({
+    ...config,
+    pdfPrint: {
+      ...resolvePdfPrintSettings(),
+      printImages: false,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      hideSelectors: ['.hide-me'],
+      css: 'body { font-size: 18px; }',
+    },
+  });
+  try {
+    const input = pdfSchema.parse({
+      route: '/print',
+      format: 'A5',
+      landscape: true,
+    });
+    const original = (await normal.generate(input)).toString('latin1');
+    const configured = (await custom.generate(input)).toString('latin1');
+    assert.match(original, /\/Subtype \/Image/);
+    assert.doesNotMatch(configured, /\/Subtype \/Image/);
+    const box = configured.match(/\/MediaBox\s*\[0 0 ([\d.]+) ([\d.]+)\]/);
+    assert.ok(box);
+    assert.ok(Number(box[1]) > Number(box[2]), 'landscape page');
+    assert.ok(Math.abs(Number(box[1]) - 595) < 2, 'A5 landscape width');
+  } finally {
+    await Promise.all([normal.close(), custom.close()]);
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 });

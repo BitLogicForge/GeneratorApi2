@@ -6,15 +6,17 @@
 
 PDF route exports and the brief, business, and summary PowerPoint exports support GET and POST. The document-ID PDF link and DAA demo support GET. All GET exports also accept HEAD with the same query schemas: successful HEAD responses return download headers without generating a document or entering a queue, and omit the unknown `Content-Length`. HEAD checks request syntax and configured services; it does not fetch upstream data or confirm that generation will succeed. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
 
-| Endpoint                                 | Input                                                                                              | Result                   |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
-| `POST /api/exports/pdf`                  | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment           |
-| `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
-| `GET /health`                            | None                                                                                               | Process health           |
+| Endpoint                                 | Input                                                                                              | Result                           |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `POST /api/exports/pdf`                  | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
+| `GET /api/exports/pdf/portrait/:id.pdf`  | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
+| `GET /api/exports/pdf/landscape/:id.pdf` | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
+| `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment         |
+| `GET /health`                            | None                                                                                               | Process health                   |
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
-The PDF endpoint combines the route with the configured origin. Query values may be strings, numbers, or booleans. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
+The PDF endpoint combines the route with the configured origin. Query values may be strings, numbers, or booleans. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`; server defaults are configured in `pdfPrintSettings` in `src/config.ts`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
 
 Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, unsupported JSON charsets/content encodings 415, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
 
@@ -33,8 +35,10 @@ npm run test:outputs
 
 The test starts local HTTP servers, downloads real files from the routes, validates PDF/PPTX contents, and saves them in `output/routes/`:
 
-- `id2222.pdf` — default language, from `/id2222.pdf`.
-- `id2222-de.pdf` — language override, from `/id2222.pdf?language=de`.
+- `document-portrait.pdf` — portrait, default language, from `/api/exports/pdf/portrait/id2222.pdf`.
+- `document-portrait-de.pdf` — portrait, language override, from `/api/exports/pdf/portrait/id2222.pdf?language=de`.
+- `document-landscape.pdf` — landscape, from `/api/exports/pdf/landscape/id2222.pdf`.
+- `quarterly-report-portrait.pdf` and `quarterly-report-landscape.pdf` — POST payload examples from `examples/pdf/`.
 - `custom-report.pdf` — readiness selector and print options, from GET `/api/exports/pdf`.
 - `quarterly-review.pptx` — editable presentation, from GET `/api/exports/pptx/pptxgenjs/brief`.
 - `customer-proposal.pptx` — edited template, from GET `/api/exports/pptx/jszip/business`.
@@ -48,15 +52,15 @@ The tests provide their own local webapp and need no running demo server. Output
 Open this URL in your browser outside Docker:
 
 ```text
-http://localhost:3000/id2222.pdf?language=en
+http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en
 ```
 
 The document ID is the filename. Add ordinary query parameters as needed:
 
-Query parameters are optional: `http://localhost:3000/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/config.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
+Query parameters are optional: `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/config.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
 
 ```text
-http://localhost:3000/id2222.pdf?language=en&year=2026
+http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en&year=2026
 ```
 
 The API forwards those parameters to the configured webapp document route. No JSON is needed for this download URL.
@@ -104,15 +108,16 @@ No parameters are required. The objects are found by their Selection Pane names:
 
 ### All routes
 
-| Method          | Endpoint                            | Successful GET/POST response                               |
-| --------------- | ----------------------------------- | ---------------------------------------------------------- |
-| GET, HEAD       | `/health`                           | JSON process health (HEAD omits the body)                  |
-| GET, HEAD       | `/api/exports/pptx/jszip/daa`       | Native table and line chart with random data               |
-| GET, HEAD       | `/:id.pdf`                          | PDF attachment for a document ID                           |
-| GET, HEAD, POST | `/api/exports/pdf`                  | PDF attachment for a webapp route                          |
-| GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment                   |
-| GET, HEAD, POST | `/api/exports/pptx/jszip/summary`   | PowerPoint attachment with summary template text replaced  |
-| GET, HEAD, POST | `/api/exports/pptx/jszip/business`  | PowerPoint attachment with business template text replaced |
+| Method          | Endpoint                             | Successful GET/POST response                               |
+| --------------- | ------------------------------------ | ---------------------------------------------------------- |
+| GET, HEAD       | `/health`                            | JSON process health (HEAD omits the body)                  |
+| GET, HEAD       | `/api/exports/pptx/jszip/daa`        | Native table and line chart with random data               |
+| GET, HEAD       | `/api/exports/pdf/portrait/:id.pdf`  | PDF attachment for a document ID                           |
+| GET, HEAD       | `/api/exports/pdf/landscape/:id.pdf` | PDF attachment for a document ID, always landscape         |
+| GET, HEAD, POST | `/api/exports/pdf`                   | PDF attachment for a webapp route                          |
+| GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief`  | Generated editable PowerPoint attachment                   |
+| GET, HEAD, POST | `/api/exports/pptx/jszip/summary`    | PowerPoint attachment with summary template text replaced  |
+| GET, HEAD, POST | `/api/exports/pptx/jszip/business`   | PowerPoint attachment with business template text replaced |
 
 PowerPoint template names are fixed route segments: `brief` uses PptxGenJS; `business`, `summary`, and `daa` use JSZip. Exposing another template requires a dedicated route. Unknown paths return 404 `NOT_FOUND`.
 
@@ -130,19 +135,19 @@ Response (200):
 
 This checks process availability; it does not check Chromium or the upstream webapp.
 
-## GET /:id.pdf
+## GET /api/exports/pdf/portrait/:id.pdf
 
 Download a PDF using a document ID:
 
 ```bash
-curl --fail-with-body 'http://localhost:3000/id2222.pdf' \
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf' \
   --output id2222.pdf
 ```
 
 Forward additional query parameters to the webapp:
 
 ```bash
-curl --fail-with-body 'http://localhost:3000/id2222.pdf?language=en' \
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en' \
   --output id2222-en.pdf
 ```
 
@@ -159,15 +164,33 @@ WEBAPP_BASE_URL=https://other-host.example
 In `src/config.ts`:
 
 ```ts
-export const documentSettings = {
+const documentSettings = {
   defaultLanguage: 'en',
   pdfRoutePattern: '/document?id={id}',
 };
 ```
 
-Then `/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en`. That route must exist on your webapp; it is not provided by the demo.
+Then `/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en`. That route must exist on your webapp; it is not provided by the demo.
 
-Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses A4 portrait output and has no per-request readiness selector; use GET /api/exports/pdf for those options.
+Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses the configured paper format (initially A4) and always forces portrait orientation and has no per-request readiness selector; use GET /api/exports/pdf for those options.
+
+## GET /api/exports/pdf/landscape/:id.pdf
+
+Generates the same document as `/api/exports/pdf/portrait/:id.pdf`, with landscape orientation always
+forced regardless of `pdfPrintSettings.landscape`. Uses the same route pattern,
+query forwarding, default language, validation, queue and download headers.
+Query parameters are forwarded to the webapp; `landscape=false` does not change
+the PDF orientation. HEAD validates the request without generating a PDF.
+
+Compare the fixed portrait output with the fixed landscape endpoint:
+
+```bash
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en' -o portrait.pdf
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/landscape/id2222.pdf?language=en' -o landscape.pdf
+```
+
+Both responses use attachment filename `id2222.pdf`. The existing `/api/exports/pdf/portrait/:id.pdf`
+always forces portrait orientation.
 
 ## GET /api/exports/pdf
 
@@ -192,7 +215,7 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
   --output quarterly-report.pdf
 ```
 
-Equivalent GET request using the values in `examples/pdf/request.json`:
+Equivalent GET request using the values in `examples/pdf/quarterly-portrait.json`:
 
 ```bash
 curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
@@ -211,8 +234,8 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
 | `query`           | No       | Object with string, finite number, or boolean values; default `{}`                                                                              |
 | `filename`        | No       | 1–80 letters, numbers, underscores, or hyphens, without extension; default `document`                                                           |
 | `waitForSelector` | No       | Nonempty selector, up to 300 characters; generation waits for it to be visible                                                                  |
-| `format`          | No       | `A4` (default) or `Letter`                                                                                                                      |
-| `landscape`       | No       | Boolean; default `false`                                                                                                                        |
+| `format`          | No       | `A3`, `A4`, `A5`, `A6`, `Letter`, `Legal`, `Tabloid`, `Ledger`; default from `pdfPrintSettings.format` (initially `A4`)                         |
+| `landscape`       | No       | Boolean; default from `pdfPrintSettings.landscape` (initially `false`)                                                                          |
 
 Query keys may contain up to 100 characters and string values up to 2,000 characters. Unknown query fields are rejected. The route must exist on `WEBAPP_BASE_URL`. Caller cookies and authentication are not forwarded to the webapp.
 
@@ -395,3 +418,40 @@ filenames, document IDs and query strings. Server failure logs record safe error
 codes rather than raw exceptions. Disconnected responses use status 499; output
 bytes count generated attachments sent by completed responses, not wire delivery.
 PDF and PPTX capacity already have separate concurrency settings.
+
+## PDF print configuration
+
+Edit `pdfPrintSettings` in `src/config.ts` and rebuild/restart the application.
+These settings apply to all PDF endpoints. The document-ID endpoints always force their named orientation: `portrait` or `landscape`. GET/POST `/api/exports/pdf` can
+still override `format` and `landscape` per request; omitted values use the
+configured defaults.
+
+| Setting                            | Purpose / default                                                                                                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format`, `landscape`              | A3, A4, A5, A6, Letter, Legal, Tabloid or Ledger; A4 portrait by default                                                                                                    |
+| `margin`                           | Separate top/right/bottom/left margins in mm, 0–200; each defaults to 12                                                                                                    |
+| `scale`                            | Content scale, 0.1–2; default 1                                                                                                                                             |
+| `printBackground`                  | Print background colors and images; default true                                                                                                                            |
+| `printImages`                      | Show images; default true. False hides img, picture, SVG, canvas, video and image inputs while preserving their layout space, and removes CSS background/list/border images |
+| `media`                            | CSS media mode: `print` (default) or `screen`                                                                                                                               |
+| `preferCSSPageSize`                | Let the webapp's CSS `@page` size take priority over paper format; default false                                                                                            |
+| `displayHeaderFooter`              | Enable Chromium headers and footers; default false                                                                                                                          |
+| `headerTemplate`, `footerTemplate` | HTML templates, empty by default. Supported classes: `date`, `title`, `url`, `pageNumber`, `totalPages`                                                                     |
+| `hideSelectors`                    | CSS selectors to remove from print layout, e.g. `['nav', '.print-hidden']`; default []                                                                                      |
+| `css`                              | Additional CSS applied after the webapp styles; default empty string                                                                                                        |
+
+Example adjustments inside the configuration section:
+
+```ts
+margin: { top: 15, right: 10, bottom: 20, left: 10 },
+printImages: false,
+hideSelectors: ['nav', '.toolbar'],
+displayHeaderFooter: true,
+footerTemplate: '<div style="font-size:9px;width:100%;text-align:center"><span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+css: '@media print { body { font-size: 11pt; } h2 { break-after: avoid; } }',
+```
+
+Reserve sufficient top/bottom margins for headers/footers. Their templates do
+not inherit webapp styles and do not execute scripts. Image visibility applies
+to the main document; embedded iframe documents have their own styles. Hiding
+images affects appearance, not network loading. Settings are validated at startup.

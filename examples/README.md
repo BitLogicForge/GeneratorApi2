@@ -2,14 +2,14 @@
 
 Run commands from the repository root. Choose the group you need:
 
-| Folder                               | Purpose                                      | Start here                                                         |
-| ------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
-| [pdf/](pdf/)                         | Local webapp and PDF request body            | `npm run demo`, then use `pdf/request.json` with the Generator API |
-| [pptx/](pptx/)                       | Generated deck and template request bodies   | `pptx/generated.json` or `pptx/template.json`                      |
-| [data-api/single/](data-api/single/) | Fetch one report                             | `npm run example:fetch-data -- id2222 en 2026`                     |
-| [data-api/chain/](data-api/chain/)   | Use one response to request another          | `npm run example:fetch-chain -- id2222 en 2026`                    |
-| [data-api/batch/](data-api/batch/)   | Fetch an ID list, then collect reports by ID | `npm run example:fetch-batch -- dict en 2026`                      |
-| [data-api/server/](data-api/server/) | Synthetic API shared by the data examples    | `npm run demo:data-api`                                            |
+| Folder                               | Purpose                                         | Start here                                      |
+| ------------------------------------ | ----------------------------------------------- | ----------------------------------------------- |
+| [pdf/](pdf/)                         | HTML source and portrait/landscape PDF requests | [PDF guide](pdf/README.md)                      |
+| [pptx/](pptx/)                       | Generated deck and template request bodies      | `pptx/generated.json` or `pptx/template.json`   |
+| [data-api/single/](data-api/single/) | Fetch one report                                | `npm run example:fetch-data -- id2222 en 2026`  |
+| [data-api/chain/](data-api/chain/)   | Use one response to request another             | `npm run example:fetch-chain -- id2222 en 2026` |
+| [data-api/batch/](data-api/batch/)   | Fetch an ID list, then collect reports by ID    | `npm run example:fetch-batch -- dict en 2026`   |
+| [data-api/server/](data-api/server/) | Synthetic API shared by the data examples       | `npm run demo:data-api`                         |
 
 ## Data API examples
 
@@ -38,12 +38,17 @@ Endpoint paths and response schemas are configured in [src/data-api/](../src/dat
 With Generator API running:
 
 ```bash
-curl -X POST http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/request.json -o report.pdf
+curl -X POST http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json -o report.pdf
 curl -X POST http://localhost:3000/api/exports/pptx/pptxgenjs/brief -H 'Content-Type: application/json' --data-binary @examples/pptx/generated.json -o brief.pptx
 curl -X POST http://localhost:3000/api/exports/pptx/jszip/business -H 'Content-Type: application/json' --data-binary @examples/pptx/template.json -o proposal.pptx
 ```
 
-PDF generation needs the demo webapp (`npm run demo`). [pptx/create-template.ts](pptx/create-template.ts) recreates the business source template when explicitly run; it is not needed to try the request examples.
+For PDF file roles, portrait/landscape requests and generated output names,
+see [pdf/README.md](pdf/README.md). PDF generation needs the demo webapp
+(`npm run demo`).
+
+[pptx/create-template.ts](pptx/create-template.ts) recreates the business source
+template when explicitly run; it is not needed to try the request examples.
 
 Distant source imports use `@/` for `src/` (for example `@/config`), and tests can use `@examples/` for example modules. Aliases omit file extensions; nearby imports remain relative with `.ts`.
 

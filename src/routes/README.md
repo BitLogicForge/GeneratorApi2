@@ -4,17 +4,23 @@ PowerPoint API routes are grouped by engine: `api/exports/pptx/jszip/`
 contains existing-file templates (`business`, `summary`, and `daa`), and
 `api/exports/pptx/pptxgenjs/` contains code-generated designs (`brief`).
 
+PDF routes all live in `api/exports/pdf/`: the base endpoint accepts a webapp
+route, while `portrait/[id].pdf` and `landscape/[id].pdf` resolve a document ID
+and force the named orientation. `document-handler.ts` is their shared HTTP
+handler; `handler.ts` handles the base GET/POST endpoint.
+
 Folders define the URL. Lowercase method files define the HTTP method:
 
-| File                                      | Endpoint                                |
-| ----------------------------------------- | --------------------------------------- |
-| `health/get.ts`                           | `GET /health`                           |
-| `api/exports/pdf/post.ts`                 | `POST /api/exports/pdf`                 |
-| `api/exports/pptx/pptxgenjs/brief/get.ts` | `GET /api/exports/pptx/pptxgenjs/brief` |
-| `api/exports/pptx/jszip/business/post.ts` | `POST /api/exports/pptx/jszip/business` |
-| `[id].pdf/get.ts`                         | `GET /:id.pdf`                          |
-| `api/exports/pptx/jszip/daa/get.ts`       | `GET /api/exports/pptx/jszip/daa`       |
-| `get.ts`                                  | `GET /` (if added)                      |
+| File                                        | Endpoint                                 |
+| ------------------------------------------- | ---------------------------------------- |
+| `health/get.ts`                             | `GET /health`                            |
+| `api/exports/pdf/post.ts`                   | `POST /api/exports/pdf`                  |
+| `api/exports/pptx/pptxgenjs/brief/get.ts`   | `GET /api/exports/pptx/pptxgenjs/brief`  |
+| `api/exports/pptx/jszip/business/post.ts`   | `POST /api/exports/pptx/jszip/business`  |
+| `api/exports/pdf/portrait/[id].pdf/get.ts`  | `GET /api/exports/pdf/portrait/:id.pdf`  |
+| `api/exports/pdf/landscape/[id].pdf/get.ts` | `GET /api/exports/pdf/landscape/:id.pdf` |
+| `api/exports/pptx/jszip/daa/get.ts`         | `GET /api/exports/pptx/jszip/daa`        |
+| `get.ts`                                    | `GET /` (if added)                       |
 
 Supported filenames: `get.ts`, `post.ts`, `put.ts`, `patch.ts`, `delete.ts`,
 `head.ts`, `options.ts`. `[name]` becomes a named parameter; suffixes such as

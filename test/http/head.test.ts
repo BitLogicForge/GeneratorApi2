@@ -23,7 +23,16 @@ test('HEAD export metadata validates query inputs without entering queues or gen
     queues,
   });
   const routes = [
-    { path: '/id2222.pdf', query: { language: 'de' }, filename: 'id2222.pdf' },
+    {
+      path: '/api/exports/pdf/portrait/id2222.pdf',
+      query: { language: 'de' },
+      filename: 'id2222.pdf',
+    },
+    {
+      path: '/api/exports/pdf/landscape/id2222.pdf',
+      query: { language: 'de' },
+      filename: 'id2222.pdf',
+    },
     {
       path: '/api/exports/pdf',
       query: {
@@ -76,8 +85,8 @@ test('HEAD export metadata validates query inputs without entering queues or gen
     assert.ok(response.headers['x-request-id']);
   }
   for (const path of [
-    '/bad%2Fid.pdf',
-    '/id2222.pdf?language=en&language=de',
+    '/api/exports/pdf/portrait/bad%2Fid.pdf',
+    '/api/exports/pdf/portrait/id2222.pdf?language=en&language=de',
     '/api/exports/pdf?route=/report&landscape=wrong',
     '/api/exports/pdf?route=/report&unknown=1',
     '/api/exports/pdf?route=/report&query=wrong',

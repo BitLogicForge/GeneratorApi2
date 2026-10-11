@@ -19,7 +19,7 @@ Set `WEBAPP_BASE_URL` to your webapp's origin. The API defaults to port 3000 and
 curl http://localhost:3000/health
 curl -X POST http://localhost:3000/api/exports/pdf \
   -H 'Content-Type: application/json' \
-  --data-binary @examples/pdf/request.json --output report.pdf
+  --data-binary @examples/pdf/quarterly-portrait.json --output report.pdf
 curl -X POST http://localhost:3000/api/exports/pptx/pptxgenjs/brief \
   -H 'Content-Type: application/json' \
   --data-binary @examples/pptx/generated.json --output presentation.pptx

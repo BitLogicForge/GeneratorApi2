@@ -1,5 +1,6 @@
 import { chromium, errors } from 'playwright';
 
+import { resolvePdfPrintSettings } from '@/config';
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
 
@@ -29,7 +30,7 @@ export class WebPagePdfService {
     private readonly config: Pick<
       Config,
       'baseUrl' | 'concurrency' | 'timeout' | 'port'
-    >,
+    > & { pdfPrint?: Config['pdfPrint'] },
   ) {}
   /** Shares one Chromium launch across requests and permits relaunch after failure or disconnect. */
   async browser() {
@@ -96,17 +97,33 @@ export class WebPagePdfService {
             await page
               .locator(input.waitForSelector)
               .waitFor({ state: 'visible' });
+          const settings = this.config.pdfPrint ?? resolvePdfPrintSettings();
+          await page.emulateMedia({ media: settings.media });
+          const styles = [settings.css];
+          if (!settings.printImages)
+            styles.push(
+              'img, svg, canvas, video, picture, input[type="image"] { visibility: hidden !important; } * , *::before, *::after { background-image: none !important; list-style-image: none !important; border-image-source: none !important; }',
+            );
+          for (const selector of settings.hideSelectors)
+            styles.push(`${selector} { display: none !important; }`);
+          if (styles.some(Boolean))
+            await page.addStyleTag({ content: styles.join('\n') });
           await page.evaluate(() => document.fonts.ready);
           return page.pdf({
             format: input.format,
             landscape: input.landscape,
-            printBackground: true,
-            margin: {
-              top: '12mm',
-              right: '12mm',
-              bottom: '12mm',
-              left: '12mm',
-            },
+            printBackground: settings.printBackground,
+            scale: settings.scale,
+            preferCSSPageSize: settings.preferCSSPageSize,
+            displayHeaderFooter: settings.displayHeaderFooter,
+            headerTemplate: settings.headerTemplate,
+            footerTemplate: settings.footerTemplate,
+            margin: Object.fromEntries(
+              Object.entries(settings.margin).map(([side, mm]) => [
+                side,
+                `${mm}mm`,
+              ]),
+            ),
           });
         })(),
         navigationFailure,

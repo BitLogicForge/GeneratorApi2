@@ -27,6 +27,11 @@ test('download real documents from HTTP routes and save output files', async (t)
       `<html><body><h1 data-ready>${language === 'de' ? 'Dokument' : 'Document'} id2222</h1><p>Language: ${language}</p></body></html>`,
     );
   });
+  webapp.get('/reports/quarterly', (req, res) => {
+    res.send(
+      '<html><body><h1 data-report-ready>Quarterly report</h1><p>Projects delivered: 12</p></body></html>',
+    );
+  });
   const upstream = webapp.listen(0, '127.0.0.1');
   await new Promise<void>((resolve) => upstream.once('listening', resolve));
   const pdf = new WebPagePdfService({
@@ -55,8 +60,18 @@ test('download real documents from HTTP routes and save output files', async (t)
     route: string,
     filename: string,
     expectedText?: string,
+    payload?: Record<string, unknown>,
   ) => {
-    const response = await fetch(`${baseUrl}${route}`);
+    const response = await fetch(
+      `${baseUrl}${route}`,
+      payload
+        ? {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }
+        : undefined,
+    );
     assert.equal(
       response.status,
       200,
@@ -75,6 +90,22 @@ test('download real documents from HTTP routes and save output files', async (t)
       );
       assert.equal(bytes.subarray(0, 5).toString(), '%PDF-');
       assert.match(bytes.subarray(-1024).toString(), /%%EOF/);
+      if (
+        route.startsWith('/api/exports/pdf/portrait/') ||
+        route.startsWith('/api/exports/pdf/landscape/') ||
+        payload
+      ) {
+        const box = bytes
+          .toString('latin1')
+          .match(/\/MediaBox\s*\[0 0 ([\d.]+) ([\d.]+)\]/);
+        assert.ok(box);
+        assert.equal(
+          Number(box[1]) > Number(box[2]),
+          payload
+            ? payload.landscape === true
+            : route.startsWith('/api/exports/pdf/landscape/'),
+        );
+      }
     } else {
       assert.match(
         response.headers.get('content-type') ?? '',
@@ -99,12 +130,24 @@ test('download real documents from HTTP routes and save output files', async (t)
   };
   try {
     await t.test('simple PDF URL with default language', async () => {
-      await save('/id2222.pdf', 'id2222.pdf');
+      await save(
+        '/api/exports/pdf/portrait/id2222.pdf',
+        'document-portrait.pdf',
+      );
       assert.equal(languages.at(-1), 'en');
     });
     await t.test('simple PDF URL with language override', async () => {
-      await save('/id2222.pdf?language=de', 'id2222-de.pdf');
+      await save(
+        '/api/exports/pdf/portrait/id2222.pdf?language=de',
+        'document-portrait-de.pdf',
+      );
       assert.equal(languages.at(-1), 'de');
+    });
+    await t.test('document PDF with fixed landscape orientation', async () => {
+      await save(
+        '/api/exports/pdf/landscape/id2222.pdf',
+        'document-landscape.pdf',
+      );
     });
     await t.test('PDF API with readiness and print options', async () => {
       const params = new URLSearchParams({
@@ -116,6 +159,28 @@ test('download real documents from HTTP routes and save output files', async (t)
       });
       await save(`/api/exports/pdf?${params}`, 'custom-report.pdf');
     });
+    for (const orientation of ['portrait', 'landscape']) {
+      await t.test(
+        `quarterly ${orientation} POST request example`,
+        async () => {
+          const payload = JSON.parse(
+            await readFile(
+              new URL(
+                `../../examples/pdf/quarterly-${orientation}.json`,
+                import.meta.url,
+              ),
+              'utf8',
+            ),
+          );
+          await save(
+            '/api/exports/pdf',
+            `${payload.filename}.pdf`,
+            undefined,
+            payload,
+          );
+        },
+      );
+    }
     await t.test('generated editable PowerPoint', async () => {
       const payload = JSON.parse(
         await readFile(

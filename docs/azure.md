@@ -71,7 +71,7 @@ Verify after deployment:
 ```bash
 curl --fail-with-body https://YOUR_WEB_APP.azurewebsites.net/health
 curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/api/exports/pptx/jszip/daa?TEXT_ME=Azure%20demo' --output demo-report.pptx
-curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/id2222.pdf?language=en' --output id2222.pdf
+curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/api/exports/pdf/portrait/id2222.pdf?language=en' --output id2222.pdf
 ```
 
 The PDF request requires a matching document page on `WEBAPP_BASE_URL`. `/health` verifies process availability; it does not render a document. Browser/library downloads on first startup can lengthen startup time; inspect App Service logs if startup fails.

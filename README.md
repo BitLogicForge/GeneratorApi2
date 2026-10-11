@@ -27,7 +27,7 @@ curl http://localhost:3000/internal/ready
 curl http://localhost:3000/internal/metrics
 curl -X POST http://localhost:3000/api/exports/pdf \
   -H 'Content-Type: application/json' \
-  --data-binary @examples/pdf/request.json --output report.pdf
+  --data-binary @examples/pdf/quarterly-portrait.json --output report.pdf
 ```
 
 ## Documentation

@@ -14,7 +14,7 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/schemas.ts](../src/schemas.ts)                                                                                                                    | Defines accepted export inputs, validation rules, and inferred TypeScript types.                               |
 | [src/pdf-route.ts](../src/pdf-route.ts)                                                                                                                | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
 | [src/routes/health/get.ts](../src/routes/health/get.ts)                                                                                                | Handles `GET /health`.                                                                                         |
-| [src/routes/[id].pdf/get.ts](src/routes/[id].pdf/get.ts)                                                                                               | Handles `GET /:id.pdf`.                                                                                        |
+| [src/routes/api/exports/pdf/portrait/[id].pdf/get.ts](../src/routes/api/exports/pdf/portrait/[id].pdf/get.ts)                                          | Handles `GET /api/exports/pdf/portrait/:id.pdf`.                                                               |
 | [src/routes/api/exports/pdf/](../src/routes/api/exports/pdf/)                                                                                          | Handles `GET/POST /api/exports/pdf`.                                                                           |
 | [src/routes/api/exports/pptx/jszip/daa/get.ts](../src/routes/api/exports/pptx/jszip/daa/get.ts)                                                        | Handles `GET /api/exports/pptx/jszip/daa`.                                                                     |
 | [src/routes/api/exports/pptx/pptxgenjs/brief/](../src/routes/api/exports/pptx/pptxgenjs/brief/)                                                        | Handles `GET/POST /api/exports/pptx/pptxgenjs/brief`.                                                          |
@@ -56,6 +56,7 @@ src/
   schemas.ts               runtime validation and inferred input types
   errors.ts                application errors
   queue/generation-queue.ts bounded FIFO queues and admission control
+  services/pdf/document-pdf.ts          document route and language defaults
   services/pdf/web-page-pdf.ts          webapp PDF rendering and browser cleanup
   services/pptxgenjs/power-point-generation-service.ts new PPTX decks from slide data
   services/jszip/power-point-template-service.ts   text replacement in existing PPTX files
@@ -67,3 +68,12 @@ src/
 Services are injected into `createApp`, keeping HTTP handling independent from document generation. To add a presentation template, implement the `PresentationTemplate` function type and register it in `PowerPointGenerationService`. It receives a fresh deck and validated input. Add template-specific schemas when new templates need different fields. Add new output formats as separate services and routes.
 
 Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
+
+Document PDF links share their HTTP handler in
+[src/routes/api/exports/pdf/document-handler.ts](../src/routes/api/exports/pdf/document-handler.ts).
+It validates path/query input and sends queued downloads. Document route
+resolution, reserved query checks and language defaults live in
+[src/services/pdf/document-pdf.ts](../src/services/pdf/document-pdf.ts), which
+has no Express dependency. Request usage is recorded centrally by
+`src/http/observability.ts`; `src/http/download.ts` records queue time,
+generation time and output bytes for both portrait and landscape links.

@@ -16,6 +16,64 @@ const documentSettings = {
   pdfRoutePattern: '/documents/{id}',
 };
 
+// PDF appearance: margins are in millimetres; scale accepts 0.1–2.
+// These defaults apply to every PDF endpoint. Rebuild after editing.
+const pdfPrintSettings = {
+  format: 'A4',
+  landscape: false,
+  margin: { top: 12, right: 12, bottom: 12, left: 12 },
+  scale: 1,
+  printBackground: true,
+  printImages: true,
+  media: 'print',
+  preferCSSPageSize: false,
+  displayHeaderFooter: false,
+  // Chromium supports date, title, url, pageNumber and totalPages classes.
+  headerTemplate: '<span></span>',
+  footerTemplate: '<span></span>',
+  hideSelectors: [] as string[],
+  // Applied after the webapp styles; use @media print for print-only rules.
+  css: '',
+};
+
+const pdfPrintSettingsSchema = z
+  .object({
+    format: z.enum([
+      'A3',
+      'A4',
+      'A5',
+      'A6',
+      'Letter',
+      'Legal',
+      'Tabloid',
+      'Ledger',
+    ]),
+    landscape: z.boolean(),
+    margin: z
+      .object({
+        top: z.number().min(0).max(200),
+        right: z.number().min(0).max(200),
+        bottom: z.number().min(0).max(200),
+        left: z.number().min(0).max(200),
+      })
+      .strict(),
+    scale: z.number().min(0.1).max(2),
+    printBackground: z.boolean(),
+    printImages: z.boolean(),
+    media: z.enum(['print', 'screen']),
+    preferCSSPageSize: z.boolean(),
+    displayHeaderFooter: z.boolean(),
+    headerTemplate: z.string().max(20000),
+    footerTemplate: z.string().max(20000),
+    hideSelectors: z.array(z.string().trim().min(1).max(300)).max(100),
+    css: z.string().max(50000),
+  })
+  .strict();
+
+export function resolvePdfPrintSettings(settings = pdfPrintSettings) {
+  return pdfPrintSettingsSchema.parse(settings);
+}
+
 /** Validates settings before startup and exposes the webapp origin as the PDF navigation boundary. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const documents = z
@@ -99,6 +157,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       );
   }
   return {
+    pdfPrint: resolvePdfPrintSettings(),
     host: c.HOST,
     dataApi: {
       endpoints: dataApiEndpoints,

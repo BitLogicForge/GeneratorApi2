@@ -6,16 +6,16 @@ Reviewed on 2026-10-11. Scope: application wiring, GET/POST contracts, validatio
 
 The findings below describe the original review baseline. Each fix is maintained in a separate commit.
 
-| Finding | Status  | Regression coverage                                                                        |
-| ------- | ------- | ------------------------------------------------------------------------------------------ |
-| R1      | Fixed   | Chromium redirects, frames, script navigation, popups, and renderer recovery               |
-| R2      | Fixed   | GET/POST XML text validation, Unicode preservation, and serialization guard                |
-| R3      | Fixed   | CI verification fails on lint/install/test errors; packaging smoke test gates deployment   |
-| R4      | Fixed   | All export HEAD metadata, validation, unavailable services, and zero generation/queue work |
-| R5      | Fixed   | Embedded workbook grow/shrink, retained text/styles, dedicated ranges, and implicit cells  |
-| R6      | Pending | —                                                                                          |
+| Finding | Status | Regression coverage                                                                         |
+| ------- | ------ | ------------------------------------------------------------------------------------------- |
+| R1      | Fixed  | Chromium redirects, frames, script navigation, popups, and renderer recovery                |
+| R2      | Fixed  | GET/POST XML text validation, Unicode preservation, and serialization guard                 |
+| R3      | Fixed  | CI verification fails on lint/install/test errors; packaging smoke test gates deployment    |
+| R4      | Fixed  | All export HEAD metadata, validation, unavailable services, and zero generation/queue work  |
+| R5      | Fixed  | Embedded workbook grow/shrink, retained text/styles, dedicated ranges, and implicit cells   |
+| R6      | Fixed  | Charset/encoding 415 responses, existing 400/413 responses, logging, and generic 500 safety |
 
-The project has a good foundation for an internal document service. The most useful next steps are to fix the confirmed correctness gaps, make the existing checks mandatory in CI, and connect the typed data client to a real report export. Keep the current separation between HTTP handling, services, and document helpers.
+The project has a good foundation for an internal document service. The six prioritized fixes are now implemented. The remaining recommendations focus on connecting the typed data client to a real report export and improving operability. Keep the current separation between HTTP handling, services, and document helpers.
 
 ## What is already working well
 
@@ -194,18 +194,18 @@ Once jobs exist, a batch export returning a ZIP of several PDFs/PPTXs becomes us
 
 ## Documentation and packaging gaps to clean up
 
-- [docs/azure.md:73](azure.md#L73) uses `/demo-report.pptx` in its smoke example, but the current route is `/api/exports/pptx/jszip/daa`. The HTTP tests explicitly verify that the old URL returns 404.
-- The overview and “All routes” tables in [docs/endpoints.md](endpoints.md) are incomplete: summary and supported POST variants should be included. Keep a single canonical endpoint matrix to reduce drift.
+- **Resolved with R3:** [docs/azure.md](azure.md) now uses `/api/exports/pptx/jszip/daa` in the smoke example instead of the obsolete `/demo-report.pptx` URL.
+- **Resolved with R4:** the canonical endpoint matrix in [docs/endpoints.md](endpoints.md) now includes summary, POST, and HEAD variants.
 - [build-azure.mjs:66](../scripts/build-azure.mjs#L66) and [the package test](../test/deployment/azure-package.ts) explicitly require business and DAA templates, but not the registered summary template. All `.pptx` files are copied today; add explicit validation and a summary-download smoke case so a missing summary file is caught before deployment.
 - Add Knip to the “verify and rebuild” instructions in [docs/development.md](development.md), matching the repository's change requirements.
 
 ## Suggested implementation order
 
-1. **Correctness:** fix R1 and R2, then R4–R6, each with an observable regression test. Enable the CI verification gate and repair stale endpoint documentation.
+1. **Completed:** R1–R6 now have regression coverage, deployment is gated on verification and package smoke tests, and affected endpoint documentation is updated.
 2. **Useful reporting:** implement one real ID-based PowerPoint report, template preflight/catalog metadata, a reliable PDF readiness policy, and report provenance. Verify it with deterministic upstream fixtures and actual document inspection.
 3. **Operate with evidence:** add timing/queue metrics, readiness, shutdown tests, and representative load measurements. Introduce background jobs, bundles, previews, or heavier performance changes when those measurements and consumer needs justify them.
 
-## Verification performed
+## Verification performed during the initial review
 
 | Check                               | Result                                                                     |
 | ----------------------------------- | -------------------------------------------------------------------------- |
@@ -215,8 +215,23 @@ Once jobs exist, a batch export returning a ZIP of several PDFs/PPTXs becomes us
 | `npm run build`                     | Passed                                                                     |
 | Temporary local reproduction checks | Confirmed R1, R2, R4, R5, and R6                                           |
 
-The reproduction checks used temporary files and localhost servers. Findings R3 and the documentation/packaging gaps came from inspection. This review adds the report; it does not implement the proposed application changes.
+The initial reproduction checks used temporary files and localhost servers. Findings R3 and the documentation/packaging gaps came from inspection. That review added only the report; the subsequent fixes are tracked above.
 
 Report formatting passed `npx --no-install prettier --check docs/project-review.md`.
 
-Azure packaging/deployment, `npm run test:azure`, `npm run test:outputs`, Office visual inspection, dependency vulnerability scanning, and production load testing were not run. There are no outstanding blockers to delivering the report. Passing checks establish the current baseline; they do not cover the newly reproduced cases.
+Azure packaging/deployment, `npm run test:azure`, `npm run test:outputs`, Office visual inspection, dependency vulnerability scanning, and production load testing were not run during the initial review.
+
+## Verification after the fixes
+
+| Check                  | Result                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `npm test`             | Passed: 76 tests, zero failures or skips, including the new regression cases |
+| `npm run typecheck`    | Passed                                                                       |
+| `npm run knip`         | Passed                                                                       |
+| Code lint              | Passed through the commit hooks                                              |
+| `npm run format:check` | Passed                                                                       |
+| `npm run build`        | Passed                                                                       |
+| `npm run build:azure`  | Passed with the final application changes                                    |
+| `npm run test:azure`   | Passed: the resulting ZIP runs real PDF and PPTX downloads                   |
+
+The GitLab pipeline and Azure deployment were not run remotely. Pipeline failure propagation was tested locally, and the deployment artifact was built and smoke-tested locally. Office visual inspection and production load testing remain outside these fixes.

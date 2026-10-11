@@ -16,7 +16,7 @@ PowerPoint's `brief` template creates a dark cover and light numbered content sl
 
 The PDF endpoint combines the route with the configured origin. Query values may be strings, numbers, or booleans. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
 
-Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
+Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, unsupported JSON charsets/content encodings 415, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
 
 PDF navigation, including every redirect hop and frame, must stay on `WEBAPP_BASE_URL`'s origin. Same-origin redirects are supported; popups and navigation outside that origin fail with 502 `NAVIGATION_BLOCKED` before the destination is requested. External assets and data requests are still allowed.
 
@@ -333,15 +333,16 @@ Errors return JSON in this shape:
 
 `details` appears for validation errors. Actual details and request IDs vary.
 
-| HTTP status | Meaning                                                                                      |
-| ----------- | -------------------------------------------------------------------------------------------- |
-| 400         | Invalid parameters, malformed JSON, invalid replacement keys, or reserved GET PDF query keys |
-| 404         | Unknown API endpoint or presentation template                                                |
-| 413         | POST JSON body exceeds the 100 KB limit                                                      |
-| 500         | Unexpected document generation failure                                                       |
-| 502         | Upstream webapp HTTP failure                                                                 |
-| 503         | Queue full, queue wait expired, or queue unavailable; includes `Retry-After: 5`              |
-| 504         | Rendering timeout                                                                            |
+| HTTP status | Meaning                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------- |
+| 400         | Invalid parameters, malformed JSON, invalid replacement keys, or reserved GET PDF query keys          |
+| 404         | Unknown API endpoint or presentation template                                                         |
+| 413         | POST JSON body exceeds the 100 KB limit                                                               |
+| 415         | Unsupported JSON charset (`UNSUPPORTED_CHARSET`) or content encoding (`UNSUPPORTED_CONTENT_ENCODING`) |
+| 500         | Unexpected document generation failure                                                                |
+| 502         | Upstream webapp HTTP failure                                                                          |
+| 503         | Queue full, queue wait expired, or queue unavailable; includes `Retry-After: 5`                       |
+| 504         | Rendering timeout                                                                                     |
 
 With `curl --fail-with-body`, HTTP errors produce a nonzero exit code. When `--output` is supplied, the error response body is also written to that file, so check the command's exit status before opening it as a PDF or PPTX.
 

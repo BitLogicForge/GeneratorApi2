@@ -4,6 +4,37 @@ import { AppError } from '@/errors';
 
 import type { ErrorRequestHandler } from 'express';
 
+const parserErrors = new Map([
+  [
+    'entity.too.large',
+    {
+      status: 413,
+      code: 'BODY_TOO_LARGE',
+      message: 'Request body is too large',
+    },
+  ],
+  [
+    'entity.parse.failed',
+    { status: 400, code: 'INVALID_JSON', message: 'Invalid JSON body' },
+  ],
+  [
+    'charset.unsupported',
+    {
+      status: 415,
+      code: 'UNSUPPORTED_CHARSET',
+      message: 'Unsupported JSON charset',
+    },
+  ],
+  [
+    'encoding.unsupported',
+    {
+      status: 415,
+      code: 'UNSUPPORTED_CONTENT_ENCODING',
+      message: 'Unsupported content encoding',
+    },
+  ],
+]);
+
 /** Maps failures to the public error contract while keeping unexpected error details in server logs. */
 export function createErrorHandler(
   logger: Pick<Console, 'error'>,
@@ -12,37 +43,26 @@ export function createErrorHandler(
     if (res.destroyed) return;
     if (res.headersSent) return next(error);
     const validation = error instanceof ZodError;
-    const status = validation
-      ? 400
+    const publicError = validation
+      ? {
+          status: 400,
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request parameters',
+        }
       : error instanceof AppError
-        ? error.status
-        : error.type === 'entity.too.large'
-          ? 413
-          : error.type === 'entity.parse.failed'
-            ? 400
-            : 500;
+        ? error
+        : (parserErrors.get(error?.type) ?? {
+            status: 500,
+            code: 'INTERNAL_ERROR',
+            message: 'Document generation failed',
+          });
+    const { status, code, message } = publicError;
     if (status === 503) res.set('Retry-After', '5');
     if (status >= 500) logger.error({ requestId: res.locals.requestId, error });
     res.status(status).json({
       error: {
-        code: validation
-          ? 'VALIDATION_ERROR'
-          : error instanceof AppError
-            ? error.code
-            : status === 400
-              ? 'INVALID_JSON'
-              : status === 413
-                ? 'BODY_TOO_LARGE'
-                : 'INTERNAL_ERROR',
-        message: validation
-          ? 'Invalid request parameters'
-          : error instanceof AppError
-            ? error.message
-            : status === 400
-              ? 'Invalid JSON body'
-              : status === 413
-                ? 'Request body is too large'
-                : 'Document generation failed',
+        code,
+        message,
         ...(validation && {
           details: error.issues.map(({ path, message }) => ({ path, message })),
         }),

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { LRUCache } from 'lru-cache';
 
+import { dataApiCacheDefaults } from '@/config';
 import { AppError } from '@/errors';
 
 import { requestDataApi } from './data-api/request.ts';
@@ -38,11 +39,8 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
     | undefined;
 
   constructor(private readonly config: ClientConfig<Endpoints>) {
-    const {
-      ttlMs = 30000,
-      maxEntries = 500,
-      maxBytes = 16777216,
-    } = config.cache ?? {};
+    const { ttlMs, maxEntries, maxBytes } =
+      config.cache ?? dataApiCacheDefaults;
     if (ttlMs > 0) {
       this.cache = new LRUCache({
         max: maxEntries,

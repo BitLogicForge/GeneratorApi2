@@ -314,6 +314,8 @@ Slide and speaker-note text is replaced while the original template file stays u
 
 Success returns 200 with `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` and the attachment filename plus `.pptx`.
 
+DAA object names and demo data dimensions are configured together in `templateSettings` at the top of `src/services/jszip/daa-poc-presentation-service.ts`. The required-name list is derived from that configuration. The HTTP query parameter remains `TEXT_ME` even if the template’s text object is renamed.
+
 Source PPTX templates are validated and cached in memory per service instance. Restart the API after replacing a template file. Each generation uses a fresh archive and still produces new document data.
 
 ## Responses and errors

@@ -3,6 +3,13 @@ import { z } from 'zod';
 import { dataApiEndpoints } from './data-api/endpoints.ts';
 import { pdfRoutePatternSchema } from './pdf-route.ts';
 
+// Shared defaults for environment configuration and directly constructed clients.
+export const dataApiCacheDefaults = {
+  ttlMs: 30000,
+  maxEntries: 500,
+  maxBytes: 16 * 1024 * 1024,
+};
+
 // Application behavior: edit these values here, then rebuild the deployment package.
 const documentSettings = {
   defaultLanguage: 'en',
@@ -41,19 +48,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
         .int()
         .min(0)
         .max(3600000)
-        .default(30000),
+        .default(dataApiCacheDefaults.ttlMs),
       DATA_API_CACHE_MAX_ENTRIES: z.coerce
         .number()
         .int()
         .min(1)
         .max(10000)
-        .default(500),
+        .default(dataApiCacheDefaults.maxEntries),
       DATA_API_CACHE_MAX_BYTES: z.coerce
         .number()
         .int()
         .min(1)
         .max(268435456)
-        .default(16777216),
+        .default(dataApiCacheDefaults.maxBytes),
       PDF_CONCURRENCY: z.coerce.number().int().min(1).max(10).default(2),
       PPTX_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(4),
       QUEUE_MAX_PENDING: z.coerce.number().int().min(0).max(2000).default(200),

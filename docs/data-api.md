@@ -12,6 +12,8 @@ DATA_API_CACHE_MAX_ENTRIES=500
 DATA_API_CACHE_MAX_BYTES=16777216
 ```
 
+Default cache settings are defined once in `dataApiCacheDefaults` in `src/config.ts`; environment overrides and directly constructed clients use those same defaults.
+
 Set `DATA_API_CACHE_TTL_MS=0` to disable caching. Values expire after the configured interval from insertion; reads do not extend it. Stale values are not served. Configure a shorter TTL or disable caching when fresh data is required. Restarting the process or creating a new client discards cached values.
 
 Keys distinguish endpoints, full upstream URLs with sorted query parameters, and a hash of the bearer token. Keep endpoint definitions and schemas unchanged during a client's lifetime; create a new client when those contracts change. Simultaneous misses for the same key share one fetch and validation. Errors are not cached, and each caller receives a deep copy so mutations cannot affect later reads.

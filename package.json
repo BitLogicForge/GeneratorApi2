@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Extensible Express API for webapp PDFs and editable PowerPoint presentations",
   "scripts": {
+    "prepare": "node scripts/install-hooks.mjs",
+    "precommit": "lint-staged && npm run lint:code && npm run typecheck && npm run knip",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
@@ -44,7 +46,9 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "@types/supertest": "^7.2.1",
+    "husky": "^9.1.7",
     "knip": "^6.41.0",
+    "lint-staged": "^17.6.0",
     "npm-check-updates": "^23.1.1",
     "oxlint": "^1.87.0",
     "oxlint-tsgolint": "^7.0.2004",
@@ -61,5 +65,8 @@
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "lint-staged": {
+    "*.{ts,js,mjs,cjs,json,md,yml,yaml}": "prettier --write --ignore-unknown"
   }
 }

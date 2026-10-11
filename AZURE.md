@@ -102,3 +102,5 @@ Give the service principal deployment permissions for the webapp and its slots (
 Create the `dev` slot in Azure before running the pipeline. Configure the Node.js runtime, `bash scripts/start-azure.sh` startup command, and `SCM_DO_BUILD_DURING_DEPLOYMENT=false` on both production and the slot. Set application variables such as `WEBAPP_BASE_URL` and `DATA_API_TOKEN` separately for each target in Azure; no `.env` file is packaged. Mark environment-specific values as deployment slot settings. Disable automatic slot swapping if `dev` should remain separate from production.
 
 See [GitLab branch rules](https://docs.gitlab.com/ci/jobs/job_rules/) and [Azure CLI ZIP deployment](https://learn.microsoft.com/en-us/cli/azure/webapp#az-webapp-deploy).
+
+The package includes `scripts/install-hooks.mjs` for the npm `prepare` lifecycle. It skips Husky installation when production dependencies are installed, so Azure does not require Git hooks or development dependencies.

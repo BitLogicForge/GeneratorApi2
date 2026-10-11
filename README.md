@@ -355,6 +355,12 @@ npm run build:azure
 npm run test:azure
 ```
 
+## Pre-commit checks
+
+`npm ci` installs Husky's local Git hook. Before each commit, `lint-staged` formats supported staged files with Prettier and updates those files in the commit. It preserves unstaged edits, including partially staged files. Then Oxlint, TypeScript, and Knip check the working tree; a failed check blocks the commit. The hook does not run document rendering tests.
+
+Run `npm run precommit` manually to perform the same actions, or `npm run prepare` to reinstall the hook. CI, production installs, and folders without Git metadata skip hook installation. Full formatting checks remain available through `npm run lint`; only staged files are autoformatted by the hook.
+
 ## Verification and production build
 
 Run `npm run lint` to check code correctness and promise handling with Oxlint, TypeScript types, unused code and dependencies with Knip, and formatting with Prettier. Use `npm run lint:code` to run only the code-pattern checks. These commands do not modify files. Oxlint uses TypeScript-aware rules compatible with the project's TypeScript 7 compiler; its configuration lives in `.oxlintrc.json`. Node test registrations are exempt from floating-promise warnings because the test runner tracks their completion; other promises in tests remain checked.

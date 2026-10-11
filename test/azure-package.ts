@@ -29,6 +29,7 @@ test('Azure ZIP includes production assets and runs real document downloads', as
     'templates/business.pptx',
     'templates/daa.pptx',
     'scripts/start-azure.sh',
+    'scripts/install-hooks.mjs',
   ])
     assert.ok(archive.file(name), `Missing ${name}`);
   assert.equal(archive.file('node_modules/typescript/package.json'), null);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { dataApiEndpoints } from './data-api/endpoints.js';
 import { pdfRoutePatternSchema } from './pdf-route.js';
 
 // Application behavior: edit these values here, then rebuild the deployment package.
@@ -74,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   return {
     host: c.HOST,
     dataApi: {
+      endpoints: dataApiEndpoints,
       baseUrl: c.DATA_API_BASE_URL,
       token: c.DATA_API_TOKEN,
       timeoutMs: c.DATA_API_TIMEOUT_MS,

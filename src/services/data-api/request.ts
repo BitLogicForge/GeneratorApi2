@@ -5,7 +5,7 @@ import { AppError } from '../../errors.js';
 /** Applies one timeout to fetching and reading JSON, then validates the response. */
 export async function requestDataApi<T>(
   url: URL,
-  config: Config['dataApi'],
+  config: Pick<Config['dataApi'], 'token' | 'timeoutMs'>,
   schema: z.ZodType<T>,
 ): Promise<T> {
   const signal = AbortSignal.timeout(config.timeoutMs);

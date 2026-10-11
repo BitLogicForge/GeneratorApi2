@@ -56,6 +56,17 @@ test('data API client encodes parameters, authenticates, validates data, and han
       if (!res.destroyed) res.end('"value":42}');
     }, 200);
   });
+  const report = {
+    id: 'id2222',
+    language: 'en',
+    year: 2026,
+    tableData: Array.from({ length: 3 }, () => [10, 11, 12, 13]),
+    chartData: Array.from({ length: 20 }, () => [1, 2, 3]),
+    categories: Array.from({ length: 20 }, (_, i) => `A${i + 1}`),
+  };
+  app.get('/v1/reports/:id', (req, res) =>
+    res.json({ ...report, id: req.params.id }),
+  );
   const server = app.listen(0, '127.0.0.1');
   await new Promise<void>((resolve) => server.once('listening', resolve));
   t.after(async () => {
@@ -68,10 +79,29 @@ test('data API client encodes parameters, authenticates, validates data, and han
     DATA_API_TOKEN: 'test-token',
     DATA_API_TIMEOUT_MS: '1000',
   });
-  const api = new DataApiClient(config.dataApi);
+  const reportApi = new DataApiClient(config.dataApi);
+  const reportData = await reportApi.get(
+    'report',
+    { id: 'full /Ż' },
+    { language: 'en', year: 2026 },
+  );
+  const tableValue: number = reportData.tableData[0][0];
+  assert.equal(tableValue, 10);
+  assert.deepEqual(reportData, { ...report, id: 'full /Ż' });
+  await assert.rejects(reportApi.get('report', { id: 'id2222' }), {
+    code: 'DATA_API_INVALID_RESPONSE',
+  });
   const schema = z.object({ id: z.string(), value: z.number() });
+  const clientConfig = {
+    ...config.dataApi,
+    endpoints: {
+      test: { path: ({ path }: { path: string }) => path, response: schema },
+    },
+  };
+  const api = new DataApiClient(clientConfig);
   const data = await api.get(
-    '/reports/id2222',
+    'test',
+    { path: '/reports/id2222' },
     {
       language: 'en',
       year: 2026,
@@ -79,8 +109,9 @@ test('data API client encodes parameters, authenticates, validates data, and han
       search: 'A & B/Ż',
       omitted: undefined,
     },
-    schema,
   );
+  const value: number = data.value;
+  assert.equal(value, 42);
   assert.deepEqual(data, { id: 'id2222', value: 42 });
   assert.deepEqual(seen, {
     path: '/v1/reports/id2222',
@@ -93,46 +124,43 @@ test('data API client encodes parameters, authenticates, validates data, and han
     '../outside',
     '/\\example.com',
   ])
-    await assert.rejects(api.get(path, {}, schema), {
+    await assert.rejects(api.get('test', { path }), {
       code: 'INVALID_DATA_API_PATH',
     });
-  await assert.rejects(api.get('/error', {}, schema), {
+  await assert.rejects(api.get('test', { path: '/error' }), {
     code: 'DATA_API_HTTP_ERROR',
     status: 502,
     message: 'Data API returned HTTP 401',
   });
-  await assert.rejects(api.get('/redirect', {}, schema), {
+  await assert.rejects(api.get('test', { path: '/redirect' }), {
     code: 'DATA_API_HTTP_ERROR',
   });
   for (const path of ['/invalid-json', '/invalid-data'])
-    await assert.rejects(api.get(path, {}, schema), {
+    await assert.rejects(api.get('test', { path }), {
       code: 'DATA_API_INVALID_RESPONSE',
     });
-  await assert.rejects(api.get('/reports/id2222', { year: NaN }, schema), {
-    code: 'INVALID_DATA_API_QUERY',
-  });
   await assert.rejects(
-    new DataApiClient(loadConfig({}).dataApi).get(
-      '/reports/id2222',
-      {},
-      schema,
-    ),
+    api.get('test', { path: '/reports/id2222' }, { year: NaN }),
+    {
+      code: 'INVALID_DATA_API_QUERY',
+    },
+  );
+  await assert.rejects(
+    new DataApiClient({ ...clientConfig, baseUrl: undefined }).get('test', {
+      path: '/reports/id2222',
+    }),
     { code: 'DATA_API_NOT_CONFIGURED' },
   );
   await assert.rejects(
-    new DataApiClient({ ...config.dataApi, timeoutMs: 50 }).get(
-      '/slow',
-      {},
-      schema,
-    ),
+    new DataApiClient({ ...clientConfig, timeoutMs: 50 }).get('test', {
+      path: '/slow',
+    }),
     { code: 'DATA_API_TIMEOUT', status: 504 },
   );
   await assert.rejects(
-    new DataApiClient({ ...config.dataApi, timeoutMs: 50 }).get(
-      '/slow-body',
-      {},
-      schema,
-    ),
+    new DataApiClient({ ...clientConfig, timeoutMs: 50 }).get('test', {
+      path: '/slow-body',
+    }),
     { code: 'DATA_API_TIMEOUT', status: 504 },
   );
 });

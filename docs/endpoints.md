@@ -4,12 +4,18 @@
 
 ## Overview
 
-User identification scaffolding is available on this branch. The default
+User identification is available on this branch. The default
 `AUTH_MODE=disabled` preserves existing requests. Entra mode requires bearer
 authentication on export GET/POST/HEAD requests and keeps health public. It
-returns 401 for missing/invalid tokens and 503 `AUTH_NOT_CONFIGURED` while the
-token verifier is still a placeholder. No user-role checks are implemented.
+returns 401 for missing/invalid tokens and 503 `AUTH_UNAVAILABLE` if signing keys
+cannot be retrieved. No user-role checks are implemented.
 See [intranet identity setup](authentication.md).
+
+`GET /api/me` returns `{ "user": { "tenantId", "objectId" } }` from the verified
+API access token. It returns 401 when authentication is disabled or the token is
+missing/invalid. It does not generate a document. Configured SPA origins can
+send bearer-token requests with `CORS_ALLOWED_ORIGINS`; OPTIONS preflights are
+handled before authentication.
 
 PDF route exports and the brief, business, and summary PowerPoint exports support GET and POST. The document-ID PDF link and DAA demo support GET. All GET exports also accept HEAD with the same query schemas: successful HEAD responses return download headers without generating a document or entering a queue, and omit the unknown `Content-Length`. HEAD checks request syntax and configured services; it does not fetch upstream data or confirm that generation will succeed. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
 

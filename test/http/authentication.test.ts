@@ -167,7 +167,7 @@ test('verified users reach GET/POST exports without role checks and identity rea
   ]);
 });
 
-test('Entra placeholders reject tokens until verification is implemented and remain separate from UAMI', async () => {
+test('Entra configuration rejects malformed tokens and remains separate from UAMI', async () => {
   assert.deepEqual(loadAuthConfig({}), { mode: 'disabled' });
   assert.equal(createEntraAuthentication(loadAuthConfig({})), undefined);
   assert.throws(() => loadAuthConfig({ AUTH_MODE: 'typo' }));
@@ -195,9 +195,9 @@ test('Entra placeholders reject tokens until verification is implemented and rem
   const response = await request(protectedApp.app)
     .get('/id.pdf')
     .set('Authorization', 'Bearer unverified')
-    .expect(503);
-  assert.equal(response.body.error.code, 'AUTH_NOT_CONFIGURED');
-  assert.equal(response.headers['retry-after'], '5');
+    .expect(401);
+  assert.equal(response.body.error.code, 'UNAUTHENTICATED');
+  assert.equal(response.headers['www-authenticate'], 'Bearer');
   assert.deepEqual(protectedApp.calls, []);
   await request(protectedApp.app).get('/health').expect(200);
   const open = fixture();

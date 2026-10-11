@@ -1,3 +1,4 @@
+import type { ManagedIdentityCredential } from '@azure/identity';
 import type { AuthenticatedUser, AuthenticationOptions } from '@/auth/types';
 import type { Config } from '@/config';
 import type { GenerationQueues } from '@/queue/generation-queue';
@@ -9,10 +10,12 @@ import type {
 
 export interface GenerationContext {
   user?: AuthenticatedUser;
+  azureCredential?: ManagedIdentityCredential;
 }
 
 export interface AppOptions {
   authentication?: AuthenticationOptions;
+  azureCredential?: ManagedIdentityCredential;
   templateReportDemo?: {
     generate(text?: string, context?: GenerationContext): Promise<Buffer>;
   };
@@ -28,7 +31,8 @@ export interface AppOptions {
       input: TemplatePresentationInput,
     ): Promise<Buffer>;
   };
-  config?: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
+  config?: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'> &
+    Partial<Pick<Config, 'corsOrigins'>>;
   queues?: GenerationQueues;
   logger?: Pick<Console, 'error'>;
 }

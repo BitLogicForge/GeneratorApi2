@@ -30,8 +30,8 @@ curl -X POST http://localhost:3000/api/exports/pdf \
 
 ## Documentation
 
-See [intranet user identity placeholders](docs/authentication.md) for the MSAL
-integration point, identity context, and separate Azure UAMI configuration.
+See [intranet user identity](docs/authentication.md) for MSAL access-token
+validation, identity context, CORS, and Azure UAMI configuration.
 
 | Guide                                             | Contents                                                                      |
 | ------------------------------------------------- | ----------------------------------------------------------------------------- |

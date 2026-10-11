@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
@@ -30,6 +31,16 @@ export function createApp(options: AppOptions) {
     res.set('X-Request-Id', res.locals.requestId);
     next();
   });
+  if (config.corsOrigins?.length)
+    app.use(
+      cors({
+        origin: config.corsOrigins,
+        methods: ['GET', 'HEAD', 'POST'],
+        allowedHeaders: ['Authorization', 'Content-Type'],
+        exposedHeaders: ['Content-Disposition', 'X-Request-Id'],
+        maxAge: 600,
+      }),
+    );
   app.use(express.json({ limit: '100kb' }));
   registerRoutes(app, routes, dependencies);
   app.use((req, res, next) =>

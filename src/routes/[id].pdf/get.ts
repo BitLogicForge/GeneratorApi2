@@ -14,6 +14,7 @@ import type { RouteDependencies } from '@/http/types';
 /** Generates a PDF from a document link with server-controlled query values. */
 export default function createHandler({
   pdf,
+  azureCredential,
   config,
   queues,
 }: RouteDependencies): RequestHandler {
@@ -40,7 +41,11 @@ export default function createHandler({
     await sendDownload(
       res,
       queues.pdf,
-      () => pdf.generate(input, { user: res.locals.user }),
+      () =>
+        pdf.generate(input, {
+          user: res.locals.user,
+          ...(azureCredential ? { azureCredential } : {}),
+        }),
       input.filename,
       'pdf',
     );

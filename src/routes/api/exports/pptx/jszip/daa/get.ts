@@ -13,6 +13,7 @@ const demoQuerySchema = z
 
 export default function createHandler({
   templateReportDemo,
+  azureCredential,
   queues,
 }: RouteDependencies): RequestHandler {
   return async (req, res) => {
@@ -27,7 +28,10 @@ export default function createHandler({
       res,
       queues.presentations,
       () =>
-        templateReportDemo.generate(input.TEXT_ME, { user: res.locals.user }),
+        templateReportDemo.generate(input.TEXT_ME, {
+          user: res.locals.user,
+          ...(azureCredential ? { azureCredential } : {}),
+        }),
       'demo-report',
       'pptx',
     );

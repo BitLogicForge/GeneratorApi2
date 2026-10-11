@@ -22,6 +22,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       HOST: z.string().trim().min(1).default('0.0.0.0'),
       PORT: z.coerce.number().int().min(1).max(65535).default(3000),
       WEBAPP_BASE_URL: z.url().default('http://localhost:3001'),
+      CORS_ALLOWED_ORIGINS: z.string().default(''),
       DATA_API_BASE_URL: z.preprocess(
         (value) => (value === '' ? undefined : value),
         z.url().optional(),
@@ -53,6 +54,25 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
         .default(30000),
     })
     .parse(env);
+  const corsOrigins = c.CORS_ALLOWED_ORIGINS.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      const url = new URL(value);
+      if (
+        !['http:', 'https:'].includes(url.protocol) ||
+        url.username ||
+        url.password ||
+        url.hostname.includes('*') ||
+        url.pathname !== '/' ||
+        url.search ||
+        url.hash
+      )
+        throw new Error(
+          'CORS_ALLOWED_ORIGINS must contain HTTP(S) origins without credentials, paths, queries, or fragments',
+        );
+      return url.origin;
+    });
   const base = new URL(c.WEBAPP_BASE_URL);
   if (
     !['http:', 'https:'].includes(base.protocol) ||
@@ -75,6 +95,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   }
   return {
     host: c.HOST,
+    corsOrigins,
     dataApi: {
       endpoints: dataApiEndpoints,
       baseUrl: c.DATA_API_BASE_URL,

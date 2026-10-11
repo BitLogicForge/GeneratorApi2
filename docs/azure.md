@@ -25,6 +25,12 @@ Edit these before building; rerun `npm run build:azure` after a change.
 
 ## App Service settings
 
+For corporate user login, set `AUTH_MODE=entra`, `ENTRA_TENANT_ID`,
+`ENTRA_API_CLIENT_ID`, `ENTRA_API_SCOPE`, and `CORS_ALLOWED_ORIGINS` as Azure app
+settings. Set `AZURE_CLIENT_ID` to the UAMI client ID assigned to the app when
+downstream services need managed-identity credentials. These changes require
+the Entra registration and SPA consent described in [the authentication guide](authentication.md).
+
 Configure the Web App's Node.js runtime to 22+ and set its startup command to:
 
 ```text

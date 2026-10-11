@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from './app.ts';
 import { loadAuthConfig } from './auth/config.ts';
 import { createEntraAuthentication } from './auth/entra.ts';
+import { createAzureCredential } from './auth/managed-identity.ts';
 import { loadConfig } from './config.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 import { DaaPocPresentationService } from './services/jszip/daa-poc-presentation-service.ts';
@@ -12,6 +13,7 @@ import { PowerPointGenerationService } from './services/pptxgenjs/power-point-ge
 
 const config = loadConfig();
 const authentication = createEntraAuthentication(loadAuthConfig());
+const azureCredential = createAzureCredential();
 const pdf = new WebPagePdfService(config);
 const queues = createGenerationQueues({
   pdfConcurrency: config.concurrency,
@@ -27,6 +29,7 @@ const templatePresentations = new PowerPointTemplateService({
 });
 const server = createApp({
   authentication,
+  azureCredential,
   templateReportDemo: new DaaPocPresentationService(
     fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
   ),

@@ -9,8 +9,8 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env) {
   if (mode === 'disabled') return { mode } as const;
   const config = z
     .object({
-      ENTRA_TENANT_ID: z.uuid(),
-      ENTRA_API_CLIENT_ID: z.uuid(),
+      ENTRA_TENANT_ID: z.guid().toLowerCase(),
+      ENTRA_API_CLIENT_ID: z.guid().toLowerCase(),
       ENTRA_API_SCOPE: z
         .string()
         .regex(/^[A-Za-z0-9_.-]+$/)

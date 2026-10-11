@@ -4,9 +4,9 @@ import {
   type Browser,
   type BrowserContext,
 } from 'playwright';
-import type { Config } from '../config.js';
-import type { PdfInput } from '../schemas.js';
-import { AppError } from '../errors.js';
+import type { Config } from '../config.ts';
+import type { PdfInput } from '../schemas.ts';
+import { AppError } from '../errors.ts';
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
   #active = 0;

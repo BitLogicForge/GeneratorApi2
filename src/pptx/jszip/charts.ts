@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
-import type { NamedObject } from './objects.js';
+import type { NamedObject } from './objects.ts';
 import type { Element } from '@xmldom/xmldom';
-import { setWorksheetCell } from './spreadsheet.js';
+import { setWorksheetCell } from './spreadsheet.ts';
 import {
   chartNs,
   spreadsheet,
@@ -10,7 +10,7 @@ import {
   writeXml,
   resolveRelationship,
   invalidTemplate,
-} from './package.js';
+} from './package.ts';
 
 interface LineChartOptions {
   sheetName?: string;

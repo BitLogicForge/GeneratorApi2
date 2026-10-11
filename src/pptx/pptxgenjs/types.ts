@@ -1,5 +1,5 @@
 import type pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '../../schemas.js';
+import type { PresentationInput } from '../../schemas.ts';
 
 export type PresentationTemplate = (
   deck: pptxgen,

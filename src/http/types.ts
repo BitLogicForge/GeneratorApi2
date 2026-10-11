@@ -1,10 +1,10 @@
-import type { Config } from '../config.js';
+import type { Config } from '../config.ts';
 import type {
   PdfInput,
   PresentationInput,
   TemplatePresentationInput,
-} from '../schemas.js';
-import type { GenerationQueues } from '../queue/generation-queue.js';
+} from '../schemas.ts';
+import type { GenerationQueues } from '../queue/generation-queue.ts';
 
 export interface AppOptions {
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };

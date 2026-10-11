@@ -1,4 +1,4 @@
-import { hasControlCharacters } from './validation/control-characters.js';
+import { hasControlCharacters } from './validation/control-characters.ts';
 import { z } from 'zod';
 const filename = z
   .string()

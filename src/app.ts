@@ -1,17 +1,17 @@
 import express from 'express';
 import helmet from 'helmet';
 import { randomUUID } from 'node:crypto';
-import { loadConfig } from './config.js';
-import { createGenerationQueues } from './queue/generation-queue.js';
-import { AppError } from './errors.js';
-import { createErrorHandler } from './http/error-handler.js';
-import type { AppOptions } from './http/types.js';
-import { createHealthRoute } from './routes/health.js';
-import { createDocumentPdfRoute } from './routes/document-pdf.js';
-import { createExportPdfRoute } from './routes/export-pdf.js';
-import { createDemoReportRoute } from './routes/demo-report.js';
-import { createGeneratedPresentationRoute } from './routes/generated-presentation.js';
-import { createTemplatePresentationRoute } from './routes/template-presentation.js';
+import { loadConfig } from './config.ts';
+import { createGenerationQueues } from './queue/generation-queue.ts';
+import { AppError } from './errors.ts';
+import { createErrorHandler } from './http/error-handler.ts';
+import type { AppOptions } from './http/types.ts';
+import { createHealthRoute } from './routes/health.ts';
+import { createDocumentPdfRoute } from './routes/document-pdf.ts';
+import { createExportPdfRoute } from './routes/export-pdf.ts';
+import { createDemoReportRoute } from './routes/demo-report.ts';
+import { createGeneratedPresentationRoute } from './routes/generated-presentation.ts';
+import { createTemplatePresentationRoute } from './routes/template-presentation.ts';
 
 /** Assembles HTTP handling around injected services so routes can be tested independently. */
 export function createApp(options: AppOptions) {

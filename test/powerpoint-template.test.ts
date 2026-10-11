@@ -6,9 +6,9 @@ import { join } from 'node:path';
 import JSZip from 'jszip';
 import request from 'supertest';
 import { DOMParser } from '@xmldom/xmldom';
-import { PowerPointTemplateService } from '../src/pptx/jszip/powerpoint-template.js';
-import { templatePresentationSchema } from '../src/schemas.js';
-import { createApp } from '../src/app.js';
+import { PowerPointTemplateService } from '../src/pptx/jszip/powerpoint-template.ts';
+import { templatePresentationSchema } from '../src/schemas.ts';
+import { createApp } from '../src/app.ts';
 
 const path = new URL('../templates/business.pptx', import.meta.url).pathname;
 const service = new PowerPointTemplateService({ business: path });

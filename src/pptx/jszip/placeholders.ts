@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
-import { AppError } from '../../errors.js';
-import { drawing, readXml, writeXml } from './package.js';
+import { AppError } from '../../errors.ts';
+import { drawing, readXml, writeXml } from './package.ts';
 
 const tokenPattern = /\{\{([A-Za-z][A-Za-z0-9_]{0,63})\}\}/g;
 

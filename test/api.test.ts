@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import JSZip from 'jszip';
-import { createApp } from '../src/app.js';
-import { GeneratedPresentationService } from '../src/pptx/pptxgenjs/generated-presentation.js';
-import { AppError } from '../src/errors.js';
+import { createApp } from '../src/app.ts';
+import { GeneratedPresentationService } from '../src/pptx/pptxgenjs/generated-presentation.ts';
+import { AppError } from '../src/errors.ts';
 const payload = {
   title: 'Roadmap',
   slides: [

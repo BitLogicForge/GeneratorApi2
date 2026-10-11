@@ -1,5 +1,5 @@
 import type { Document } from '@xmldom/xmldom';
-import { spreadsheet, invalidTemplate } from './package.js';
+import { spreadsheet, invalidTemplate } from './package.ts';
 
 /** Creates missing rows/cells while retaining existing cell styles. */
 export function setWorksheetCell(

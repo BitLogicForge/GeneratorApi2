@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 import request from 'supertest';
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { TemplateReportDemoService } from '../src/pptx/jszip/template-report-demo.js';
-import { createApp } from '../src/app.js';
+import { TemplateReportDemoService } from '../src/pptx/jszip/template-report-demo.ts';
+import { createApp } from '../src/app.ts';
 
 const template = fileURLToPath(
   new URL('../templates/daa.pptx', import.meta.url),

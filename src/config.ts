@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { dataApiEndpoints } from './data-api/endpoints.js';
-import { pdfRoutePatternSchema } from './pdf-route.js';
+import { dataApiEndpoints } from './data-api/endpoints.ts';
+import { pdfRoutePatternSchema } from './pdf-route.ts';
 
 // Application behavior: edit these values here, then rebuild the deployment package.
 const documentSettings = {

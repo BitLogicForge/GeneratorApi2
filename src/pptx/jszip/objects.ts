@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
 import type { Element } from '@xmldom/xmldom';
-import { readXml, presentationNs, invalidTemplate } from './package.js';
+import { readXml, presentationNs, invalidTemplate } from './package.ts';
 
 export interface NamedObject {
   path: string;

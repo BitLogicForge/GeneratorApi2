@@ -1,8 +1,8 @@
 import { Router, type RequestHandler } from 'express';
-import type { RouteDependencies } from '../http/types.js';
-import { generationInput } from '../http/input.js';
-import { sendDownload } from '../http/download.js';
-import { pdfSchema } from '../schemas.js';
+import type { RouteDependencies } from '../http/types.ts';
+import { generationInput } from '../http/input.ts';
+import { sendDownload } from '../http/download.ts';
+import { pdfSchema } from '../schemas.ts';
 
 export function createExportPdfRoute({ pdf, queues }: RouteDependencies) {
   const router = Router();

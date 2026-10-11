@@ -1,6 +1,6 @@
-import { hasControlCharacters } from '../../validation/control-characters.js';
-import { AppError } from '../../errors.js';
-import type { DataApiQuery } from '../data-api-client.js';
+import { hasControlCharacters } from '../../validation/control-characters.ts';
+import { AppError } from '../../errors.ts';
+import type { DataApiQuery } from '../data-api-client.ts';
 
 /** Resolves and encodes a request within the configured API prefix. */
 export function buildDataApiUrl(

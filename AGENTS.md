@@ -50,8 +50,8 @@ Poniższa mapa wskazuje główne granice odpowiedzialności:
 
 ## Zasady zmian
 
-- Zachowuj istniejący styl TypeScript ESM, w tym rozszerzenia `.js` w lokalnych
-  importach. Formatowanie pozostaw Prettierowi.
+- Zachowuj istniejący styl TypeScript ESM, w tym rozszerzenia `.ts` w lokalnych
+  importach źródeł TypeScript. Kompilator przepisuje je na `.js` w `dist`. Formatowanie pozostaw Prettierowi.
 - Utrzymuj rozdział między routingiem, walidacją i generowaniem dokumentów.
   Korzystaj z wstrzykiwania usług przez `createApp` i kontraktów w
   `src/http/types.ts`, aby testy HTTP nie wymagały prawdziwego Chromium.

@@ -1,5 +1,5 @@
 import type { Element } from '@xmldom/xmldom';
-import { drawing, invalidTemplate } from './package.js';
+import { drawing, invalidTemplate } from './package.ts';
 
 /** Uses the first text run for replacement content, retaining its formatting and clearing remaining runs. */
 function setText(element: Element, value: string) {

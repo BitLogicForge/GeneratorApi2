@@ -1,12 +1,12 @@
 import express from 'express';
 import { z } from 'zod';
-import { documentIdSchema } from '../../../src/pdf-route.js';
-import { loadConfig } from '../../../src/config.js';
+import { documentIdSchema } from '../../../src/pdf-route.ts';
+import { loadConfig } from '../../../src/config.ts';
 
-import { createCustomerRoute } from './routes/customer.js';
-import { createReportSummaryRoute } from './routes/report-summary.js';
+import { createCustomerRoute } from './routes/customer.ts';
+import { createReportSummaryRoute } from './routes/report-summary.ts';
 
-import { createReportIdsRoute } from './routes/report-ids.js';
+import { createReportIdsRoute } from './routes/report-ids.ts';
 
 const app = express();
 app.use('/api', createReportIdsRoute());

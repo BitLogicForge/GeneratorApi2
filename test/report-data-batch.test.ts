@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import express from 'express';
 import type { AddressInfo } from 'node:net';
 import request from 'supertest';
-import { loadConfig } from '../src/config.js';
-import { DataApiClient } from '../src/services/data-api-client.js';
-import { createReportIdsRoute } from '../examples/data-api/server/routes/report-ids.js';
-import { fetchReportDataBatch } from '../examples/data-api/batch/collect.js';
+import { loadConfig } from '../src/config.ts';
+import { DataApiClient } from '../src/services/data-api-client.ts';
+import { createReportIdsRoute } from '../examples/data-api/server/routes/report-ids.ts';
+import { fetchReportDataBatch } from '../examples/data-api/batch/collect.ts';
 
 test('demo report-ID endpoint returns IDs and rejects unknown query parameters', async () => {
   const app = express();

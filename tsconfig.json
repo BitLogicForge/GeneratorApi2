@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "rootDir": "src",
     "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["src/**/*.ts"]
 }

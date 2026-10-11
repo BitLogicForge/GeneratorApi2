@@ -1,8 +1,8 @@
 import pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '../../schemas.js';
-import { AppError } from '../../errors.js';
-import { briefTemplate } from './templates/brief.js';
-import type { PresentationTemplate } from './types.js';
+import type { PresentationInput } from '../../schemas.ts';
+import { AppError } from '../../errors.ts';
+import { briefTemplate } from './templates/brief.ts';
+import type { PresentationTemplate } from './types.ts';
 
 export class GeneratedPresentationService {
   private readonly templates: Map<string, PresentationTemplate>;

@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { GenerationQueue } from '../queue/generation-queue.js';
+import type { GenerationQueue } from '../queue/generation-queue.ts';
 
 const contentTypes = {
   pdf: 'application/pdf',

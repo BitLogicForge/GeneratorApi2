@@ -5,8 +5,8 @@ import request from 'supertest';
 import {
   GenerationQueue,
   createGenerationQueues,
-} from '../src/queue/generation-queue.js';
-import { createApp } from '../src/app.js';
+} from '../src/queue/generation-queue.ts';
+import { createApp } from '../src/app.ts';
 
 function deferred() {
   let resolve!: () => void;

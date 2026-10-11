@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { loadConfig } from '../../../src/config.js';
-import { DataApiClient } from '../../../src/services/data-api-client.js';
-import { fetchReportDataBatch } from './collect.js';
+import { loadConfig } from '../../../src/config.ts';
+import { DataApiClient } from '../../../src/services/data-api-client.ts';
+import { fetchReportDataBatch } from './collect.ts';
 
 const config = loadConfig();
 const mode = z.enum(['dict', 'list']).parse(process.argv[2] ?? 'dict');

@@ -1,4 +1,4 @@
-import { hasControlCharacters } from './validation/control-characters.js';
+import { hasControlCharacters } from './validation/control-characters.ts';
 import { z } from 'zod';
 
 // Supports both path parameters (/documents/{id}) and query parameters (/document?id={id}).

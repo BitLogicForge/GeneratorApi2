@@ -1,10 +1,10 @@
 import { randomInt } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { findNamedObjects } from './objects.js';
-import { fillTable, fillTextShape } from './text-table.js';
-import { fillLineChart } from './charts.js';
-import { writeXml } from './package.js';
+import { findNamedObjects } from './objects.ts';
+import { fillTable, fillTextShape } from './text-table.ts';
+import { fillLineChart } from './charts.ts';
+import { writeXml } from './package.ts';
 
 export class TemplateReportDemoService {
   constructor(

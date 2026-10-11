@@ -1,4 +1,4 @@
-import { AppError } from '../errors.js';
+import { AppError } from '../errors.ts';
 
 export interface QueueOptions {
   concurrency: number;

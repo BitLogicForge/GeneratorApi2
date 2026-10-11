@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import { createApp } from '../src/app.js';
-import { loadConfig } from '../src/config.js';
-import type { PdfInput } from '../src/schemas.js';
+import { createApp } from '../src/app.ts';
+import { loadConfig } from '../src/config.ts';
+import type { PdfInput } from '../src/schemas.ts';
 
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {
   const inputs: PdfInput[] = [];

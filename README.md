@@ -236,8 +236,8 @@ Give optional parameters defaults so the URL also works without a query string. 
 Create `src/pptx/jszip/sales-report.ts`:
 
 ```ts
-import type { SalesReportInput } from '../../schemas.js';
-import { TemplateReportDemoService } from './template-report-demo.js';
+import type { SalesReportInput } from '../../schemas.ts';
+import { TemplateReportDemoService } from './template-report-demo.ts';
 
 export class SalesReportService {
   private readonly template: TemplateReportDemoService;
@@ -256,7 +256,7 @@ This starting implementation puts `title` into `TEXT_ME` and uses the existing r
 
 ### 3. Declare the dependency
 
-In `src/http/types.ts`, add `SalesReportInput` to the existing import from `../schemas.js`, then add this property inside `AppOptions`:
+In `src/http/types.ts`, add `SalesReportInput` to the existing import from `../schemas.ts`, then add this property inside `AppOptions`:
 
 ```ts
 salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
@@ -269,7 +269,7 @@ salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
 Import the service in `src/index.ts`:
 
 ```ts
-import { SalesReportService } from './pptx/jszip/sales-report.js';
+import { SalesReportService } from './pptx/jszip/sales-report.ts';
 ```
 
 Add this property to the existing `createApp({ ... })` call:
@@ -288,10 +288,10 @@ Create `src/routes/sales-report.ts` with a router factory:
 
 ```ts
 import { Router } from 'express';
-import type { RouteDependencies } from '../http/types.js';
-import { salesReportSchema } from '../schemas.js';
-import { AppError } from '../errors.js';
-import { sendDownload } from '../http/download.js';
+import type { RouteDependencies } from '../http/types.ts';
+import { salesReportSchema } from '../schemas.ts';
+import { AppError } from '../errors.ts';
+import { sendDownload } from '../http/download.ts';
 
 export function createSalesReportRoute({
   salesReport,
@@ -362,6 +362,8 @@ npm run test:azure
 Run `npm run precommit` manually to perform the same actions, or `npm run prepare` to reinstall the hook. CI, production installs, and folders without Git metadata skip hook installation. Full formatting checks remain available through `npm run lint`; only staged files are autoformatted by the hook.
 
 ## Verification and production build
+
+Local TypeScript imports use `.ts` extensions. `rewriteRelativeImportExtensions` rewrites them to `.js` in compiled output. `npm run typecheck` also runs `npm run check:imports`, which rejects relative `.js` imports in TypeScript files. JavaScript build outputs and actual `.mjs` tooling scripts retain their extensions.
 
 Run `npm run lint` to check code correctness and promise handling with Oxlint, TypeScript types, unused code and dependencies with Knip, and formatting with Prettier. Use `npm run lint:code` to run only the code-pattern checks. These commands do not modify files. Oxlint uses TypeScript-aware rules compatible with the project's TypeScript 7 compiler; its configuration lives in `.oxlintrc.json`. Node test registrations are exempt from floating-promise warnings because the test runner tracks their completion; other promises in tests remain checked.
 

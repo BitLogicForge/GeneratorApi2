@@ -1,7 +1,7 @@
-import { reportIdsSchema } from './report-ids-schema.js';
-import { customerDataSchema } from './customer-data-schema.js';
-import { reportSummarySchema } from './report-summary-schema.js';
-import { reportDataSchema } from './report-data-schema.js';
+import { reportIdsSchema } from './report-ids-schema.ts';
+import { customerDataSchema } from './customer-data-schema.ts';
+import { reportSummarySchema } from './report-summary-schema.ts';
+import { reportDataSchema } from './report-data-schema.ts';
 
 /** Define each upstream path and its validated response contract together. */
 export const dataApiEndpoints = {

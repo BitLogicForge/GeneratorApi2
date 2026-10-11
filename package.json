@@ -18,7 +18,7 @@
     "test:azure": "tsx --test test/azure-package.ts",
     "lint:code": "oxlint --type-aware --deny-warnings src test examples scripts",
     "lint": "npm run lint:code && npm run typecheck && npm run knip && npm run format:check",
-    "typecheck": "tsc -p tsconfig.check.json",
+    "typecheck": "npm run check:imports && tsc -p tsconfig.check.json",
     "knip": "knip",
     "deps:verify": "npm run typecheck && npm run knip && npm run browser:install && npm test",
     "deps:update": "ncu --target semver --upgrade --doctor --doctorTest \"npm run deps:verify\"",
@@ -27,7 +27,8 @@
     "example:fetch-batch": "tsx --env-file-if-exists=.env examples/data-api/batch/fetch.ts",
     "example:fetch-chain": "tsx --env-file-if-exists=.env examples/data-api/chain/fetch.ts",
     "example:fetch-data": "tsx --env-file-if-exists=.env examples/data-api/single/fetch.ts",
-    "deps:check": "ncu --target semver"
+    "deps:check": "ncu --target semver",
+    "check:imports": "oxlint --config .oxlint-imports.json --deny-warnings src test examples"
   },
   "keywords": [],
   "author": "",

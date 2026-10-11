@@ -5,7 +5,5 @@ export class AppError extends Error {
     message: string,
   ) {
     super(message);
-    this.status = status;
-    this.code = code;
   }
 }

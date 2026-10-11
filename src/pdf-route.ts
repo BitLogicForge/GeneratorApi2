@@ -1,3 +1,4 @@
+import { hasControlCharacters } from './validation/control-characters.js';
 import { z } from 'zod';
 
 // Supports both path parameters (/documents/{id}) and query parameters (/document?id={id}).
@@ -13,7 +14,8 @@ export const pdfRoutePatternSchema = z
     (value) =>
       !value.startsWith('//') &&
       !value.includes('\\') &&
-      !/[\u0000-\u001f#]/.test(value),
+      !value.includes('#') &&
+      !hasControlCharacters(value),
     'Use a relative route without fragments',
   );
 export const documentIdSchema = z

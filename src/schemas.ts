@@ -1,3 +1,4 @@
+import { hasControlCharacters } from './validation/control-characters.js';
 import { z } from 'zod';
 const filename = z
   .string()
@@ -13,9 +14,7 @@ export const pdfSchema = z
       .startsWith('/')
       .refine(
         (v) =>
-          !v.startsWith('//') &&
-          !v.includes('\\') &&
-          !/[\u0000-\u001f]/.test(v),
+          !v.startsWith('//') && !v.includes('\\') && !hasControlCharacters(v),
         'Use a relative webapp route',
       ),
     query: z

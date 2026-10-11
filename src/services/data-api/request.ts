@@ -27,7 +27,7 @@ export async function requestDataApi<T>(
     let body: unknown;
     try {
       body = await response.json();
-    } catch (error) {
+    } catch {
       if (signal.aborted) throw signal.reason;
       throw new AppError(
         502,

@@ -39,14 +39,14 @@ function shutdown() {
   queues.pdf.close();
   queues.presentations.close();
   const deadline = setTimeout(() => process.exit(1), 15000).unref();
-  server.close(async () => {
-    try {
-      await pdf.close();
-      clearTimeout(deadline);
-    } catch (error) {
-      console.error(error);
-      process.exitCode = 1;
-    }
+  server.close(() => {
+    pdf.close().then(
+      () => clearTimeout(deadline),
+      (error: unknown) => {
+        console.error(error);
+        process.exitCode = 1;
+      },
+    );
   });
 }
 process.on('SIGTERM', shutdown);

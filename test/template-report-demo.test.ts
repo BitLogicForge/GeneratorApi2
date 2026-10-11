@@ -148,10 +148,11 @@ test('Template report demo preserves table headers, fills the last three rows, a
       await archive.file('ppt/slides/slide1.xml')!.async('string'),
       'application/xml',
     );
-    return slide
-      .getElementsByTagNameNS(drawing, 'tbl')[0]
-      .getElementsByTagNameNS(drawing, 'tr')[0]
-      .toString();
+    return new XMLSerializer().serializeToString(
+      slide
+        .getElementsByTagNameNS(drawing, 'tbl')[0]
+        .getElementsByTagNameNS(drawing, 'tr')[0],
+    );
   };
   assert.equal(await header(zip), await header(original));
   assert.deepEqual(
@@ -198,10 +199,10 @@ test('Template report demo preserves table headers, fills the last three rows, a
   for (const tag of ['tx', 'spPr']) {
     assert.deepEqual(
       Array.from(after.getElementsByTagNameNS(chartNs, tag)).map((node) =>
-        node.toString(),
+        new XMLSerializer().serializeToString(node),
       ),
       Array.from(before.getElementsByTagNameNS(chartNs, tag)).map((node) =>
-        node.toString(),
+        new XMLSerializer().serializeToString(node),
       ),
     );
   }
@@ -281,7 +282,7 @@ test('named lookup ignores other tables and resolves renamed chart and workbook 
     cloneProperties.setAttribute('name', 'OtherTable');
     cloneProperties.setAttribute('id', '1000');
     frame.parentNode!.insertBefore(clone, frame);
-    const untouchedTable = clone.toString();
+    const untouchedTable = new XMLSerializer().serializeToString(clone);
     zip.file(
       'ppt/slides/slide1.xml',
       new XMLSerializer().serializeToString(slide),
@@ -328,7 +329,9 @@ test('named lookup ignores other tables and resolves renamed chart and workbook 
       outputSlide.getElementsByTagNameNS(ns, 'cNvPr'),
     ).find((node) => node.getAttribute('name') === 'OtherTable')!;
     assert.equal(
-      outputProperties.parentNode!.parentNode!.toString(),
+      new XMLSerializer().serializeToString(
+        outputProperties.parentNode!.parentNode!,
+      ),
       untouchedTable,
     );
     assert.notDeepEqual(

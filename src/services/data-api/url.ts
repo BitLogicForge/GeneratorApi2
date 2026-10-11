@@ -1,3 +1,4 @@
+import { hasControlCharacters } from '../../validation/control-characters.js';
 import { AppError } from '../../errors.js';
 import type { DataApiQuery } from '../data-api-client.js';
 
@@ -11,7 +12,8 @@ export function buildDataApiUrl(
     !path ||
     path.startsWith('//') ||
     /^[a-z][a-z0-9+.-]*:/i.test(path) ||
-    /[\\?#\u0000-\u001f]/.test(path)
+    /[\\?#]/.test(path) ||
+    hasControlCharacters(path)
   )
     throw new AppError(
       400,

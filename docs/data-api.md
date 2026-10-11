@@ -2,6 +2,22 @@
 
 [Back to overview](../README.md)
 
+## Cached upstream values
+
+Each `DataApiClient` instance caches successful Zod-validated responses using `lru-cache`. Reuse the client across requests to benefit from the cache. Defaults are a 30-second TTL, 500 entries, and a 16 MiB budget for serialized values and keys. Oversized values are returned without being retained. The budget does not represent total JavaScript heap usage or limit concurrent upstream requests.
+
+```dotenv
+DATA_API_CACHE_TTL_MS=30000
+DATA_API_CACHE_MAX_ENTRIES=500
+DATA_API_CACHE_MAX_BYTES=16777216
+```
+
+Set `DATA_API_CACHE_TTL_MS=0` to disable caching. Values expire after the configured interval from insertion; reads do not extend it. Stale values are not served. Configure a shorter TTL or disable caching when fresh data is required. Restarting the process or creating a new client discards cached values.
+
+Keys distinguish endpoints, full upstream URLs with sorted query parameters, and a hash of the bearer token. Keep endpoint definitions and schemas unchanged during a client's lifetime; create a new client when those contracts change. Simultaneous misses for the same key share one fetch and validation. Errors are not cached, and each caller receives a deep copy so mutations cannot affect later reads.
+
+The cache is local to one client in one process; multiple API instances do not share it. This feature affects consumers of `DataApiClient`, currently the data API examples. Document routes still generate fresh attachments and retain `Cache-Control: no-store`.
+
 ## Fetch report data from another API
 
 `DataApiClient` coordinates helpers in `src/services/data-api/`: `url.ts` validates paths and encodes queries; `request.ts` fetches JSON, applies the timeout, and validates responses.

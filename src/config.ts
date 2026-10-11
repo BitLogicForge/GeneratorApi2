@@ -36,6 +36,24 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
         .min(1)
         .max(120000)
         .default(10000),
+      DATA_API_CACHE_TTL_MS: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(3600000)
+        .default(30000),
+      DATA_API_CACHE_MAX_ENTRIES: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(10000)
+        .default(500),
+      DATA_API_CACHE_MAX_BYTES: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(268435456)
+        .default(16777216),
       PDF_CONCURRENCY: z.coerce.number().int().min(1).max(10).default(2),
       PPTX_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(4),
       QUEUE_MAX_PENDING: z.coerce.number().int().min(0).max(2000).default(200),
@@ -80,6 +98,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       baseUrl: c.DATA_API_BASE_URL,
       token: c.DATA_API_TOKEN,
       timeoutMs: c.DATA_API_TIMEOUT_MS,
+      cache: {
+        ttlMs: c.DATA_API_CACHE_TTL_MS,
+        maxEntries: c.DATA_API_CACHE_MAX_ENTRIES,
+        maxBytes: c.DATA_API_CACHE_MAX_BYTES,
+      },
     },
     defaultLanguage: documents.defaultLanguage,
     port: c.PORT,

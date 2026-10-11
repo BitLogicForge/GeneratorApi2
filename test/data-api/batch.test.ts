@@ -48,6 +48,8 @@ test('batch collects by requested ID or as a list, deduplicates IDs, and rejects
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
   const config = loadConfig({
+    // This test changes upstream responses between requests and requires fresh values.
+    DATA_API_CACHE_TTL_MS: '0',
     DATA_API_BASE_URL: `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`,
   });
   const api = new DataApiClient(config.dataApi);

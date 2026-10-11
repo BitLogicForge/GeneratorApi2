@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+
+import { LRUCache } from 'lru-cache';
+
 import { AppError } from '@/errors';
 
 import { requestDataApi } from './data-api/request.ts';
@@ -19,13 +23,42 @@ type EndpointRegistry = Record<
   }
 >;
 
-type ClientConfig<Endpoints> = Omit<Config['dataApi'], 'endpoints'> & {
+type ClientConfig<Endpoints> = Omit<
+  Config['dataApi'],
+  'endpoints' | 'cache'
+> & {
   endpoints: Endpoints;
+  cache?: Config['dataApi']['cache'];
 };
 
 /** Fetches validated JSON from the configured API, preserving its base path. */
 export class DataApiClient<Endpoints extends EndpointRegistry> {
-  constructor(private readonly config: ClientConfig<Endpoints>) {}
+  private readonly cache:
+    | LRUCache<string, { data: unknown }, { load: () => Promise<unknown> }>
+    | undefined;
+
+  constructor(private readonly config: ClientConfig<Endpoints>) {
+    const {
+      ttlMs = 30000,
+      maxEntries = 500,
+      maxBytes = 16777216,
+    } = config.cache ?? {};
+    if (ttlMs > 0) {
+      this.cache = new LRUCache({
+        max: maxEntries,
+        maxSize: maxBytes,
+        ttl: ttlMs,
+        // Eviction must not cancel an upstream request already serving a caller.
+        ignoreFetchAbort: true,
+        sizeCalculation: (value, key) =>
+          Buffer.byteLength(JSON.stringify(value.data)) +
+          Buffer.byteLength(key),
+        fetchMethod: async (_key, _stale, { context }) => ({
+          data: await context.load(),
+        }),
+      });
+    }
+  }
 
   /** Keeps requests within the configured API prefix and validates responses under one fetch/read timeout. */
   async get<Key extends keyof Endpoints>(
@@ -51,10 +84,20 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
       definition.path(params as never),
       query,
     );
-    return requestDataApi(
-      url,
-      this.config,
-      definition.response as z.ZodType<z.output<Endpoints[Key]['response']>>,
-    );
+    const load = () =>
+      requestDataApi(
+        url,
+        this.config,
+        definition.response as z.ZodType<z.output<Endpoints[Key]['response']>>,
+      );
+    if (!this.cache) return load();
+    const canonicalUrl = new URL(url);
+    canonicalUrl.searchParams.sort();
+    const scope = createHash('sha256')
+      .update(this.config.token ?? '')
+      .digest('hex');
+    const key = JSON.stringify([endpoint, canonicalUrl.href, scope]);
+    const value = await this.cache.fetch(key, { context: { load } });
+    return structuredClone(value!.data) as z.output<Endpoints[Key]['response']>;
   }
 }

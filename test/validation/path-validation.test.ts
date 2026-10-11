@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { pdfRoutePatternSchema } from '@/pdf-route';
-import { pdfSchema } from '@/routes/api/exports/pdf/schema';
+import { pdfRenderSchema } from '@/routes/api/exports/pdf/schema';
+import { pdfRoutePatternSchema } from '@/routes/api/exports/pdf/webapp-route';
 import { buildDataApiUrl } from '@/services/data-api/url';
 
 test('PDF routes, route patterns, and data API paths reject every ASCII control character', () => {
@@ -15,7 +15,7 @@ test('PDF routes, route patterns, and data API paths reject every ASCII control 
     ]) {
       const path = `/reports/${suffix}`;
       assert.equal(
-        pdfSchema.safeParse({ route: path }).success,
+        pdfRenderSchema.safeParse({ route: path }).success,
         false,
         `PDF: ${code}`,
       );
@@ -41,7 +41,7 @@ test('path validation preserves accepted printable and Unicode characters', () =
     String.fromCharCode(0x7f),
   ]) {
     const path = `/reports/${suffix}`;
-    assert.equal(pdfSchema.safeParse({ route: path }).success, true);
+    assert.equal(pdfRenderSchema.safeParse({ route: path }).success, true);
     assert.equal(pdfRoutePatternSchema.safeParse(`${path}/{id}`).success, true);
     assert.equal(
       buildDataApiUrl('https://example.com/api', path, {}).origin,

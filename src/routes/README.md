@@ -10,7 +10,7 @@ and `landscape/[id].pdf` resolve a document ID and force the named orientation;
 The generic GET/POST test export lives in `api/exports/pdf/test/`. It uses the common
 PDF renderer schema from `api/exports/pdf/schema.ts`.
 All PDF method factories call `createPdfHandler` from `api/exports/pdf/handler.ts`
-with `schema`, `readInput` and `prepareInput`. Document and quarterly endpoints
+with `schema`, `readRequestInput` and `prepareInput`. Document and quarterly endpoints
 have local URL-parameter schemas next to `get.ts`; target resolution also lives
 alongside each route.
 `src/services/pdf/` owns Chromium rendering and navigation restrictions.
@@ -96,7 +96,7 @@ covers new routes. Add HTTP behavior tests under `test/http/` and update
 `docs/endpoints.md` when adding an endpoint. Run `npm run typecheck`,
 `npm run knip`, and `npm test`.
 
-For GET/POST exports, declare accepted fields and a `readInput` function in the
+For GET/POST exports, declare accepted fields and a `readRequestInput` function in the
 endpoint's `schema.ts`. Call `decodeExportInput(req, jsonFields)` with only the
 JSON fields used by that endpoint. PDF test uses `['query', 'landscape']`, brief
 uses `['slides']`, and each template export uses `['replacements']`. The helper

@@ -8,14 +8,22 @@ The example below adds `GET /sales-report.pptx?title=Quarterly%20sales`. It reus
 
 ### 1. Define the request schema
 
-Add this to `src/schemas.ts`, which already imports `z`:
+Create `src/routes/sales-report.pptx/schema.ts`:
 
 ```ts
-export const salesReportSchema = z
+import { z } from 'zod';
+
+import type { Request } from 'express';
+
+export const requestSchema = z
   .object({ title: z.string().min(1).max(5000).default('Sales report') })
   .strict();
 
-export type SalesReportInput = z.infer<typeof salesReportSchema>;
+export type RequestInput = z.infer<typeof requestSchema>;
+
+export function readRequestInput(req: Request) {
+  return req.query;
+}
 ```
 
 Give optional parameters defaults so the URL also works without a query string. `.strict()` rejects misspelled or unknown parameters. Keep application defaults in `src/config.ts`; use environment settings for hosts, credentials, and runtime limits.
@@ -27,7 +35,7 @@ Create `src/services/jszip/sales-report-service.ts`:
 ```ts
 import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
 
-import type { SalesReportInput } from '@/schemas';
+import type { RequestInput as SalesReportInput } from '@/routes/sales-report.pptx/schema';
 
 export class SalesReportService {
   private readonly template: DaaPocPresentationService;
@@ -46,7 +54,8 @@ This starting implementation puts `title` into `TEXT_ME` and uses the existing r
 
 ### 3. Declare the dependency
 
-In `src/http/types.ts`, add `SalesReportInput` to the existing import from `../schemas.ts`, then add this property inside `AppOptions`:
+In `src/http/types.ts`, import `RequestInput as SalesReportInput` from
+`@/routes/sales-report.pptx/schema`, then add this property inside `AppOptions`:
 
 ```ts
 salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
@@ -80,7 +89,8 @@ and the filename defines GET; the loader registers it automatically:
 ```ts
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
-import { salesReportSchema } from '@/schemas';
+
+import { readRequestInput, requestSchema } from './schema.ts';
 
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
@@ -90,7 +100,7 @@ export default function createHandler({
   queues,
 }: RouteDependencies): RequestHandler {
   return async (req, res) => {
-    const input = salesReportSchema.parse(req.query);
+    const input = requestSchema.parse(readRequestInput(req));
     if (!salesReport) {
       throw new AppError(
         404,
@@ -115,7 +125,7 @@ files, or validate input and call `res.json(data)` for JSON endpoints.
 
 For GET and POST sharing an operation, put the factory in `handler.ts` and create
 `get.ts` and `post.ts` that each contain `export { default } from './handler.ts';`.
-Define the endpoint's `inputSchema` and `readInput(req)` in its local `schema.ts`.
+Define the endpoint's `requestSchema` and `readRequestInput(req)` in its local `schema.ts`.
 The reader calls `decodeExportInput(req, ['slides'])` (with that endpoint's own
 JSON field list) before validation. This helper reads POST bodies directly and
 decodes only the named GET/HEAD fields; it has no global parameter registry.

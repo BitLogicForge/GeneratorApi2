@@ -92,29 +92,47 @@ The common renderer executes the waiting logic in
 Every PDF route calls `createPdfHandler` with the same three fields:
 
 - `schema`: validates that endpoint's input;
-- `readInput`: reads GET/POST data or the document ID from the request;
-- `prepareInput`: converts validated data into the shared `PdfInput` contract.
+- `readRequestInput`: reads GET/POST data or the document ID from the request;
+- `prepareInput`: converts validated data into the shared `PdfRenderInput` contract.
 
 The handler handles validation and calls the common queue/download flow.
 Document and quarterly endpoints have local URL-parameter schemas. The common
 PDF renderer schema is shared by all endpoints, including the generic test export:
 
-| Schema file (document paths relative to `src/routes/api/exports/pdf/`) | Accepted input                                                          |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `src/routes/api/exports/pdf/schema.ts`                                 | Shared PDF renderer contract, also validated by the generic test export |
-| `portrait/[id].pdf/schema.ts`                                          | Document ID plus optional language/year                                 |
-| `landscape/[id].pdf/schema.ts`                                         | Document ID plus optional language/year                                 |
-| `portrait/quarterly/schema.ts`                                         | Direct year, quarter and language parameters                            |
+| Schema file (document paths relative to `src/routes/api/exports/pdf/`) | Accepted input                                                                       |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `src/routes/api/exports/pdf/schema.ts`                                 | Technical PDF options and internal query-value transport; no business parameter list |
+| `portrait/[id].pdf/schema.ts`                                          | Document ID plus optional language/year                                              |
+| `landscape/[id].pdf/schema.ts`                                         | Document ID plus optional language/year                                              |
+| `portrait/quarterly/schema.ts`                                         | Direct year, quarter and language parameters                                         |
 
 The test endpoint declares accepted export fields and GET JSON decoding in
-`test/schema.ts`. It reuses the shared PDF contract for validation and passes
-the resulting `PdfInput` through directly. Its `query`
+`test/schema.ts`. It reuses only the shared technical PDF options, declares a strict local
+`webappQuerySchema`, and passes the resulting `PdfRenderInput` through directly. Its `query`
 object accepts only `language`, `year`, `quarter` and `print`.
 Each document route resolves its target in a separate `document-pdf.ts` next to
 `get.ts`, including language defaults, reserved query checks, fixed orientation
 and optional readiness settings. The quarterly route keeps its target
 configuration in `quarterly-report-pdf.ts`. All use the same Chromium renderer
 and central usage statistics.
+
+## Schema naming
+
+Every route uses the same names:
+
+| Name                                | Meaning                                                                            |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| `requestSchema`                     | API request data accepted by this endpoint                                         |
+| `webappQuerySchema`                 | Allowed parameters sent to the HTML webapp; used only by PDF routes                |
+| `readRequestInput`                  | Reads/decodes HTTP input before validation                                         |
+| `RequestInput`                      | Validated API request type, where needed for input preparation                     |
+| `pdfRenderSchema`, `PdfRenderInput` | Shared technical renderer contract and type, defined in the parent PDF `schema.ts` |
+
+For PDF requests, `requestSchema.query` uses `webappQuerySchema`. Document-ID
+requests also contain `id`; the test request also contains PDF options. Quarterly
+normalizes direct GET parameters into the same internal `query` field. Its public
+URL remains `?year=2027&quarter=2&language=pl`. PPTX routes have `requestSchema`
+and `readRequestInput`, but no webapp query because they generate decks directly.
 
 ## Where generation happens
 

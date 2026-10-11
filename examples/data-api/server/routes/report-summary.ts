@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { documentIdSchema } from '@/pdf-route';
+import { documentIdSchema } from '@/validation/document-id';
 
 const querySchema = z
   .object({

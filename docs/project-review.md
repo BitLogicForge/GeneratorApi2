@@ -54,7 +54,7 @@ The route handler checks the origin of navigation requests and calls `route.cont
 
 ### R2. Validate document text for XML compatibility
 
-**Locations:** [schemas.ts:65](../src/schemas.ts#L65), [placeholders.ts](../src/pptx/jszip/placeholders.ts), [set-text.ts](../src/pptx/jszip/text/set-text.ts), and [write-xml.ts](../src/pptx/jszip/package/write-xml.ts).
+**Locations:** [jszip/schema.ts](../src/routes/api/exports/pptx/jszip/schema.ts), [placeholders.ts](../src/pptx/jszip/placeholders.ts), [set-text.ts](../src/pptx/jszip/text/set-text.ts), and [write-xml.ts](../src/pptx/jszip/package/write-xml.ts).
 
 Replacement values are length-checked strings, and DOM text assignment correctly escapes markup. However, XML-forbidden characters are accepted and serialized literally.
 

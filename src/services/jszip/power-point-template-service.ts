@@ -5,7 +5,7 @@ import { replacePlaceholders } from '@/pptx/jszip/placeholders';
 
 import { TemplateSource } from './template-source.ts';
 
-import type { TemplatePresentationInput } from '@/schemas';
+import type { PptxRenderInput } from '@/routes/api/exports/pptx/jszip/schema';
 
 /** Mutates only text in slides and speaker notes; preserves all other ZIP parts. */
 export class PowerPointTemplateService {
@@ -26,10 +26,7 @@ export class PowerPointTemplateService {
   }
 
   /** Replaces paragraph tokens across formatting runs and rejects missing or unused replacement keys. */
-  async generate(
-    template: string,
-    input: TemplatePresentationInput,
-  ): Promise<Buffer> {
+  async generate(template: string, input: PptxRenderInput): Promise<Buffer> {
     // Registry lookup prevents request-controlled paths or arbitrary file reads.
     const source = this.templates.get(template);
     if (!source)

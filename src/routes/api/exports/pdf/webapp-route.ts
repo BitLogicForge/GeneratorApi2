@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { hasControlCharacters } from './validation/control-characters.ts';
+import { hasControlCharacters } from '@/validation/control-characters';
 
 // Supports both path parameters (/documents/{id}) and query parameters (/document?id={id}).
 export const pdfRoutePatternSchema = z
@@ -19,11 +19,6 @@ export const pdfRoutePatternSchema = z
       !hasControlCharacters(value),
     'Use a relative route without fragments',
   );
-export const documentIdSchema = z
-  .string()
-  .min(1)
-  .max(80)
-  .regex(/^[A-Za-z0-9_-]+$/);
 export function resolvePdfRoute(pattern: string, id: string) {
   return pattern.replaceAll('{id}', encodeURIComponent(id));
 }

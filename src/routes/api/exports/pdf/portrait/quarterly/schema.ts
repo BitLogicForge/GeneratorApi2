@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
-// Direct GET parameters for the fixed quarterly-report PDF example.
-export const quarterlyPdfQuerySchema = z
+import type { Request } from 'express';
+
+// Only these parameters are forwarded to the fixed quarterly webapp page.
+const webappQuerySchema = z
   .object({
     year: z
       .string()
@@ -13,4 +15,11 @@ export const quarterlyPdfQuerySchema = z
   })
   .strict();
 
-export type QuarterlyPdfQuery = z.infer<typeof quarterlyPdfQuerySchema>;
+// API request: direct URL parameters become the webapp query.
+export const requestSchema = z.object({ query: webappQuerySchema }).strict();
+
+export type RequestInput = z.infer<typeof requestSchema>;
+
+export function readRequestInput(req: Request) {
+  return { query: req.query };
+}

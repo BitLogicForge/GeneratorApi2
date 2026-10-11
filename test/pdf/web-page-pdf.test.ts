@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import express from 'express';
 
 import { resolvePdfPrintSettings } from '@/config';
-import { pdfSchema } from '@/routes/api/exports/pdf/schema';
+import { pdfRenderSchema } from '@/routes/api/exports/pdf/schema';
 import { WebPagePdfService } from '@/services/pdf/web-page-pdf';
 
 test('real Chromium PDF, query parameters, upstream errors and readiness timeout', async () => {
@@ -24,9 +24,9 @@ test('real Chromium PDF, query parameters, upstream errors and readiness timeout
   });
   try {
     const bytes = await pdf.generate(
-      pdfSchema.parse({
+      pdfRenderSchema.parse({
         route: '/report',
-        query: { year: 2026 },
+        query: { year: 2026, customer: 'acme', includeTotals: true },
         waitForSelector: '[data-ready]',
       }),
     );
@@ -35,21 +35,32 @@ test('real Chromium PDF, query parameters, upstream errors and readiness timeout
     assert.equal(pdf.stats.launches, 1);
     assert.equal(pdf.stats.launchFailures, 0);
     assert.equal(query.year, '2026');
-    await assert.rejects(pdf.generate(pdfSchema.parse({ route: '/missing' })), {
-      code: 'UPSTREAM_ERROR',
-    });
+    assert.equal(query.customer, 'acme');
+    assert.equal(query.includeTotals, 'true');
+    await assert.rejects(
+      pdf.generate(pdfRenderSchema.parse({ route: '/missing' })),
+      {
+        code: 'UPSTREAM_ERROR',
+      },
+    );
     await assert.rejects(
       pdf.generate(
-        pdfSchema.parse({ route: '/report', waitForSelector: '#missing' }),
+        pdfRenderSchema.parse({
+          route: '/report',
+          waitForSelector: '#missing',
+        }),
       ),
       { code: 'RENDER_TIMEOUT' },
     );
     const pending = pdf.generate(
-      pdfSchema.parse({ route: '/report', waitForSelector: '#missing' }),
+      pdfRenderSchema.parse({ route: '/report', waitForSelector: '#missing' }),
     );
-    await assert.rejects(pdf.generate(pdfSchema.parse({ route: '/report' })), {
-      code: 'RENDER_BUSY',
-    });
+    await assert.rejects(
+      pdf.generate(pdfRenderSchema.parse({ route: '/report' })),
+      {
+        code: 'RENDER_BUSY',
+      },
+    );
     await assert.rejects(pending, { code: 'RENDER_TIMEOUT' });
   } finally {
     await pdf.close();
@@ -98,7 +109,7 @@ test('navigation stays within the configured origin across redirects, frames, an
   });
   try {
     const bytes = await pdf.generate(
-      pdfSchema.parse({
+      pdfRenderSchema.parse({
         route: '/redirect',
         waitForSelector: 'html[data-ready="true"]',
       }),
@@ -107,14 +118,14 @@ test('navigation stays within the configured origin across redirects, frames, an
     for (const route of ['/escape', '/chain', '/frame', '/script', '/popup']) {
       await assert.rejects(
         pdf.generate(
-          pdfSchema.parse({ route, waitForSelector: '#never-ready' }),
+          pdfRenderSchema.parse({ route, waitForSelector: '#never-ready' }),
         ),
         { code: 'NAVIGATION_BLOCKED' },
       );
       assert.equal(outsideRequests, 0, route);
     }
     const recovered = await pdf.generate(
-      pdfSchema.parse({
+      pdfRenderSchema.parse({
         route: '/nested/final',
         waitForSelector: 'html[data-ready="true"]',
       }),
@@ -165,7 +176,7 @@ test('configured PDF appearance controls images, page size and hidden elements',
     },
   });
   try {
-    const input = pdfSchema.parse({
+    const input = pdfRenderSchema.parse({
       route: '/print',
       format: 'A5',
       landscape: true,

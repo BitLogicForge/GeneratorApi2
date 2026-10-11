@@ -1,7 +1,7 @@
 import type pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '@/schemas';
+import type { BriefInput } from '@/routes/api/exports/pptx/pptxgenjs/brief/schema';
 
 export type PresentationTemplate = (
   deck: pptxgen,
-  input: PresentationInput,
+  input: BriefInput,
 ) => void | Promise<void>;

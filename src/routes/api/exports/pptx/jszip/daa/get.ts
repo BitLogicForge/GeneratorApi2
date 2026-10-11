@@ -1,7 +1,7 @@
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
 
-import { inputSchema, readInput } from './schema.ts';
+import { readRequestInput, requestSchema } from './schema.ts';
 
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
@@ -11,7 +11,7 @@ export default function createHandler({
   queues,
 }: RouteDependencies): RequestHandler {
   return async (req, res) => {
-    const input = inputSchema.parse(readInput(req));
+    const input = requestSchema.parse(readRequestInput(req));
     if (!templateReportDemo)
       throw new AppError(
         404,

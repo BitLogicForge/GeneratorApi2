@@ -8,7 +8,7 @@ import { navigationBoundary } from './navigation-boundary.ts';
 
 import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
-import type { PdfInput } from '@/routes/api/exports/pdf/schema';
+import type { PdfRenderInput } from '@/routes/api/exports/pdf/schema';
 
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
@@ -58,7 +58,7 @@ export class WebPagePdfService {
     return this.#browserPromise;
   }
   /** Prints in an isolated context, restricts navigation to the webapp, and always releases rendering resources. */
-  async generate(input: PdfInput) {
+  async generate(input: PdfRenderInput) {
     const url = new URL(input.route, this.config.baseUrl);
     if (url.origin !== this.config.baseUrl)
       throw new AppError(

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { documentIdSchema } from '@/pdf-route';
+import { documentIdSchema } from '@/validation/document-id';
 
 export function createCustomerRoute() {
   const router = Router();

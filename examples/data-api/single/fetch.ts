@@ -2,8 +2,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '@/config';
-import { documentIdSchema } from '@/pdf-route';
 import { DataApiClient } from '@/services/data-api-client';
+import { documentIdSchema } from '@/validation/document-id';
 
 const config = loadConfig();
 const id = documentIdSchema.parse(process.argv[2] ?? 'id2222');

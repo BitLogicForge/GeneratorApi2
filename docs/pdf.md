@@ -23,7 +23,7 @@ output filenames.
 ## Where PDF readiness is configured
 
 Every PDF render waits for the page `load` event and fonts. Waiting for a
-visible readiness element happens only when `PdfInput.waitForSelector` is set.
+visible readiness element happens only when `PdfRenderInput.waitForSelector` is set.
 There is no global `waitForSelector` setting.
 
 | Endpoint                              | Where the selector comes from                                                                                                    | Current behavior                                                          |
@@ -35,7 +35,7 @@ There is no global `waitForSelector` setting.
 
 The quarterly query schema validates year, quarter and language; the selector
 is set by its input resolver, not by the schema. For document-ID routes, add
-`waitForSelector: '[data-report-ready]'` to the `pdfSchema.parse({...})` object
+`waitForSelector: '[data-report-ready]'` to the `pdfRenderSchema.parse({...})` object
 in the chosen document route's `document-pdf.ts` to make that orientation wait for the marker.
 Set it in both files if both orientations should wait. These routes reject
 `waitForSelector` in the URL; readiness is configured only in their input files.

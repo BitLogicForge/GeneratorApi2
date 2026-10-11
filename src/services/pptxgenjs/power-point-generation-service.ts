@@ -4,7 +4,7 @@ import { AppError } from '@/errors';
 import { briefTemplate } from '@/pptx/pptxgenjs/templates/brief';
 
 import type { PresentationTemplate } from '@/pptx/pptxgenjs/types';
-import type { PresentationInput } from '@/schemas';
+import type { BriefInput } from '@/routes/api/exports/pptx/pptxgenjs/brief/schema';
 
 export class PowerPointGenerationService {
   private readonly templates: Map<string, PresentationTemplate>;
@@ -14,7 +14,7 @@ export class PowerPointGenerationService {
     this.templates = new Map(Object.entries(templates));
   }
   /** Runs a registered design on a fresh deck to keep request content and metadata isolated. */
-  async generate(template: string, input: PresentationInput) {
+  async generate(template: string, input: BriefInput) {
     const render = this.templates.get(template);
     if (!render)
       throw new AppError(

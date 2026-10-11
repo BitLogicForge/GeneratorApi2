@@ -10,13 +10,13 @@ import request from 'supertest';
 
 import { createApp } from '@/app';
 import { replacePlaceholders } from '@/pptx/jszip/placeholders';
-import { templatePresentationSchema } from '@/schemas';
+import { pptxRenderSchema } from '@/routes/api/exports/pptx/jszip/schema';
 import { PowerPointTemplateService } from '@/services/jszip/power-point-template-service';
 
 const path = new URL('../../../templates/business.pptx', import.meta.url)
   .pathname;
 const service = new PowerPointTemplateService({ business: path });
-const input = templatePresentationSchema.parse({
+const input = pptxRenderSchema.parse({
   replacements: {
     title: 'Revenue & growth <2026>',
     subtitle: 'Our strategy',
@@ -70,7 +70,7 @@ test('split and repeated placeholders preserve text-run formatting and escape re
     const result = await JSZip.loadAsync(
       await editor.generate(
         'split',
-        templatePresentationSchema.parse({
+        pptxRenderSchema.parse({
           replacements: { title: 'A & B', customer: 'Acme' },
         }),
       ),
@@ -98,7 +98,7 @@ test('template names and replacement keys are validated', async () => {
   await assert.rejects(
     service.generate(
       'business',
-      templatePresentationSchema.parse({
+      pptxRenderSchema.parse({
         replacements: { title: 'Only title' },
       }),
     ),

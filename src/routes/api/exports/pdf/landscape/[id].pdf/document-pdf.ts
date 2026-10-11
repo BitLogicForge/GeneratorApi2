@@ -1,10 +1,12 @@
 import { AppError } from '@/errors';
-import { pdfRoutePatternSchema, resolvePdfRoute } from '@/pdf-route';
-import { pdfSchema } from '@/routes/api/exports/pdf/schema';
+import { pdfRenderSchema } from '@/routes/api/exports/pdf/schema';
+import {
+  pdfRoutePatternSchema,
+  resolvePdfRoute,
+} from '@/routes/api/exports/pdf/webapp-route';
 
-import type { z } from 'zod';
 import type { Config } from '@/config';
-import type { documentPdfRequestSchema } from './schema.ts';
+import type { RequestInput } from './schema.ts';
 
 /** Resolves this endpoint's document parameters and print settings. */
 export function createDocumentPdfResolver(
@@ -12,10 +14,7 @@ export function createDocumentPdfResolver(
 ) {
   // Validate the configured route once when the endpoint is registered.
   const routePattern = pdfRoutePatternSchema.parse(config.pdfRoutePattern);
-  return ({
-    id,
-    query: queryValues,
-  }: z.infer<typeof documentPdfRequestSchema>) => {
+  return ({ id, query: queryValues }: RequestInput) => {
     // Forward only the explicitly supported, validated webapp parameters.
     const query: { language?: string; year?: string } = {};
     if (queryValues.language !== undefined)
@@ -41,7 +40,7 @@ export function createDocumentPdfResolver(
       query.language = config.defaultLanguage;
     // Apply shared PDF defaults while keeping the endpoint-selected orientation.
     // No readiness selector is configured: wait only for page load and fonts.
-    return pdfSchema.parse({
+    return pdfRenderSchema.parse({
       route,
       query,
       filename: id,

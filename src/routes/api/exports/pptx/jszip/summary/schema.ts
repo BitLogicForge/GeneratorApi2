@@ -1,15 +1,16 @@
 import { decodeExportInput } from '@/http/input';
-import { templatePresentationSchema } from '@/schemas';
+
+import { pptxRenderSchema } from '../schema.ts';
 
 import type { Request } from 'express';
 
-// Explicit fields accepted by this endpoint; validation rules come from the shared contract.
-export const inputSchema = templatePresentationSchema.pick({
+// API request fields for this template export; no webapp query is used.
+export const requestSchema = pptxRenderSchema.pick({
   filename: true,
   replacements: true,
 });
 
 /** Reads GET/HEAD query parameters or POST JSON for this endpoint only. */
-export function readInput(req: Request) {
+export function readRequestInput(req: Request) {
   return decodeExportInput(req, ['replacements']);
 }

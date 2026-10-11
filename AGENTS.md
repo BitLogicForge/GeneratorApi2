@@ -17,7 +17,7 @@ The following map identifies the main areas of responsibility:
 | Startup, dependency wiring, and shutdown                        | `src/index.ts`                                                             |
 | Express, middleware, and request IDs                            | `src/app.ts`                                                               |
 | Configuration and limits                                        | `src/config.ts`                                                            |
-| Input validation and document routes                            | `src/schemas.ts`, `src/pdf-route.ts`                                       |
+| Input validation and document routes                            | `src/routes/**/schema.ts`, `src/validation/`                               |
 | Endpoints                                                       | `src/routes/` (folders define URLs; `get.ts` and `post.ts` define methods) |
 | Service contracts, GET decoding, downloads, and errors          | `src/http/`, `src/errors.ts`                                               |
 | Queues, timeouts, and cancellation of waiting jobs              | `src/queue/generation-queue.ts`                                            |

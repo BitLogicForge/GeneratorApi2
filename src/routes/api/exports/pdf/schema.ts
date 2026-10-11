@@ -5,7 +5,7 @@ import { hasControlCharacters } from '@/validation/control-characters';
 import { filenameSchema } from '@/validation/filename';
 
 /** Shared PDF renderer contract, used by every PDF endpoint. */
-export const pdfSchema = z
+export const pdfRenderSchema = z
   .object({
     route: z
       .string()
@@ -17,27 +17,12 @@ export const pdfSchema = z
           !v.startsWith('//') && !v.includes('\\') && !hasControlCharacters(v),
         'Use a relative webapp route',
       ),
-    // Explicit parameters supported by the example webapp; unknown keys fail validation.
+    // Internal transport values; each route validates its own allowed parameter names.
     query: z
-      .object({
-        language: z.string().trim().min(1).max(100).optional(),
-        year: z
-          .union([
-            z.number().int().min(2000).max(2100),
-            z
-              .string()
-              .regex(/^\d{4}$/)
-              .refine(
-                (value) => Number(value) >= 2000 && Number(value) <= 2100,
-              ),
-          ])
-          .optional(),
-        quarter: z
-          .union([z.number().int().min(1).max(4), z.enum(['1', '2', '3', '4'])])
-          .optional(),
-        print: z.boolean().optional(),
-      })
-      .strict()
+      .record(
+        z.string().max(100),
+        z.union([z.string().max(2000), z.number(), z.boolean()]),
+      )
       .default({}),
     filename: filenameSchema.default('document'),
     waitForSelector: z.string().min(1).max(300).optional(),
@@ -48,4 +33,4 @@ export const pdfSchema = z
   })
   .strict();
 
-export type PdfInput = z.infer<typeof pdfSchema>;
+export type PdfRenderInput = z.infer<typeof pdfRenderSchema>;

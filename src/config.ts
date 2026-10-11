@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
+import { pdfRoutePatternSchema } from '@/routes/api/exports/pdf/webapp-route';
+
 import { dataApiEndpoints } from './data-api/endpoints.ts';
-import { pdfRoutePatternSchema } from './pdf-route.ts';
 
 // Shared defaults for environment configuration and directly constructed clients.
 export const dataApiCacheDefaults = {

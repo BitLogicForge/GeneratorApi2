@@ -1,14 +1,15 @@
 import type { Config } from '@/config';
 import type { ReadinessState, RendererState } from '@/observability/constants';
 import type { GenerationQueues } from '@/queue/generation-queue';
-import type { PdfInput } from '@/routes/api/exports/pdf/schema';
-import type { PresentationInput, TemplatePresentationInput } from '@/schemas';
+import type { PdfRenderInput } from '@/routes/api/exports/pdf/schema';
+import type { PptxRenderInput } from '@/routes/api/exports/pptx/jszip/schema';
+import type { BriefInput } from '@/routes/api/exports/pptx/pptxgenjs/brief/schema';
 import type { createObservability } from './observability.ts';
 
 export interface AppOptions {
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
   pdf: {
-    generate(input: PdfInput): Promise<Buffer>;
+    generate(input: PdfRenderInput): Promise<Buffer>;
     readonly stats?: {
       state: RendererState;
       launches: number;
@@ -18,13 +19,10 @@ export interface AppOptions {
     };
   };
   presentations: {
-    generate(template: string, input: PresentationInput): Promise<Buffer>;
+    generate(template: string, input: BriefInput): Promise<Buffer>;
   };
   templatePresentations?: {
-    generate(
-      template: string,
-      input: TemplatePresentationInput,
-    ): Promise<Buffer>;
+    generate(template: string, input: PptxRenderInput): Promise<Buffer>;
   };
   config?: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
   queues?: GenerationQueues;

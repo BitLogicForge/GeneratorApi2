@@ -6,10 +6,10 @@ import request from 'supertest';
 import { createApp } from '@/app';
 import { loadConfig } from '@/config';
 
-import type { PdfInput } from '@/routes/api/exports/pdf/schema';
+import type { PdfRenderInput } from '@/routes/api/exports/pdf/schema';
 
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {
-  const inputs: PdfInput[] = [];
+  const inputs: PdfRenderInput[] = [];
   const app = createApp({
     config: {
       ...loadConfig({}),

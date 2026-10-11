@@ -1,6 +1,7 @@
 node_modules/
 dist/
 output/
+.cache/ms-playwright/
 package-lock.json
 templates/
 .env

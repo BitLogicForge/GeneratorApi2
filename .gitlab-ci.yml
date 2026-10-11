@@ -12,23 +12,48 @@ variables:
   AZURE_CLI_IMAGE: 'mcr.microsoft.com/azure-cli:latest'
   # Must match the output path in scripts/build-azure.mjs.
   AZURE_ZIP_PATH: 'output/azure/generator-api.zip'
+  PLAYWRIGHT_BROWSERS_PATH: '$CI_PROJECT_DIR/.cache/ms-playwright'
 
 stages:
+  - verify
   - build
   - deploy
 
 workflow:
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH'
     - when: never
 
-build_zip:
-  stage: build
+.node_job:
   image: '$NODE_IMAGE'
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .cache/ms-playwright/
+
+verify:
+  extends: .node_job
+  stage: verify
   script:
     - npm ci --no-audit --no-fund
-    - npm run knip
+    - npm run verify:ci
+
+build_zip:
+  extends: .node_job
+  stage: build
+  needs:
+    - job: verify
+      artifacts: false
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && ($CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH)'
+  script:
+    - npm ci --no-audit --no-fund
+    - npm run browser:install
     - npm run build:azure
+    - npm run test:azure
   artifacts:
     paths:
       - '$AZURE_ZIP_PATH'
@@ -49,7 +74,7 @@ build_zip:
 deploy_main:
   extends: .azure_deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_BRANCH == $PRODUCTION_BRANCH'
   environment:
     name: production
   resource_group: azure-production
@@ -64,7 +89,7 @@ deploy_main:
 deploy_dev:
   extends: .azure_deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == $DEV_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_BRANCH == $DEV_BRANCH'
   environment:
     name: dev
   resource_group: azure-dev

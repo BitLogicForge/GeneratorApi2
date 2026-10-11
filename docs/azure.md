@@ -70,7 +70,7 @@ Verify after deployment:
 
 ```bash
 curl --fail-with-body https://YOUR_WEB_APP.azurewebsites.net/health
-curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/demo-report.pptx?TEXT_ME=Azure%20demo' --output demo-report.pptx
+curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/api/exports/pptx/jszip/daa?TEXT_ME=Azure%20demo' --output demo-report.pptx
 curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/id2222.pdf?language=en' --output id2222.pdf
 ```
 
@@ -85,7 +85,9 @@ The root `.gitlab-ci.yml` builds the ZIP and deploys automatically:
 | `main` | Production webapp            |
 | `dev`  | The same webapp's `dev` slot |
 
-Other branches and merge request pipelines do not run this pipeline. It has build and deploy stages, with no tests. Deployment jobs download the ZIP artifact produced by the build job. Deployments to each target are serialized with GitLab resource groups.
+Merge request pipelines run verification without packaging or deployment. Branch pipelines for the configured production and development branches verify, package, smoke-test, and deploy; other branch pipelines are skipped. `npm run verify:ci` runs code lint, type checking, Knip, formatting, Chromium installation, and all tests, stopping on the first failure. Packaging requires successful verification, and `npm run test:azure` checks the exact ZIP before it is published as a deployment artifact. Deployment jobs download that ZIP. Deployments to each target are serialized with GitLab resource groups.
+
+Browser downloads are cached under `.cache/ms-playwright/` with a key derived from `package-lock.json`. System dependencies are installed in each Node job even when the browser download is cached. Run `npm run verify:ci` locally on Linux to exercise the same verification commands; browser installation may need system-package permissions.
 
 Use a Linux GitLab runner with a Docker or Kubernetes executor that supports the configured container images. If your runner requires a tag, add its tag under `default: tags:` in `.gitlab-ci.yml`.
 

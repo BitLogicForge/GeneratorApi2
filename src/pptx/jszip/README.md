@@ -60,6 +60,29 @@ with `writeXml`. Chart, placeholder and slide operations save their own parts.
 Finish/save XML edits before looking up the same slide again. Duplicate slides
 before lookup, then scope lookup to the returned path when names repeat.
 
+For tables, `startRow` and `startColumn` are zero-based offsets, both defaulting
+to `0`. Use `startColumn: 1` to preserve first-column headers, or combine it with
+`startRow: 1` to preserve both the top row and first column:
+
+```ts
+fillTable(table.element, [['100', '200', '300']], {
+  startRow: 1,
+  startColumn: 1,
+});
+```
+
+Each data row must fill all columns from `startColumn` to the table's end, unless
+`resizeColumns: true` adjusts the column count. Data must fill all rows from
+`startRow`, unless `resizeRows: true` adjusts the row count. Enable both options
+to resize both dimensions. Column resizing requires nonempty, rectangular data.
+When growing rows, the last row is cloned, including its preserved column headers;
+new header labels therefore repeat the last row's labels.
+When growing columns, the last column's cells and width are cloned across every
+row, including header rows. New header labels repeat the last column's labels.
+Shrinking removes trailing columns. Table frame width adjusts with column widths,
+just as frame height adjusts when rows resize. Preserved rows retain existing
+cells, but gain or lose trailing cells to match the new column count.
+
 ## Limits and options
 
 Chart rows represent categories; columns represent the template's existing series.

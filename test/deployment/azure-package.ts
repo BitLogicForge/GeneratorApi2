@@ -1,4 +1,3 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import {
@@ -10,11 +9,15 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { createServer, type AddressInfo } from 'node:net';
+import { test } from 'node:test';
+
 import express from 'express';
 import JSZip from 'jszip';
+
+import type { AddressInfo } from 'node:net';
 
 test('Azure ZIP includes production assets and runs real document downloads', async (t) => {
   const archive = await JSZip.loadAsync(

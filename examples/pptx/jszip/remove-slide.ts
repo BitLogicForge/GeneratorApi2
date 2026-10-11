@@ -1,5 +1,7 @@
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
 import JSZip from 'jszip';
+
 import { listSlides } from '@/pptx/jszip/slides/list';
 import { removeSlide } from '@/pptx/jszip/slides/remove';
 

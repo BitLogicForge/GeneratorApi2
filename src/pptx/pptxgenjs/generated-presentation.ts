@@ -1,7 +1,10 @@
 import pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '@/schemas';
+
 import { AppError } from '@/errors';
+
 import { briefTemplate } from './templates/brief.ts';
+
+import type { PresentationInput } from '@/schemas';
 import type { PresentationTemplate } from './types.ts';
 
 export class GeneratedPresentationService {

@@ -1,6 +1,8 @@
-import type JSZip from 'jszip';
 import { DOMParser } from '@xmldom/xmldom';
+
 import { invalidTemplate } from './invalid-template.ts';
+
+import type JSZip from 'jszip';
 
 export const readXml = async (archive: JSZip, path: string) => {
   const file = archive.file(path);

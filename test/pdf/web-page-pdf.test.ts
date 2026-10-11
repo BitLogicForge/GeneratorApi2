@@ -1,8 +1,11 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
 import express from 'express';
-import { WebPagePdfService } from '@/services/web-page-pdf';
+
 import { pdfSchema } from '@/schemas';
+import { WebPagePdfService } from '@/services/web-page-pdf';
+
 test('real Chromium PDF, query parameters, upstream errors and readiness timeout', async () => {
   const webapp = express();
   let query: Record<string, unknown> = {};

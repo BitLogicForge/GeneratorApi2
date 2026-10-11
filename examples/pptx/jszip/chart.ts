@@ -1,7 +1,9 @@
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
 import JSZip from 'jszip';
-import { findNamedObjects } from '@/pptx/jszip/objects';
+
 import { fillCategoryChart } from '@/pptx/jszip/charts';
+import { findNamedObjects } from '@/pptx/jszip/objects';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects } = await findNamedObjects(zip, ['GGO']);

@@ -1,12 +1,14 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
+
 import request from 'supertest';
-import {
-  GenerationQueue,
-  createGenerationQueues,
-} from '@/queue/generation-queue';
+
 import { createApp } from '@/app';
+import {
+  createGenerationQueues,
+  GenerationQueue,
+} from '@/queue/generation-queue';
 
 function deferred() {
   let resolve!: () => void;

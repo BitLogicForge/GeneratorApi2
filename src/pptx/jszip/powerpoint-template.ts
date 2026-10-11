@@ -1,8 +1,12 @@
 import { readFile } from 'node:fs/promises';
+
 import JSZip from 'jszip';
-import { replacePlaceholders } from './placeholders.ts';
-import type { TemplatePresentationInput } from '@/schemas';
+
 import { AppError } from '@/errors';
+
+import { replacePlaceholders } from './placeholders.ts';
+
+import type { TemplatePresentationInput } from '@/schemas';
 
 /** Mutates only text in slides and speaker notes; preserves all other ZIP parts. */
 export class PowerPointTemplateService {

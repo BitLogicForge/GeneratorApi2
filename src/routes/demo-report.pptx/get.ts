@@ -1,8 +1,10 @@
+import { z } from 'zod';
+
+import { AppError } from '@/errors';
+import { sendDownload } from '@/http/download';
+
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
-import { z } from 'zod';
-import { sendDownload } from '@/http/download';
-import { AppError } from '@/errors';
 
 const demoQuerySchema = z
   .object({ TEXT_ME: z.string().max(5000).default('Generated report') })

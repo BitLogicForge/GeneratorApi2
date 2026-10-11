@@ -1,10 +1,12 @@
 import JSZip from 'jszip';
-import type { Document } from '@xmldom/xmldom';
-import { spreadsheet, relationshipNs } from '@/pptx/jszip/package/namespaces';
-import { readXml } from '@/pptx/jszip/package/read-xml';
-import { writeXml } from '@/pptx/jszip/package/write-xml';
-import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
+
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { relationshipNs, spreadsheet } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
+import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+
+import type { Document } from '@xmldom/xmldom';
 
 export async function resizeWorkbookTables(
   workbook: JSZip,

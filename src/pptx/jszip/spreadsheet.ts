@@ -1,6 +1,7 @@
-import type { Document } from '@xmldom/xmldom';
-import { spreadsheet } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { spreadsheet } from '@/pptx/jszip/package/namespaces';
+
+import type { Document } from '@xmldom/xmldom';
 
 /** Creates missing rows/cells while retaining existing cell styles. */
 export function setWorksheetCell(

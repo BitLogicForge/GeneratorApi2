@@ -1,14 +1,16 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import request from 'supertest';
-import JSZip from 'jszip';
+
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { TemplateReportDemoService } from '@/pptx/jszip/template-report-demo';
+import JSZip from 'jszip';
+import request from 'supertest';
+
 import { createApp } from '@/app';
+import { TemplateReportDemoService } from '@/pptx/jszip/template-report-demo';
 
 const template = fileURLToPath(
   new URL('../../../templates/daa.pptx', import.meta.url),

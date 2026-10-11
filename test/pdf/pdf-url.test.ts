@@ -1,8 +1,11 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
 import request from 'supertest';
+
 import { createApp } from '@/app';
 import { loadConfig } from '@/config';
+
 import type { PdfInput } from '@/schemas';
 
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {

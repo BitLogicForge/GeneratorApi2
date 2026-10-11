@@ -236,8 +236,9 @@ Give optional parameters defaults so the URL also works without a query string. 
 Create `src/pptx/jszip/sales-report.ts`:
 
 ```ts
-import type { SalesReportInput } from '@/schemas';
 import { TemplateReportDemoService } from './template-report-demo.ts';
+
+import type { SalesReportInput } from '@/schemas';
 
 export class SalesReportService {
   private readonly template: TemplateReportDemoService;
@@ -288,11 +289,12 @@ Create `src/routes/sales-report.pptx/get.ts`. The folder defines `/sales-report.
 and the filename defines GET; the loader registers it automatically:
 
 ```ts
-import type { RequestHandler } from 'express';
-import type { RouteDependencies } from '@/http/types';
-import { salesReportSchema } from '@/schemas';
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
+import { salesReportSchema } from '@/schemas';
+
+import type { RequestHandler } from 'express';
+import type { RouteDependencies } from '@/http/types';
 
 export default function createHandler({
   salesReport,

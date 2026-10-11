@@ -1,9 +1,10 @@
-import type { Element } from '@xmldom/xmldom';
-import { drawing } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-
+import { drawing } from '@/pptx/jszip/package/namespaces';
 import { setText } from '@/pptx/jszip/text/set-text';
+
 import { resizeTableRows } from './resize-rows.ts';
+
+import type { Element } from '@xmldom/xmldom';
 import type { FillTableOptions } from './types.ts';
 
 /** Fills table cells, optionally resizing data rows; startRow preserves header rows. */

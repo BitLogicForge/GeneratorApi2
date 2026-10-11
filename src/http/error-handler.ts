@@ -1,6 +1,8 @@
-import type { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
+
 import { AppError } from '@/errors';
+
+import type { ErrorRequestHandler } from 'express';
 
 /** Maps failures to the public error contract while keeping unexpected error details in server logs. */
 export function createErrorHandler(

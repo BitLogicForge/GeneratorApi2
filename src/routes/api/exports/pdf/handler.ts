@@ -1,8 +1,9 @@
+import { sendDownload } from '@/http/download';
+import { generationInput } from '@/http/input';
+import { pdfSchema } from '@/schemas';
+
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
-import { generationInput } from '@/http/input';
-import { sendDownload } from '@/http/download';
-import { pdfSchema } from '@/schemas';
 
 export default function createHandler({
   pdf,

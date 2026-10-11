@@ -1,13 +1,16 @@
+import { randomUUID } from 'node:crypto';
+
 import express from 'express';
 import helmet from 'helmet';
-import { randomUUID } from 'node:crypto';
+
 import { loadConfig } from './config.ts';
-import { createGenerationQueues } from './queue/generation-queue.ts';
 import { AppError } from './errors.ts';
 import { createErrorHandler } from './http/error-handler.ts';
-import type { AppOptions } from './http/types.ts';
 import { discoverRoutes } from './http/file-routes/discover.ts';
 import { registerRoutes } from './http/file-routes/register.ts';
+import { createGenerationQueues } from './queue/generation-queue.ts';
+
+import type { AppOptions } from './http/types.ts';
 
 const routes = await discoverRoutes(new URL('./routes/', import.meta.url));
 

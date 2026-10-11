@@ -1,13 +1,15 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
 import JSZip from 'jszip';
 import PptxGenJS from 'pptxgenjs';
-import { replacePlaceholders } from '@/pptx/jszip/placeholders';
-import { listSlides } from '@/pptx/jszip/slides/list';
-import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
-import { removeSlide } from '@/pptx/jszip/slides/remove';
+
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
+import { replacePlaceholders } from '@/pptx/jszip/placeholders';
+import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
+import { listSlides } from '@/pptx/jszip/slides/list';
+import { removeSlide } from '@/pptx/jszip/slides/remove';
 
 test('removed slides do not require placeholder replacements and last slide cannot be removed', async () => {
   const pptx = new PptxGenJS();

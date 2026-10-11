@@ -1,10 +1,10 @@
 import type { Config } from '@/config';
+import type { GenerationQueues } from '@/queue/generation-queue';
 import type {
   PdfInput,
   PresentationInput,
   TemplatePresentationInput,
 } from '@/schemas';
-import type { GenerationQueues } from '@/queue/generation-queue';
 
 export interface AppOptions {
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };

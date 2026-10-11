@@ -1,9 +1,10 @@
-import type JSZip from 'jszip';
+import { invalidTemplate } from './invalid-template.ts';
+import { packageNs } from './namespaces.ts';
+import { readXml } from './read-xml.ts';
 import { relsPath } from './relationship-path.ts';
 import { targetPath } from './target-path.ts';
-import { readXml } from './read-xml.ts';
-import { packageNs } from './namespaces.ts';
-import { invalidTemplate } from './invalid-template.ts';
+
+import type JSZip from 'jszip';
 
 /** Follows a typed internal package relationship so callers need no hardcoded chart or workbook paths. */
 export const resolveRelationship = async (

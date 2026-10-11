@@ -1,6 +1,7 @@
-import type { Element } from '@xmldom/xmldom';
-import { drawing } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { drawing } from '@/pptx/jszip/package/namespaces';
+
+import type { Element } from '@xmldom/xmldom';
 
 /** Replaces body paragraphs, cloning the last paragraph's bullets and run style when growing. */
 export function fillParagraphs(element: Element, values: string[]): void {

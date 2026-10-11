@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
+
 import JSZip from 'jszip';
+
 import { findNamedObjects } from '@/pptx/jszip/objects';
 import { chartNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';

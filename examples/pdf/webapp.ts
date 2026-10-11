@@ -1,4 +1,5 @@
 import express from 'express';
+
 const app = express();
 app.get('/reports/quarterly', (req, res) => {
   // The demo only interpolates validated numeric values.

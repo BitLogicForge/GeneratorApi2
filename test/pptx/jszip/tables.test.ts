@@ -1,9 +1,12 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
 import { XMLSerializer } from '@xmldom/xmldom';
+
 import { findNamedObjects } from '@/pptx/jszip/objects';
-import { fillTable } from '@/pptx/jszip/tables/fill';
 import { drawing } from '@/pptx/jszip/package/namespaces';
+import { fillTable } from '@/pptx/jszip/tables/fill';
+
 import { loadTemplate } from './fixtures.ts';
 
 test('table resizing preserves headers and row styling', async () => {

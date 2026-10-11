@@ -1,6 +1,7 @@
-import { access, readFile, readdir, writeFile } from 'node:fs/promises';
+import { access, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { init, parse } from 'es-module-lexer/minimal';
 
 /** Rewrites source aliases in emitted JavaScript so Node needs no runtime loader. */

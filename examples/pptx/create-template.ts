@@ -1,5 +1,7 @@
-import pptxgen from 'pptxgenjs';
 import { fileURLToPath } from 'node:url';
+
+import pptxgen from 'pptxgenjs';
+
 // Run once to create the sample; the API subsequently reads this actual PPTX file.
 const deck = new pptxgen();
 deck.layout = 'LAYOUT_WIDE';

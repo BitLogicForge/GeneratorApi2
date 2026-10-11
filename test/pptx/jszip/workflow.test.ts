@@ -1,16 +1,19 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { test } from 'node:test';
+
 import JSZip from 'jszip';
-import { listSlides } from '@/pptx/jszip/slides/list';
-import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
-import { removeSlide } from '@/pptx/jszip/slides/remove';
-import { findNamedObjects } from '@/pptx/jszip/objects';
+
 import { fillCategoryChart } from '@/pptx/jszip/charts';
+import { findNamedObjects } from '@/pptx/jszip/objects';
 import { chartNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
-import { loadTemplate, chartPath } from './fixtures.ts';
+import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
+import { listSlides } from '@/pptx/jszip/slides/list';
+import { removeSlide } from '@/pptx/jszip/slides/remove';
+
+import { chartPath, loadTemplate } from './fixtures.ts';
 
 test('duplicated slide has independent editable chart/workbook and removable deck entry', async () => {
   const sourceBytes = await readFile('templates/daa.pptx');

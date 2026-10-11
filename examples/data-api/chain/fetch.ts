@@ -1,8 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+
 import { loadConfig } from '@/config';
 import { documentIdSchema } from '@/pdf-route';
 import { DataApiClient } from '@/services/data-api-client';
+
 import { fetchReportDataChain } from './collect.ts';
 
 const config = loadConfig();

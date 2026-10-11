@@ -41,10 +41,12 @@ namespace constants and `package/invalid-template.ts` creates template errors.
 
 ```ts
 import { readFile, writeFile } from 'node:fs/promises';
+
 import JSZip from 'jszip';
+
 import { findNamedObjects } from '@/pptx/jszip/objects';
-import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects, slides } = await findNamedObjects(zip, ['TEXT_ME']);

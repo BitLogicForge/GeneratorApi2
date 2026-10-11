@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { dataApiEndpoints } from './data-api/endpoints.ts';
 import { pdfRoutePatternSchema } from './pdf-route.ts';
 

@@ -1,14 +1,17 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import express from 'express';
-import type { AddressInfo } from 'node:net';
-import { z } from 'zod';
-import { loadConfig } from '@/config';
-import request from 'supertest';
+import { test } from 'node:test';
+
 import { fetchReportDataChain } from '@examples/data-api/chain/collect';
 import { createCustomerRoute } from '@examples/data-api/server/routes/customer';
 import { createReportSummaryRoute } from '@examples/data-api/server/routes/report-summary';
+import express from 'express';
+import request from 'supertest';
+import { z } from 'zod';
+
+import { loadConfig } from '@/config';
 import { DataApiClient } from '@/services/data-api-client';
+
+import type { AddressInfo } from 'node:net';
 
 test('data API config validates URLs and supports an unconfigured API', () => {
   const config = loadConfig({});

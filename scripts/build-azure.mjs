@@ -4,8 +4,8 @@ import {
   lstat,
   mkdir,
   mkdtemp,
-  readFile,
   readdir,
+  readFile,
   readlink,
   rm,
   writeFile,
@@ -13,7 +13,9 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import JSZip from 'jszip';
+
 import { rewriteSourceAliases } from './rewrite-imports.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));

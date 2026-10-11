@@ -1,11 +1,13 @@
-import type JSZip from 'jszip';
-
-import { writeXml } from '@/pptx/jszip/package/write-xml';
-import { relationshipNs, packageNs } from '@/pptx/jszip/package/namespaces';
-import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { posix } from 'node:path';
-import { deck } from './deck.ts';
+
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { packageNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+
 import { copySlideParts } from './copy-parts.ts';
+import { deck } from './deck.ts';
+
+import type JSZip from 'jszip';
 
 /** Inserts after the source. Copies mutable charts, embedded files and notes, sharing layouts/media. */
 export async function duplicateSlide(

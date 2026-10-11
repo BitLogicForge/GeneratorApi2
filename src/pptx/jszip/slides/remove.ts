@@ -1,9 +1,10 @@
-import type JSZip from 'jszip';
-
-import { writeXml } from '@/pptx/jszip/package/write-xml';
-import { relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { relationshipNs } from '@/pptx/jszip/package/namespaces';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+
 import { deck } from './deck.ts';
+
+import type JSZip from 'jszip';
 
 /** Removes a slide from the deck. Retains package assets to preserve shared relationships. */
 export async function removeSlide(zip: JSZip, path: string): Promise<void> {

@@ -1,14 +1,16 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { test } from 'node:test';
+
+import { DOMParser } from '@xmldom/xmldom';
 import JSZip from 'jszip';
 import request from 'supertest';
-import { DOMParser } from '@xmldom/xmldom';
+
+import { createApp } from '@/app';
 import { PowerPointTemplateService } from '@/pptx/jszip/powerpoint-template';
 import { templatePresentationSchema } from '@/schemas';
-import { createApp } from '@/app';
 
 const path = new URL('../../../templates/business.pptx', import.meta.url)
   .pathname;

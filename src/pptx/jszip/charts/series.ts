@@ -1,10 +1,12 @@
-import type { Document, Element } from '@xmldom/xmldom';
-import { chartNs } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { chartNs } from '@/pptx/jszip/package/namespaces';
 import { setWorksheetCell } from '@/pptx/jszip/spreadsheet';
+
 import { fillCache } from './cache.ts';
-import type { CategoryChartOptions } from './types.ts';
+
+import type { Document, Element } from '@xmldom/xmldom';
 import type { createChartRange } from './ranges.ts';
+import type { CategoryChartOptions } from './types.ts';
 
 export function fillChartSeries(
   sheet: Document,

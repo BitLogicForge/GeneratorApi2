@@ -1,6 +1,7 @@
-import type { Document, Element } from '@xmldom/xmldom';
-import { spreadsheet } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { spreadsheet } from '@/pptx/jszip/package/namespaces';
+
+import type { Document, Element } from '@xmldom/xmldom';
 
 export function createChartRange(
   sheet: Document,

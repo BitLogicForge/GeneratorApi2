@@ -1,12 +1,14 @@
-import type JSZip from 'jszip';
-import { readXml } from '@/pptx/jszip/package/read-xml';
-
-import { packageNs, contentNs } from '@/pptx/jszip/package/namespaces';
-import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { posix } from 'node:path';
+
 import { XMLSerializer } from '@xmldom/xmldom';
+
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { contentNs, packageNs } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
 import { relsPath } from '@/pptx/jszip/package/relationship-path';
 import { targetPath } from '@/pptx/jszip/package/target-path';
+
+import type JSZip from 'jszip';
 
 export async function copySlideParts(zip: JSZip, sourcePath: string) {
   const contentTypes = await readXml(zip, '[Content_Types].xml');

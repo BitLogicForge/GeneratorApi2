@@ -1,12 +1,11 @@
-import {
-  chromium,
-  errors,
-  type Browser,
-  type BrowserContext,
-} from 'playwright';
+import { chromium, errors } from 'playwright';
+
+import { AppError } from '@/errors';
+
+import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
 import type { PdfInput } from '@/schemas';
-import { AppError } from '@/errors';
+
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
   #active = 0;

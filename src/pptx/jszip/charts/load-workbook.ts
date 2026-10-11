@@ -1,14 +1,15 @@
 import JSZip from 'jszip';
-import type { Document } from '@xmldom/xmldom';
+
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import {
   chartNs,
-  spreadsheet,
   relationshipNs,
+  spreadsheet,
 } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
-
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
-import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+
+import type { Document } from '@xmldom/xmldom';
 
 export async function loadChartWorkbook(
   zip: JSZip,

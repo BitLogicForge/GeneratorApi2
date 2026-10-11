@@ -1,6 +1,7 @@
-import type { Element } from '@xmldom/xmldom';
-import { drawing } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { drawing } from '@/pptx/jszip/package/namespaces';
+
+import type { Element } from '@xmldom/xmldom';
 
 /** Uses the first text run for replacement content, retaining its formatting and clearing remaining runs. */
 export function setText(element: Element, value: string) {

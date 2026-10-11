@@ -1,11 +1,13 @@
 import { fileURLToPath } from 'node:url';
-import { PowerPointTemplateService } from './pptx/jszip/powerpoint-template.ts';
-import { TemplateReportDemoService } from './pptx/jszip/template-report-demo.ts';
+
 import { createApp } from './app.ts';
 import { loadConfig } from './config.ts';
-import { WebPagePdfService } from './services/web-page-pdf.ts';
+import { PowerPointTemplateService } from './pptx/jszip/powerpoint-template.ts';
+import { TemplateReportDemoService } from './pptx/jszip/template-report-demo.ts';
 import { GeneratedPresentationService } from './pptx/pptxgenjs/generated-presentation.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
+import { WebPagePdfService } from './services/web-page-pdf.ts';
+
 const config = loadConfig();
 const pdf = new WebPagePdfService(config);
 const queues = createGenerationQueues({

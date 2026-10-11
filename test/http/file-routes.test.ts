@@ -1,14 +1,16 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
+
 import express from 'express';
 import request from 'supertest';
+
 import { discoverRoutes } from '@/http/file-routes/discover';
-import { registerRoutes } from '@/http/file-routes/register';
 import { routePath } from '@/http/file-routes/path';
+import { registerRoutes } from '@/http/file-routes/register';
 import { createGenerationQueues } from '@/queue/generation-queue';
 
 async function fixture(files: Record<string, string>) {

@@ -1,14 +1,16 @@
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
 import JSZip from 'jszip';
-import { listSlides } from '@/pptx/jszip/slides/list';
-import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
-import { removeSlide } from '@/pptx/jszip/slides/remove';
-import { findNamedObjects } from '@/pptx/jszip/objects';
+
 import { fillCategoryChart } from '@/pptx/jszip/charts';
+import { findNamedObjects } from '@/pptx/jszip/objects';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
+import { listSlides } from '@/pptx/jszip/slides/list';
+import { removeSlide } from '@/pptx/jszip/slides/remove';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillParagraphs } from '@/pptx/jszip/text/fill-paragraphs';
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
-import { writeXml } from '@/pptx/jszip/package/write-xml';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const [source] = await listSlides(zip);

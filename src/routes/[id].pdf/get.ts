@@ -1,5 +1,4 @@
-import type { RequestHandler } from 'express';
-import type { RouteDependencies } from '@/http/types';
+import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
 import {
   documentIdSchema,
@@ -8,7 +7,9 @@ import {
   resolvePdfRoute,
 } from '@/pdf-route';
 import { pdfSchema } from '@/schemas';
-import { AppError } from '@/errors';
+
+import type { RequestHandler } from 'express';
+import type { RouteDependencies } from '@/http/types';
 
 /** Generates a PDF from a document link with server-controlled query values. */
 export default function createHandler({

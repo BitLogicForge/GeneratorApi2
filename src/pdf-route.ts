@@ -1,5 +1,6 @@
-import { hasControlCharacters } from './validation/control-characters.ts';
 import { z } from 'zod';
+
+import { hasControlCharacters } from './validation/control-characters.ts';
 
 // Supports both path parameters (/documents/{id}) and query parameters (/document?id={id}).
 export const pdfRoutePatternSchema = z

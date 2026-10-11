@@ -1,6 +1,7 @@
-import type { Element } from '@xmldom/xmldom';
-import { chartNs } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { chartNs } from '@/pptx/jszip/package/namespaces';
+
+import type { Element } from '@xmldom/xmldom';
 
 export function fillCache(cache: Element, values: (string | number)[]) {
   const document = cache.ownerDocument!;

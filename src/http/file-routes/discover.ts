@@ -1,8 +1,10 @@
 import { readdir } from 'node:fs/promises';
 import { extname, join, relative, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { routePath } from './path.ts';
+
 import { compareRoutes } from './compare.ts';
+import { routePath } from './path.ts';
+
 import type { FileRoute, RouteFactory, RouteMethod } from './types.ts';
 
 const methods = new Set([

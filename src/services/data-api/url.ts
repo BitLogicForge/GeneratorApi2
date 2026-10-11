@@ -1,5 +1,6 @@
-import { hasControlCharacters } from '@/validation/control-characters';
 import { AppError } from '@/errors';
+import { hasControlCharacters } from '@/validation/control-characters';
+
 import type { DataApiQuery } from '@/services/data-api-client';
 
 /** Resolves and encodes a request within the configured API prefix. */

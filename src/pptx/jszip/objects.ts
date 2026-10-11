@@ -1,9 +1,10 @@
-import type JSZip from 'jszip';
-import type { Element } from '@xmldom/xmldom';
-import { readXml } from '@/pptx/jszip/package/read-xml';
-import { presentationNs } from '@/pptx/jszip/package/namespaces';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { presentationNs } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
 import { listSlides } from '@/pptx/jszip/slides/list';
+
+import type { Element } from '@xmldom/xmldom';
+import type JSZip from 'jszip';
 
 export interface NamedObject {
   path: string;

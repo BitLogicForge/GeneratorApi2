@@ -1,12 +1,15 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import { fetchReportDataBatch } from '@examples/data-api/batch/collect';
+import { createReportIdsRoute } from '@examples/data-api/server/routes/report-ids';
 import express from 'express';
-import type { AddressInfo } from 'node:net';
 import request from 'supertest';
+
 import { loadConfig } from '@/config';
 import { DataApiClient } from '@/services/data-api-client';
-import { createReportIdsRoute } from '@examples/data-api/server/routes/report-ids';
-import { fetchReportDataBatch } from '@examples/data-api/batch/collect';
+
+import type { AddressInfo } from 'node:net';
 
 test('demo report-ID endpoint returns IDs and rejects unknown query parameters', async () => {
   const app = express();

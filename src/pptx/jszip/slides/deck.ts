@@ -1,13 +1,13 @@
-import type JSZip from 'jszip';
-import { readXml } from '@/pptx/jszip/package/read-xml';
-
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import {
+  packageNs,
   presentationNs,
   relationshipNs,
-  packageNs,
 } from '@/pptx/jszip/package/namespaces';
-import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { readXml } from '@/pptx/jszip/package/read-xml';
 import { targetPath } from '@/pptx/jszip/package/target-path';
+
+import type JSZip from 'jszip';
 
 export async function deck(zip: JSZip) {
   const document = await readXml(zip, 'ppt/presentation.xml');

@@ -2,6 +2,19 @@
 
 Reviewed on 2026-10-11. Scope: application wiring, GET/POST contracts, validation, queues, Chromium rendering, editable PowerPoint generation, upstream data access, tests, and deployment tooling.
 
+## Fix status
+
+The findings below describe the original review baseline. Each fix is maintained in a separate commit.
+
+| Finding | Status  | Regression coverage                                                          |
+| ------- | ------- | ---------------------------------------------------------------------------- |
+| R1      | Fixed   | Chromium redirects, frames, script navigation, popups, and renderer recovery |
+| R2      | Pending | —                                                                            |
+| R3      | Pending | —                                                                            |
+| R4      | Pending | —                                                                            |
+| R5      | Pending | —                                                                            |
+| R6      | Pending | —                                                                            |
+
 The project has a good foundation for an internal document service. The most useful next steps are to fix the confirmed correctness gaps, make the existing checks mandatory in CI, and connect the typed data client to a real report export. Keep the current separation between HTTP handling, services, and document helpers.
 
 ## What is already working well

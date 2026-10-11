@@ -2,6 +2,8 @@ import { chromium, errors } from 'playwright';
 
 import { AppError } from '@/errors';
 
+import { navigationBoundary } from './navigation-boundary.ts';
+
 import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
 import type { PdfInput } from '@/schemas';
@@ -53,16 +55,12 @@ export class WebPagePdfService {
       context = await (
         await this.browser()
       ).newContext({ serviceWorkers: 'block' });
-      await context.route('**/*', (route) => {
-        const request = route.request();
-        if (
-          request.isNavigationRequest() &&
-          new URL(request.url()).origin !== this.config.baseUrl
-        )
-          return route.abort();
-        return route.continue();
-      });
       const page = await context.newPage();
+      const { failure: navigationFailure } = await navigationBoundary(
+        context,
+        page,
+        this.config.baseUrl,
+      );
       page.setDefaultTimeout(this.config.timeout);
       return await Promise.race([
         (async () => {
@@ -90,6 +88,7 @@ export class WebPagePdfService {
             },
           });
         })(),
+        navigationFailure,
         new Promise<never>((resolve, reject) => {
           timer = setTimeout(
             () =>

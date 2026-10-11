@@ -18,6 +18,8 @@ The PDF endpoint combines the route with the configured origin. Query values may
 
 Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
 
+PDF navigation, including every redirect hop and frame, must stay on `WEBAPP_BASE_URL`'s origin. Same-origin redirects are supported; popups and navigation outside that origin fail with 502 `NAVIGATION_BLOCKED` before the destination is requested. External assets and data requests are still allowed.
+
 See [examples/README.md](../examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
 
 ## Generate test output files

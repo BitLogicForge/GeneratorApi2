@@ -1,7 +1,6 @@
-import { quarterlyPdfQuerySchema } from '@/schemas/quarterly-pdf';
-
 import { createPdfHandler } from '../../handler.ts';
 import { createQuarterlyReportPdfInput } from './quarterly-report-pdf.ts';
+import { quarterlyPdfQuerySchema } from './schema.ts';
 
 import type { RouteDependencies } from '@/http/types';
 

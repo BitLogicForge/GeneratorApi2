@@ -20,7 +20,9 @@ test('download real documents from HTTP routes and save output files', async (t)
   await mkdir(outputDir, { recursive: true });
   const webapp = express();
   const languages: string[] = [];
+  let documentQuery: Record<string, unknown> = {};
   webapp.get('/documents/:id', (req, res) => {
+    documentQuery = { ...req.query };
     const language = req.query.language === 'de' ? 'de' : 'en';
     languages.push(language);
     res.send(
@@ -141,16 +143,18 @@ test('download real documents from HTTP routes and save output files', async (t)
     });
     await t.test('simple PDF URL with language override', async () => {
       await save(
-        '/api/exports/pdf/portrait/id2222.pdf?language=de',
+        '/api/exports/pdf/portrait/id2222.pdf?language=de&year=2027',
         'document-portrait-de.pdf',
       );
       assert.equal(languages.at(-1), 'de');
+      assert.deepEqual(documentQuery, { language: 'de', year: '2027' });
     });
     await t.test('document PDF with fixed landscape orientation', async () => {
       await save(
-        '/api/exports/pdf/landscape/id2222.pdf',
+        '/api/exports/pdf/landscape/id2222.pdf?language=pl&year=2028',
         'document-landscape.pdf',
       );
+      assert.deepEqual(documentQuery, { language: 'pl', year: '2028' });
     });
     await t.test('PDF API with readiness and print options', async () => {
       const params = new URLSearchParams({

@@ -18,6 +18,29 @@ GET endpoints also support HEAD metadata without rendering. The old root-level
 See [the PDF examples](../examples/pdf/README.md) for file roles, requests and
 output filenames.
 
+## Where PDF readiness is configured
+
+Every PDF render waits for the page `load` event and fonts. Waiting for a
+visible readiness element happens only when `PdfInput.waitForSelector` is set.
+There is no global `waitForSelector` setting.
+
+| Endpoint                              | Where the selector comes from                                                                                                    | Current behavior                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| GET/POST `/api/exports/pdf`           | Caller supplies `waitForSelector` in the GET query or POST JSON; `src/routes/api/exports/pdf/schema.ts` validates it as optional | Waits for the supplied selector, or just page load and fonts when omitted |
+| `/api/exports/pdf/portrait/:id.pdf`   | Renderer input assembled in `src/routes/api/exports/pdf/portrait/[id].pdf/document-pdf.ts`                                       | No selector is set; waits for page load and fonts                         |
+| `/api/exports/pdf/landscape/:id.pdf`  | Renderer input assembled in `src/routes/api/exports/pdf/landscape/[id].pdf/document-pdf.ts`                                      | No selector is set; waits for page load and fonts                         |
+| `/api/exports/pdf/portrait/quarterly` | `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`                                                          | Always waits for visible `[data-report-ready]`                            |
+
+The quarterly query schema validates year, quarter and language; the selector
+is set by its input resolver, not by the schema. For document-ID routes, add
+`waitForSelector: '[data-report-ready]'` to the `pdfSchema.parse({...})` object
+in the chosen document route's `document-pdf.ts` to make that orientation wait for the marker.
+Set it in both files if both orientations should wait. These routes reject
+`waitForSelector` in the URL; readiness is configured only in their input files.
+
+If a configured marker never becomes visible, the render times out with
+`504 RENDER_TIMEOUT`. HEAD returns metadata without loading the webapp or waiting.
+
 ## PDF download URLs
 
 Query parameters are optional. `/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default), configured in `src/config.ts`; `/api/exports/pdf/portrait/id2222.pdf?language=de` overrides it. A language already set in `documentSettings.pdfRoutePattern` stays authoritative. Other omitted query parameters use your webapp's defaults.
@@ -37,7 +60,7 @@ const documentSettings = {
 };
 ```
 
-With these settings, `https://generator-host/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en` and returns an `id2222.pdf` attachment. For path-based webapps, use `pdfRoutePattern: '/documents/{id}'` in `src/config.ts` (the default). Additional query parameters are forwarded as strings. Query keys already configured in the pattern cannot be overridden by the caller. Duplicate query keys are rejected. IDs accept up to 80 letters, numbers, underscores, and hyphens.
+With these settings, `https://generator-host/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en` and returns an `id2222.pdf` attachment. For path-based webapps, use `pdfRoutePattern: '/documents/{id}'` in `src/config.ts` (the default). Only `language` (nonempty text, up to 100 characters) and `year` (four digits, 2000–2100) are accepted and forwarded as strings. Unknown parameters return 400. Query keys already configured in the pattern cannot be overridden by the caller. Duplicate query keys are rejected. IDs accept up to 80 letters, numbers, underscores, and hyphens.
 
 The GET endpoint uses the same PDF queue and rendering settings as `POST /api/exports/pdf`. It does not cache documents or forward client cookies. The POST endpoint remains available for per-request readiness selectors and print options. For the included demo, start both servers and open `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf`.
 

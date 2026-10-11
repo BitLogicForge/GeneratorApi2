@@ -12,7 +12,7 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/app.ts](../src/app.ts)                                                                                                                            | Sets up middleware, request IDs, routers, and error handling.                                                  |
 | [src/config.ts](../src/config.ts)                                                                                                                      | Defines document route/language defaults and validates environment settings and runtime limits.                |
 | [src/schemas.ts](../src/schemas.ts)                                                                                                                    | Defines PowerPoint export inputs, validation rules, and inferred types.                                        |
-| [src/schemas/](../src/schemas/)                                                                                                                        | PDF renderer input, document-link request and quarterly GET query schemas.                                     |
+| [src/routes/api/exports/pdf/](../src/routes/api/exports/pdf/)                                                                                          | PDF renderer input, document-link request and quarterly GET query schemas.                                     |
 | [src/pdf-route.ts](../src/pdf-route.ts)                                                                                                                | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
 | [src/routes/health/get.ts](../src/routes/health/get.ts)                                                                                                | Handles `GET /health`.                                                                                         |
 | [src/routes/api/exports/pdf/portrait/[id].pdf/get.ts](../src/routes/api/exports/pdf/portrait/[id].pdf/get.ts)                                          | Handles `GET /api/exports/pdf/portrait/:id.pdf`.                                                               |
@@ -55,10 +55,11 @@ src/
   routes/                  folders define URLs; method files define handlers
   config.ts                validated environment configuration
   schemas.ts               PowerPoint validation and inferred input types
-  schemas/                 PDF renderer and endpoint input schemas
+  routes/api/exports/pdf/**/schema.ts   PDF endpoint input schemas
   errors.ts                application errors
   queue/generation-queue.ts bounded FIFO queues and admission control
-  routes/api/exports/pdf/document-pdf.ts  document route and language defaults
+  routes/api/exports/pdf/portrait/[id].pdf/document-pdf.ts   portrait document input
+  routes/api/exports/pdf/landscape/[id].pdf/document-pdf.ts  landscape document input
   services/pdf/web-page-pdf.ts          webapp PDF rendering and browser cleanup
   services/pptxgenjs/power-point-generation-service.ts new PPTX decks from slide data
   services/jszip/power-point-template-service.ts   text replacement in existing PPTX files
@@ -74,14 +75,16 @@ Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCU
 All PDF routes use [createPdfHandler](../src/routes/api/exports/pdf/handler.ts).
 Each route supplies a schema, a `readInput` function and a `prepareInput` function.
 The shared handler validates input and sends downloads through the PDF queue.
-Endpoint-specific schemas live in `src/schemas/`: `pdf.ts` defines the renderer
-contract and arbitrary-page request, `document-pdf.ts` defines ID/query input,
-and `quarterly-pdf.ts` defines the fixed report's GET parameters.
+Each PDF endpoint has a local `schema.ts` next to `get.ts`. The base
+`api/exports/pdf/schema.ts` defines the renderer contract and arbitrary-page
+request. Both document-ID folders define their own ID/language/year schema, and
+`portrait/quarterly/schema.ts` defines the fixed report's GET parameters.
 
-`src/routes/api/exports/pdf/document-pdf.ts` resolves document IDs, reserved query keys,
-language defaults and orientation. `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`
+The portrait and landscape routes each have a separate `document-pdf.ts`
+next to a thin `get.ts`. These helper files resolve their own
+document IDs, reserved query keys, language defaults and fixed orientation. `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`
 selects the fixed report page and readiness selector. Arbitrary-page input
 already matches the renderer contract and is passed through after validation.
-These input resolvers have no Express dependency. Request usage is recorded
+Input preparation remains separate from rendering. Request usage is recorded
 centrally by `src/http/observability.ts`; `src/http/download.ts` records queue
 time, generation time and output bytes for every PDF endpoint.

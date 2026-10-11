@@ -39,6 +39,11 @@ curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf
 curl --fail-with-body 'http://localhost:3000/api/exports/pdf/landscape/id2222.pdf?language=en' --output document-landscape.pdf
 ```
 
+Document-ID endpoints accept only `language` (nonempty text, up to 100 characters)
+and `year` (four digits, 2000–2100). Unknown or repeated parameters return 400.
+Each route lists allowed fields in its own `schema.ts` and forwards them
+explicitly in `document-pdf.ts`.
+
 Both responses suggest the attachment filename `id2222.pdf`; `--output`
 chooses separate local filenames. The demo document page does not translate
 text; this example demonstrates forwarding the language parameter.
@@ -72,6 +77,15 @@ Unknown and repeated parameters are rejected. The output is always portrait and
 waits for `[data-report-ready]`. The demo uses year/quarter in the heading and
 translates the quarter label according to language.
 
+## Waiting for the webapp
+
+See [where readiness is configured](../../docs/pdf.md#where-pdf-readiness-is-configured)
+for each endpoint. The document-ID portrait/landscape routes currently have no
+readiness selector. The fixed quarterly route sets `[data-report-ready]` in
+`quarterly-report-pdf.ts`; the POST examples supply it in their JSON bodies.
+The common renderer executes the waiting logic in
+`src/services/pdf/web-page-pdf.ts`.
+
 ## Shared endpoint structure
 
 Every PDF route calls `createPdfHandler` with the same three fields:
@@ -81,22 +95,32 @@ Every PDF route calls `createPdfHandler` with the same three fields:
 - `prepareInput`: converts validated data into the shared `PdfInput` contract.
 
 The handler handles validation and calls the common queue/download flow.
-`src/schemas/pdf.ts`, `src/schemas/document-pdf.ts` and
-`src/schemas/quarterly-pdf.ts` keep the three input contracts separate.
-The generic endpoint passes validated `PdfInput` through directly. Document and
-quarterly endpoints resolve their webapp targets alongside their route handlers.
-All use the same Chromium renderer and central usage statistics.
+Each PDF endpoint has a `schema.ts` beside `get.ts`:
+
+| Schema file under `src/routes/api/exports/pdf/` | Accepted input                                                 |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| `schema.ts`                                     | Arbitrary-page export options and the shared renderer contract |
+| `portrait/[id].pdf/schema.ts`                   | Document ID plus optional language/year                        |
+| `landscape/[id].pdf/schema.ts`                  | Document ID plus optional language/year                        |
+| `portrait/quarterly/schema.ts`                  | Direct year, quarter and language parameters                   |
+
+The generic endpoint passes validated `PdfInput` through directly. Its `query`
+object accepts only `language`, `year`, `quarter` and `print`.
+Each document route resolves its target in a separate `document-pdf.ts` next to
+`get.ts`, including language defaults, reserved query checks, fixed orientation
+and optional readiness settings. The quarterly route keeps its target
+configuration in `quarterly-report-pdf.ts`. All use the same Chromium renderer
+and central usage statistics.
 
 ## Where generation happens
 
 | Application file                                                        | Responsibility                                                |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `src/routes/api/exports/pdf/handler.ts`                                 | Shared validation, preparation and queued download flow       |
-| `src/routes/api/exports/pdf/portrait/[id].pdf/get.ts`                   | Selects fixed portrait orientation                            |
-| `src/routes/api/exports/pdf/landscape/[id].pdf/get.ts`                  | Selects fixed landscape orientation                           |
+| `src/routes/api/exports/pdf/portrait/[id].pdf/document-pdf.ts`          | Resolves document input and forces portrait                   |
+| `src/routes/api/exports/pdf/landscape/[id].pdf/document-pdf.ts`         | Resolves document input and forces landscape                  |
 | `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts` | Selects the fixed quarterly webapp endpoint and print options |
 | `src/routes/api/exports/pdf/portrait/quarterly/get.ts`                  | Selects quarterly schema, query reader and input resolver     |
-| `src/routes/api/exports/pdf/document-pdf.ts`                            | Resolves document ID, route and language defaults             |
 | `src/services/pdf/web-page-pdf.ts`                                      | Uses Chromium to render HTML and create PDF bytes             |
 | `src/config.ts`                                                         | Contains `documentSettings` and `pdfPrintSettings`            |
 | `src/http/download.ts`, `src/http/observability.ts`                     | Queue/download handling and central usage statistics          |

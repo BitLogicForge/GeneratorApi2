@@ -8,8 +8,8 @@ PDF routes all live in `api/exports/pdf/`: the base endpoint accepts a webapp
 route, while `portrait/[id].pdf` and `landscape/[id].pdf` resolve a document ID
 and force the named orientation. All PDF method factories call
 `createPdfHandler` from `api/exports/pdf/handler.ts` with `schema`, `readInput`
-and `prepareInput`. Schemas live in `src/schemas/`; target resolution lives
-alongside the PDF routes. `src/services/pdf/` owns Chromium rendering and
+and `prepareInput`. Each endpoint has a local `schema.ts` next to `get.ts`;
+target resolution also lives alongside its route. `src/services/pdf/` owns Chromium rendering and
 navigation restrictions. The base POST route reuses its GET factory; the shared
 input reader distinguishes query JSON from the POST body.
 

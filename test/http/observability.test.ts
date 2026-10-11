@@ -30,7 +30,7 @@ test('completion metrics count output and failures without sensitive input', asy
     .get('/api/exports/pdf')
     .query({
       route: '/private-report',
-      query: JSON.stringify({ token: 'private-token' }),
+      query: JSON.stringify({ language: 'private-token' }),
     })
     .expect(200);
   fail = true;
@@ -122,7 +122,7 @@ test('document PDF routes record usage, bytes and failures centrally, including 
     '/api/exports/pdf/landscape',
   ]) {
     await request(app)
-      .get(`${prefix}/private-id.pdf?token=private-token`)
+      .get(`${prefix}/private-id.pdf?language=private-token`)
       .expect(200);
     await request(app).get(`${prefix}/bad%2Fid.pdf`).expect(400);
     await request(app).head(`${prefix}/private-id.pdf`).expect(200);

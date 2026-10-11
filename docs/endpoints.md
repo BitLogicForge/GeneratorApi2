@@ -16,7 +16,7 @@ PDF route exports and the brief, business, and summary PowerPoint exports suppor
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
-The PDF endpoint combines the route with the configured origin. Query values may be strings, numbers, or booleans. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`; server defaults are configured in `pdfPrintSettings` in `src/config.ts`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
+The PDF endpoint combines the route with the configured origin. The base PDF endpoint accepts only declared webapp query fields: `language`, `year`, `quarter`, and `print`. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`; server defaults are configured in `pdfPrintSettings` in `src/config.ts`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
 
 Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, unsupported JSON charsets/content encodings 415, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
 
@@ -56,7 +56,7 @@ Open this URL in your browser outside Docker:
 http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en
 ```
 
-The document ID is the filename. Add ordinary query parameters as needed:
+The document ID is the filename. The document-ID routes accept only `language` and `year`:
 
 Query parameters are optional: `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/config.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
 
@@ -155,7 +155,19 @@ curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf
 
 With the default configuration, these render `/documents/id2222` and `/documents/id2222?language=en` on the configured webapp host. The demo supports the document route, though it does not use the language parameter.
 
-The ID must contain 1–80 letters, numbers, underscores, or hyphens. Query values must be strings; duplicate query keys are rejected. Keys already present in `documentSettings.pdfRoutePattern` cannot be overridden.
+The ID must contain 1–80 letters, numbers, underscores, or hyphens.
+Only these direct GET parameters are accepted:
+
+| Parameter  | Accepted values                     | Default                                                       |
+| ---------- | ----------------------------------- | ------------------------------------------------------------- |
+| `language` | Nonempty text, up to 100 characters | Configured default language unless fixed by the route pattern |
+| `year`     | Four digits, 2000–2100              | Omitted                                                       |
+
+Unknown parameters, repeated values and invalid values return 400. These rules
+also apply to HEAD and the landscape document route. Parameters already fixed
+in `documentSettings.pdfRoutePattern` cannot be overridden. To add a new allowed
+parameter, declare it in the selected route's `schema.ts` and explicitly forward
+it in its `document-pdf.ts`.
 
 For a webapp that expects the document ID in a query parameter, configure the host in `.env` and the route in `src/config.ts`:
 
@@ -181,8 +193,8 @@ Success returns 200 with `Content-Type: application/pdf` and attachment filename
 Generates the same document as `/api/exports/pdf/portrait/:id.pdf`, with landscape orientation always
 forced regardless of `pdfPrintSettings.landscape`. Uses the same route pattern,
 query forwarding, default language, validation, queue and download headers.
-Query parameters are forwarded to the webapp; `landscape=false` does not change
-the PDF orientation. HEAD validates the request without generating a PDF.
+Only validated `language` and `year` parameters are forwarded to the webapp;
+`landscape` and all other undeclared parameters return 400. HEAD validates the request without generating a PDF.
 
 Compare the fixed portrait output with the fixed landscape endpoint:
 
@@ -258,13 +270,16 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
 | Field             | Required | Accepted values / default                                                                                                                       |
 | ----------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `route`           | Yes      | Relative webapp route starting with `/`, up to 2,000 characters; external URLs, `//` prefixes, backslashes, and control characters are rejected |
-| `query`           | No       | Object with string, finite number, or boolean values; default `{}`                                                                              |
+| `query`           | No       | Strict object: optional `language`, `year`, `quarter`, `print`; default `{}`                                                                    |
 | `filename`        | No       | 1–80 letters, numbers, underscores, or hyphens, without extension; default `document`                                                           |
 | `waitForSelector` | No       | Nonempty selector, up to 300 characters; generation waits for it to be visible                                                                  |
 | `format`          | No       | `A3`, `A4`, `A5`, `A6`, `Letter`, `Legal`, `Tabloid`, `Ledger`; default from `pdfPrintSettings.format` (initially `A4`)                         |
 | `landscape`       | No       | Boolean; default from `pdfPrintSettings.landscape` (initially `false`)                                                                          |
 
-Query keys may contain up to 100 characters and string values up to 2,000 characters. Unknown query fields are rejected. The route must exist on `WEBAPP_BASE_URL`. Caller cookies and authentication are not forwarded to the webapp.
+The `query` object accepts `language` (nonempty text, up to 100 characters),
+`year` (integer or four-digit string, 2000–2100), `quarter` (integer or string,
+1–4), and `print` (boolean). Unknown fields inside `query` and at the top level
+are rejected. The route must exist on `WEBAPP_BASE_URL`. Caller cookies and authentication are not forwarded to the webapp.
 
 Success returns 200 with `Content-Type: application/pdf` and the requested attachment filename plus `.pdf`.
 

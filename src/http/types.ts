@@ -1,8 +1,8 @@
 import type { Config } from '@/config';
 import type { ReadinessState, RendererState } from '@/observability/constants';
 import type { GenerationQueues } from '@/queue/generation-queue';
+import type { PdfInput } from '@/routes/api/exports/pdf/schema';
 import type { PresentationInput, TemplatePresentationInput } from '@/schemas';
-import type { PdfInput } from '@/schemas/pdf';
 import type { createObservability } from './observability.ts';
 
 export interface AppOptions {

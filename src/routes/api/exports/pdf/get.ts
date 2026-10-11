@@ -1,7 +1,7 @@
 import { generationInput } from '@/http/input';
-import { pdfSchema } from '@/schemas/pdf';
 
 import { createPdfHandler } from './handler.ts';
+import { pdfSchema } from './schema.ts';
 
 import type { RouteDependencies } from '@/http/types';
 

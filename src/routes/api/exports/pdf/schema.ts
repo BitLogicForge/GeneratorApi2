@@ -16,11 +16,27 @@ export const pdfSchema = z
           !v.startsWith('//') && !v.includes('\\') && !hasControlCharacters(v),
         'Use a relative webapp route',
       ),
+    // Explicit parameters supported by the example webapp; unknown keys fail validation.
     query: z
-      .record(
-        z.string().max(100),
-        z.union([z.string().max(2000), z.number(), z.boolean()]),
-      )
+      .object({
+        language: z.string().trim().min(1).max(100).optional(),
+        year: z
+          .union([
+            z.number().int().min(2000).max(2100),
+            z
+              .string()
+              .regex(/^\d{4}$/)
+              .refine(
+                (value) => Number(value) >= 2000 && Number(value) <= 2100,
+              ),
+          ])
+          .optional(),
+        quarter: z
+          .union([z.number().int().min(1).max(4), z.enum(['1', '2', '3', '4'])])
+          .optional(),
+        print: z.boolean().optional(),
+      })
+      .strict()
       .default({}),
     filename: filenameSchema.default('document'),
     waitForSelector: z.string().min(1).max(300).optional(),

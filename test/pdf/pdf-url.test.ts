@@ -6,7 +6,7 @@ import request from 'supertest';
 import { createApp } from '@/app';
 import { loadConfig } from '@/config';
 
-import type { PdfInput } from '@/schemas/pdf';
+import type { PdfInput } from '@/routes/api/exports/pdf/schema';
 
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {
   const inputs: PdfInput[] = [];
@@ -112,12 +112,12 @@ test('landscape document URL forces landscape and preserves document validation'
     .get('/api/exports/pdf/portrait/id2222.pdf')
     .expect(200);
   const landscape = await request(app)
-    .get('/api/exports/pdf/landscape/id2222.pdf?language=de&landscape=false')
+    .get('/api/exports/pdf/landscape/id2222.pdf?language=de&year=2027')
     .expect(200);
   assert.equal(inputs[0].landscape, false);
   assert.equal(inputs[1].landscape, true);
   assert.equal(inputs[1].route, inputs[0].route);
-  assert.deepEqual(inputs[1].query, { language: 'de', landscape: 'false' });
+  assert.deepEqual(inputs[1].query, { language: 'de', year: '2027' });
   for (const response of [portrait, landscape]) {
     assert.match(response.headers['content-type'], /application\/pdf/);
     assert.match(response.headers['content-disposition'], /id2222.pdf/);
@@ -128,9 +128,9 @@ test('landscape document URL forces landscape and preserves document validation'
   await request(app)
     .get('/api/exports/pdf/landscape/id2222.pdf?language=en&language=de')
     .expect(400);
-  const reserved = fixture('/documents/{id}?print=true');
+  const reserved = fixture('/documents/{id}?year=2026');
   await request(reserved.app)
-    .get('/api/exports/pdf/landscape/id2222.pdf?print=false')
+    .get('/api/exports/pdf/landscape/id2222.pdf?year=2027')
     .expect(400);
   assert.equal(inputs.length, 2);
   assert.equal(reserved.inputs.length, 0);
@@ -140,9 +140,7 @@ test('PDF document downloads use only the exports namespace', async () => {
   const { app, inputs } = fixture();
   await request(app).get('/id2222.pdf').expect(404);
   await request(app).get('/landscape/id2222.pdf').expect(404);
-  await request(app)
-    .get('/api/exports/pdf/portrait/id2222.pdf?landscape=true')
-    .expect(200);
+  await request(app).get('/api/exports/pdf/portrait/id2222.pdf').expect(200);
   assert.equal(inputs.length, 1);
   assert.equal(inputs[0].landscape, false);
 });
@@ -188,4 +186,68 @@ test('quarterly portrait route forwards validated direct GET parameters to a fix
       .expect(400);
   }
   assert.equal(inputs.length, 2);
+});
+
+test('document GET and HEAD reject undeclared parameters before rendering', async () => {
+  const { app, inputs } = fixture();
+  for (const orientation of ['portrait', 'landscape']) {
+    const path = `/api/exports/pdf/${orientation}/id2222.pdf`;
+    await request(app).get(`${path}?language=pl&year=2028`).expect(200);
+    assert.deepEqual(inputs.at(-1)?.query, { language: 'pl', year: '2028' });
+    for (const query of [
+      'unknown=value',
+      'landscape=true',
+      'waitForSelector=.ready',
+      'quarter=2',
+      'print=true',
+      'language=',
+      'year=1999',
+      'year=2101',
+      'year=abc',
+      'year=2026&year=2027',
+    ]) {
+      const response = await request(app).get(`${path}?${query}`).expect(400);
+      assert.equal(response.body.error.code, 'VALIDATION_ERROR');
+      await request(app).head(`${path}?${query}`).expect(400);
+    }
+    const reserved = fixture('/documents/{id}?language=en');
+    const response = await request(reserved.app)
+      .get(`${path}?language=pl`)
+      .expect(400);
+    assert.equal(response.body.error.code, 'RESERVED_QUERY_PARAMETER');
+    assert.equal(reserved.inputs.length, 0);
+  }
+  assert.equal(inputs.length, 2);
+});
+
+test('base PDF export accepts only declared webapp query fields for GET and POST', async () => {
+  const { app, inputs } = fixture();
+  const query = { language: 'pl', year: 2028, quarter: 2, print: true };
+  await request(app)
+    .post('/api/exports/pdf')
+    .send({ route: '/reports/quarterly', query })
+    .expect(200);
+  assert.deepEqual(inputs[0].query, query);
+  for (const invalid of [
+    { unexpected: 'value' },
+    { year: 1999 },
+    { year: 'abc' },
+    { quarter: 5 },
+    { print: 'true' },
+    { language: '' },
+  ]) {
+    await request(app)
+      .post('/api/exports/pdf')
+      .send({ route: '/report', query: invalid })
+      .expect(400);
+    await request(app)
+      .get('/api/exports/pdf')
+      .query({ route: '/report', query: JSON.stringify(invalid) })
+      .expect(400);
+    await request(app)
+      .head('/api/exports/pdf')
+      .query({ route: '/report', query: JSON.stringify(invalid) })
+      .expect(400);
+  }
+  assert.equal(inputs.length, 1);
 });

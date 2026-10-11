@@ -9,11 +9,14 @@ import { createErrorHandler } from './http/error-handler.ts';
 import { discoverRoutes } from './http/file-routes/discover.ts';
 import { registerRoutes } from './http/file-routes/register.ts';
 import { createObservability } from './http/observability.ts';
+import { createOpenApiDocument } from './http/openapi/document.ts';
+import { registerSwagger } from './http/openapi/swagger.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 
 import type { AppOptions } from './http/types.ts';
 
 const routes = await discoverRoutes(new URL('./routes/', import.meta.url));
+const openApiDocument = createOpenApiDocument(routes);
 
 /** Assembles HTTP handling around injected services so routes can be tested independently. */
 export function createApp(options: AppOptions) {
@@ -34,6 +37,7 @@ export function createApp(options: AppOptions) {
   });
   app.use(observability.middleware);
   app.use(express.json({ limit: '100kb' }));
+  registerSwagger(app, openApiDocument);
   registerRoutes(app, routes, dependencies);
   app.use((req, res, next) =>
     next(new AppError(404, 'NOT_FOUND', 'Endpoint not found')),

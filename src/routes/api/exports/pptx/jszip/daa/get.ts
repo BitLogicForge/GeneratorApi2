@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
+import { documentedRoute } from '@/http/openapi/route';
 import { documentTextSchema } from '@/validation/document-text';
 
 import type { RequestHandler } from 'express';
@@ -11,7 +12,7 @@ const demoQuerySchema = z
   .object({ TEXT_ME: documentTextSchema.max(5000).default('Generated report') })
   .strict();
 
-export default function createHandler({
+function createHandler({
   templateReportDemo,
   queues,
 }: RouteDependencies): RequestHandler {
@@ -32,3 +33,11 @@ export default function createHandler({
     );
   };
 }
+
+export default documentedRoute(createHandler, {
+  summary: 'Generate random table and chart data',
+  tag: 'PowerPoint',
+  query: demoQuerySchema,
+  format: 'pptx',
+  example: { TEXT_ME: 'Generated report' },
+});

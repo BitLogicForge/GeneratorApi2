@@ -32,6 +32,8 @@ curl -X POST http://localhost:3000/api/exports/pdf \
 
 ## Documentation
 
+Open [Swagger UI](http://localhost:3000/docs/) to explore and test endpoints. The generated OpenAPI 3.1 document is available at `/openapi.json`.
+
 | Guide                                             | Contents                                                                      |
 | ------------------------------------------------- | ----------------------------------------------------------------------------- |
 | [Getting started](docs/getting-started.md)        | Local setup, configuration, Docker access, and sample requests                |

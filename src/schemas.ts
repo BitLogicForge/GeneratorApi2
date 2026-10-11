@@ -19,6 +19,9 @@ export const pdfSchema = z
         (v) =>
           !v.startsWith('//') && !v.includes('\\') && !hasControlCharacters(v),
         'Use a relative webapp route',
+      )
+      .describe(
+        'Relative webapp route; external URLs, double-slash prefixes, backslashes, and control characters are rejected.',
       ),
     query: z
       .record(
@@ -72,7 +75,13 @@ export const templatePresentationSchema = z
         (value) =>
           Object.keys(value).length > 0 && Object.keys(value).length <= 100,
         'Supply 1–100 replacements',
-      ),
+      )
+      .meta({
+        description:
+          'Supply 1–100 replacements. Required keys depend on the template.',
+        minProperties: 1,
+        maxProperties: 100,
+      }),
   })
   .strict();
 export type TemplatePresentationInput = z.infer<

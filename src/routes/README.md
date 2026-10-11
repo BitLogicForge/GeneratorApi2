@@ -59,6 +59,29 @@ export { default } from './handler.ts';
 Helper files such as `handler.ts` are not endpoints. Directories beginning with
 `_` or `.` are excluded from discovery; symlinks are not traversed.
 
+## Document an endpoint
+
+Wrap the default-exported factory with `documentedRoute` and reference its existing validation schema:
+
+```ts
+import { documentedRoute } from '@/http/openapi/route';
+import { pdfSchema } from '@/schemas';
+
+export default documentedRoute(createHandler, {
+  summary: 'Generate a webapp PDF',
+  tag: 'PDF',
+  input: pdfSchema,
+  format: 'pdf',
+  example: { route: '/reports/quarterly' },
+});
+```
+
+`input` describes structured generation input shared by POST bodies and decoded GET/HEAD query parameters. Use `query` for directly validated query objects, `params` for path parameters, and `response` for JSON responses. Downloads use `format: 'pdf'` or `'pptx'`; shared headers and errors are generated automatically. `responses` can describe additional JSON statuses, such as readiness returning 503. `noStore` documents cache-control on JSON responses.
+
+Attach metadata to `handler.ts` when GET and POST re-export the same factory; they share one definition. Paths and methods come from route discovery, including implicit HEAD. A route missing documentation fails startup so new endpoints cannot silently disappear from the specification. Zod descriptions and metadata document custom validation rules that JSON Schema cannot infer. Restart after changing schemas or documentation.
+
+`src/http/openapi/document.ts` generates `/openapi.json` using native Zod conversion; `swagger.ts` serves `/docs/` and local Swagger UI assets. Documentation routes are registered centrally before the API routes and 404 handler.
+
 ## Loading and ordering
 
 [discoverRoutes](../http/file-routes/discover.ts) discovers route files once when

@@ -1,7 +1,10 @@
+import { metricsSchema } from '@/http/openapi/observability-schemas';
+import { documentedRoute } from '@/http/openapi/route';
+
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 
-export default function createHandler({
+function createHandler({
   queues,
   pdf,
   observability,
@@ -19,3 +22,10 @@ export default function createHandler({
     });
   };
 }
+
+export default documentedRoute(createHandler, {
+  summary: 'Inspect generation metrics',
+  tag: 'Internal',
+  response: metricsSchema,
+  noStore: true,
+});

@@ -1,5 +1,8 @@
+import { z } from 'zod';
+
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
+import { documentedRoute } from '@/http/openapi/route';
 import {
   documentIdSchema,
   pdfRoutePatternSchema,
@@ -12,7 +15,7 @@ import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 
 /** Generates a PDF from a document link with server-controlled query values. */
-export default function createHandler({
+function createHandler({
   pdf,
   config,
   queues,
@@ -46,3 +49,12 @@ export default function createHandler({
     );
   };
 }
+
+export default documentedRoute(createHandler, {
+  summary: 'Download a PDF by document ID',
+  tag: 'PDF',
+  params: z.object({ id: documentIdSchema }),
+  format: 'pdf',
+  description:
+    'Additional query parameters are forwarded as single strings (keys up to 100 characters, values up to 2000). Server-configured query keys cannot be overridden. Language defaults to the configured value. Uses A4 portrait output.',
+});

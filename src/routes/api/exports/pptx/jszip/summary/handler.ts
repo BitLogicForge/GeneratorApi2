@@ -1,12 +1,13 @@
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
 import { generationInput } from '@/http/input';
+import { documentedRoute } from '@/http/openapi/route';
 import { templatePresentationSchema } from '@/schemas';
 
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 
-export default function createHandler({
+function createHandler({
   templatePresentations,
   queues,
 }: RouteDependencies): RequestHandler<Record<string, string>> {
@@ -27,3 +28,18 @@ export default function createHandler({
     );
   };
 }
+
+export default documentedRoute(createHandler, {
+  summary: 'Fill the summary template',
+  tag: 'PowerPoint',
+  input: templatePresentationSchema,
+  format: 'pptx',
+  description: 'Requires title, subtitle, and customer replacements.',
+  example: {
+    replacements: {
+      title: 'Quarterly summary',
+      subtitle: 'Results and outlook',
+      customer: 'Acme',
+    },
+  },
+});

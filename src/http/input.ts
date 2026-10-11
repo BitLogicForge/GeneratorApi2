@@ -2,6 +2,14 @@ import { AppError } from '@/errors';
 
 import type { Request } from 'express';
 
+// Shared by query decoding and OpenAPI parameter generation.
+export const jsonQueryFields: readonly string[] = [
+  'query',
+  'slides',
+  'replacements',
+  'landscape',
+];
+
 /** Gives GET/HEAD exports the same structured input as POST by decoding JSON query fields. */
 export function generationInput(req: Request) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return req.body;
@@ -13,7 +21,7 @@ export function generationInput(req: Request) {
         'INVALID_QUERY_PARAMETER',
         `Supply a single value for: ${key}`,
       );
-    if (['query', 'slides', 'replacements', 'landscape'].includes(key)) {
+    if (jsonQueryFields.includes(key)) {
       try {
         input[key] = JSON.parse(value);
       } catch {

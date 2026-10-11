@@ -1,9 +1,11 @@
+import { readinessSchema } from '@/http/openapi/observability-schemas';
+import { documentedRoute } from '@/http/openapi/route';
 import { ManagedExternally } from '@/observability/constants';
 
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 
-export default function createHandler({
+function createHandler({
   readiness,
   queues,
 }: RouteDependencies): RequestHandler {
@@ -24,3 +26,16 @@ export default function createHandler({
       .json({ ...state, ready });
   };
 }
+
+export default documentedRoute(createHandler, {
+  summary: 'Check generation readiness',
+  tag: 'Internal',
+  response: readinessSchema,
+  noStore: true,
+  responses: {
+    503: {
+      description: 'Generation services are not ready.',
+      schema: readinessSchema,
+    },
+  },
+});

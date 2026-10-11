@@ -90,6 +90,12 @@ Large presentations or replacement text may exceed URL limits imposed by browser
 
 For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The included devcontainer publishes it to your computer's `127.0.0.1:3000`; rebuild the devcontainer to apply this setting. See [Docker access instructions](getting-started.md#access-from-outside-docker).
 
+## Interactive documentation
+
+Open `/docs/` on the API host for Swagger UI, or fetch `/openapi.json` for the OpenAPI 3.1 document. Both work without Chromium or configured generation services. Swagger UI serves its assets locally and does not send the specification to an external validator. Its **Try it out** actions call the real API and use the existing validation and queues.
+
+The document is generated once at startup from discovered route paths and methods. Documentation metadata on shared handler factories references the same Zod schemas used for validation. GET/HEAD parameters `query`, `slides`, `replacements`, and `landscape` are represented using JSON parameter content; POST bodies use the input schemas so defaulted fields remain optional. The document includes implicit HEAD operations without response bodies, download media types and headers, shared errors, and health/internal endpoints. Additional arbitrary query keys on `/{id}.pdf` are described in text because OpenAPI lists named parameters.
+
 ## Endpoint list
 
 ### Random table and chart download

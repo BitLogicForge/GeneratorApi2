@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import type { GenerationQueue } from '@/queue/generation-queue';
 
-const contentTypes = {
+export const contentTypes = {
   pdf: 'application/pdf',
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 };

@@ -362,3 +362,19 @@ test('named lookup ignores other tables and resolves renamed chart and workbook 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('DAA caches source bytes while generating independent documents', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'daa-source-cache-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const file = join(dir, 'template.pptx');
+  await writeFile(file, await readFile(template));
+  const service = new DaaPocPresentationService(file);
+  await service.validate();
+  await writeFile(file, 'changed on disk');
+  const [first, second] = await Promise.all([
+    service.generate('First'),
+    service.generate('Second'),
+  ]);
+  await verifyData(first, 'First');
+  await verifyData(second, 'Second');
+});

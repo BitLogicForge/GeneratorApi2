@@ -314,6 +314,8 @@ Slide and speaker-note text is replaced while the original template file stays u
 
 Success returns 200 with `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` and the attachment filename plus `.pptx`.
 
+Source PPTX templates are validated and cached in memory per service instance. Restart the API after replacing a template file. Each generation uses a fresh archive and still produces new document data.
+
 ## Responses and errors
 
 All responses include an `X-Request-Id` header. Generated attachments include `Cache-Control: no-store`. Generation requests keep the HTTP connection open while queued and return the file directly.

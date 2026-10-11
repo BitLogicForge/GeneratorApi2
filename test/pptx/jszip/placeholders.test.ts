@@ -133,3 +133,39 @@ test('template endpoint returns an edited PPTX attachment', async () => {
     .send(input)
     .expect(404);
 });
+
+test('validated template bytes survive file changes and isolate concurrent replacements', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'pptx-source-cache-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const file = join(dir, 'template.pptx');
+  await writeFile(file, await readFile(path));
+  const editor = new PowerPointTemplateService({ business: file });
+  await editor.validate();
+  await writeFile(file, 'changed on disk');
+  const outputs = await Promise.all(
+    ['First', 'Second'].map((title) =>
+      editor.generate('business', {
+        ...input,
+        replacements: { ...input.replacements, title },
+      }),
+    ),
+  );
+  for (const [index, bytes] of outputs.entries()) {
+    const zip = await JSZip.loadAsync(bytes);
+    const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+    assert.match(xml, new RegExp(index === 0 ? 'First' : 'Second'));
+    assert.doesNotMatch(xml, new RegExp(index === 0 ? 'Second' : 'First'));
+  }
+  assert.equal(await readFile(file, 'utf8'), 'changed on disk');
+});
+
+test('failed template loading can retry after the source is repaired', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'pptx-source-retry-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const file = join(dir, 'template.pptx');
+  const editor = new PowerPointTemplateService({ business: file });
+  await assert.rejects(editor.validate());
+  await writeFile(file, await readFile(path));
+  await editor.validate();
+  await editor.generate('business', input);
+});

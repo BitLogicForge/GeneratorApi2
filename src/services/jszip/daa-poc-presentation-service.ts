@@ -1,5 +1,4 @@
 import { randomInt } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 
 import JSZip from 'jszip';
 
@@ -9,20 +8,26 @@ import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 
+import { TemplateSource } from './template-source.ts';
+
 export class DaaPocPresentationService {
+  private readonly source: TemplateSource;
   constructor(
-    private readonly path: string,
+    path: string,
     private readonly nextNumber: () => number = () => randomInt(1, 101),
-  ) {}
+  ) {
+    this.source = new TemplateSource(path, async (zip) => {
+      await findNamedObjects(zip, ['TAB100', 'GGO', 'TEXT_ME']);
+    });
+  }
 
   async validate() {
-    const zip = await JSZip.loadAsync(await readFile(this.path));
-    await findNamedObjects(zip, ['TAB100', 'GGO', 'TEXT_ME']);
+    await this.source.load();
   }
 
   /** Populates named template objects with demo data while retaining native editable tables and charts. */
   async generate(text = 'Generated report'): Promise<Buffer> {
-    const zip = await JSZip.loadAsync(await readFile(this.path));
+    const zip = await JSZip.loadAsync(await this.source.load());
     const { slides, objects } = await findNamedObjects(zip, [
       'TAB100',
       'GGO',

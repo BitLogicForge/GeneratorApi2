@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import request from 'supertest';
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { TemplateReportDemoService } from '../src/services/template-report-demo.js';
+import { TemplateReportDemoService } from '../src/pptx/jszip/template-report-demo.js';
 import { createApp } from '../src/app.js';
 
 const template = fileURLToPath(

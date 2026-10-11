@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import request from 'supertest';
 import JSZip from 'jszip';
 import { createApp } from '../src/app.js';
-import { GeneratedPresentationService } from '../src/services/generated-presentation.js';
+import { GeneratedPresentationService } from '../src/pptx/pptxgenjs/generated-presentation.js';
 import { AppError } from '../src/errors.js';
 const payload = {
   title: 'Roadmap',

@@ -1,10 +1,10 @@
 import { fileURLToPath } from 'node:url';
-import { PowerPointTemplateService } from './services/powerpoint-template.js';
-import { TemplateReportDemoService } from './services/template-report-demo.js';
+import { PowerPointTemplateService } from './pptx/jszip/powerpoint-template.js';
+import { TemplateReportDemoService } from './pptx/jszip/template-report-demo.js';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 import { WebPagePdfService } from './services/web-page-pdf.js';
-import { GeneratedPresentationService } from './services/generated-presentation.js';
+import { GeneratedPresentationService } from './pptx/pptxgenjs/generated-presentation.js';
 import { createGenerationQueues } from './queue/generation-queue.js';
 const config = loadConfig();
 const pdf = new WebPagePdfService(config);

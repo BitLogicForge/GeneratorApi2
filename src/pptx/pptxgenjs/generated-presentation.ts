@@ -1,11 +1,9 @@
 import pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '../schemas.js';
-export type PresentationTemplate = (
-  deck: pptxgen,
-  input: PresentationInput,
-) => void | Promise<void>;
-import { AppError } from '../errors.js';
-import { briefTemplate } from '../templates/brief.js';
+import type { PresentationInput } from '../../schemas.js';
+import { AppError } from '../../errors.js';
+import { briefTemplate } from './templates/brief.js';
+import type { PresentationTemplate } from './types.js';
+
 export class GeneratedPresentationService {
   private readonly templates: Map<string, PresentationTemplate>;
   constructor(

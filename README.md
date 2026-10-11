@@ -25,16 +25,16 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/http/error-handler.ts](src/http/error-handler.ts), [src/errors.ts](src/errors.ts)                                           | Define application errors and translate failures into HTTP responses and logs.                                 |
 | [src/queue/generation-queue.ts](src/queue/generation-queue.ts)                                                                   | Controls concurrency, pending capacity, wait timeouts, cancellation, and shutdown admission.                   |
 | [src/services/web-page-pdf.ts](src/services/web-page-pdf.ts)                                                                     | Manages Chromium, navigation restrictions, page readiness, printing, and browser context cleanup.              |
-| [src/services/generated-presentation.ts](src/services/generated-presentation.ts)                                                 | Registers code-based presentation designs and creates a fresh deck for each export.                            |
-| [src/templates/brief.ts](src/templates/brief.ts)                                                                                 | Defines the brief deck's slide layout, typography, colors, and speaker notes. Change its visual design here.   |
-| [src/services/powerpoint-template.ts](src/services/powerpoint-template.ts)                                                       | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
-| [src/services/template-report-demo.ts](src/services/template-report-demo.ts)                                                     | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
+| [src/pptx/pptxgenjs/generated-presentation.ts](src/pptx/pptxgenjs/generated-presentation.ts)                                     | Registers code-based presentation designs and creates a fresh deck for each export.                            |
+| [src/pptx/pptxgenjs/templates/brief.ts](src/pptx/pptxgenjs/templates/brief.ts)                                                   | Defines the brief deck's slide layout, typography, colors, and speaker notes. Change its visual design here.   |
+| [src/pptx/jszip/powerpoint-template.ts](src/pptx/jszip/powerpoint-template.ts)                                                   | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
+| [src/pptx/jszip/template-report-demo.ts](src/pptx/jszip/template-report-demo.ts)                                                 | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
 | [src/services/data-api-client.ts](src/services/data-api-client.ts)                                                               | Fetches and validates upstream JSON; handles API prefixes, bearer tokens, and timeouts.                        |
-| [src/pptx/objects.ts](src/pptx/objects.ts)                                                                                       | Locates template objects by Selection Pane name. Check here for missing or duplicate objects.                  |
-| [src/pptx/text-table.ts](src/pptx/text-table.ts)                                                                                 | Fills text shapes and fixed-size tables while retaining formatting.                                            |
-| [src/pptx/charts.ts](src/pptx/charts.ts)                                                                                         | Updates line-chart caches, formulas, and embedded workbook data together so charts remain editable.            |
-| [src/pptx/spreadsheet.ts](src/pptx/spreadsheet.ts)                                                                               | Writes embedded workbook cells, creating rows/cells and retaining styles.                                      |
-| [src/pptx/package.ts](src/pptx/package.ts)                                                                                       | Reads/writes package XML and follows internal relationships between slides, charts, and workbooks.             |
+| [src/pptx/jszip/objects.ts](src/pptx/jszip/objects.ts)                                                                           | Locates template objects by Selection Pane name. Check here for missing or duplicate objects.                  |
+| [src/pptx/jszip/text-table.ts](src/pptx/jszip/text-table.ts)                                                                     | Fills text shapes and fixed-size tables while retaining formatting.                                            |
+| [src/pptx/jszip/charts.ts](src/pptx/jszip/charts.ts)                                                                             | Updates line-chart caches, formulas, and embedded workbook data together so charts remain editable.            |
+| [src/pptx/jszip/spreadsheet.ts](src/pptx/jszip/spreadsheet.ts)                                                                   | Writes embedded workbook cells, creating rows/cells and retaining styles.                                      |
+| [src/pptx/jszip/package.ts](src/pptx/jszip/package.ts)                                                                           | Reads/writes package XML and follows internal relationships between slides, charts, and workbooks.             |
 | [templates/business.pptx](templates/business.pptx), [templates/daa.pptx](templates/daa.pptx)                                     | Source decks for placeholder replacement and the report demo. Edit named objects and styling in PowerPoint.    |
 | [examples/fetch-report-data.ts](examples/fetch-report-data.ts), [examples/report-data-schema.ts](examples/report-data-schema.ts) | Show upstream data fetching and the expected report data shape.                                                |
 | [examples/webapp.ts](examples/webapp.ts), [examples/data-api.ts](examples/data-api.ts)                                           | Provide local demo pages and synthetic report data.                                                            |
@@ -145,6 +145,8 @@ The client preserves the configured URL prefix, rejects paths outside it, and do
 
 When the API is on your computer and Generator API runs in Docker, use a Docker-reachable hostname such as `host.docker.internal`, as described above for `WEBAPP_BASE_URL`.
 
+PptxGenJS deck generation and designs live in `src/pptx/pptxgenjs/`. JSZip template editing and XML helpers live in `src/pptx/jszip/`; `placeholders.ts` handles text tokens independently of template registration and file loading.
+
 ## Structure and extension
 
 ```text
@@ -158,11 +160,11 @@ src/
   errors.ts                application errors
   queue/generation-queue.ts bounded FIFO queues and admission control
   services/web-page-pdf.ts          webapp PDF rendering and browser cleanup
-  services/generated-presentation.ts new PPTX decks from slide data
-  services/powerpoint-template.ts   text replacement in existing PPTX files
-  services/template-report-demo.ts demo of native tables, charts, and text
-  pptx/                            reusable template XML helpers
-  templates/brief.ts       slide design
+  pptx/pptxgenjs/generated-presentation.ts new PPTX decks from slide data
+  pptx/jszip/powerpoint-template.ts   text replacement in existing PPTX files
+  pptx/jszip/template-report-demo.ts demo of native tables, charts, and text
+  pptx/jszip/                      reusable template XML helpers
+  pptx/pptxgenjs/templates/brief.ts       slide design
 ```
 
 Services are injected into `createApp`, keeping HTTP handling independent from document generation. To add a presentation template, implement the `PresentationTemplate` function type and register it in `GeneratedPresentationService`. It receives a fresh deck and validated input. Add template-specific schemas when new templates need different fields. Add new output formats as separate services and routes.
@@ -189,10 +191,10 @@ Give optional parameters defaults so the URL also works without a query string. 
 
 ### 2. Add the generation service
 
-Create `src/services/sales-report.ts`:
+Create `src/pptx/jszip/sales-report.ts`:
 
 ```ts
-import type { SalesReportInput } from '../schemas.js';
+import type { SalesReportInput } from '../../schemas.js';
 import { TemplateReportDemoService } from './template-report-demo.js';
 
 export class SalesReportService {
@@ -208,7 +210,7 @@ export class SalesReportService {
 }
 ```
 
-This starting implementation puts `title` into `TEXT_ME` and uses the existing random table/chart data. For your real report, fetch data with `DataApiClient` and use the `src/pptx` helpers to populate named objects. Keep Express requests and responses out of the service; return the finished file as a `Buffer`.
+This starting implementation puts `title` into `TEXT_ME` and uses the existing random table/chart data. For your real report, fetch data with `DataApiClient` and use the `src/pptx/jszip` helpers to populate named objects. Keep Express requests and responses out of the service; return the finished file as a `Buffer`.
 
 ### 3. Declare the dependency
 
@@ -225,7 +227,7 @@ salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
 Import the service in `src/index.ts`:
 
 ```ts
-import { SalesReportService } from './services/sales-report.js';
+import { SalesReportService } from './pptx/jszip/sales-report.js';
 ```
 
 Add this property to the existing `createApp({ ... })` call:
@@ -360,7 +362,7 @@ Open `http://localhost:3000/demo-report.pptx` to download `templates/daa.pptx` p
 
 Run `npm run test:outputs` to save a sample to `output/routes/demo-report.pptx` along with the other route outputs.
 
-Reusable template helpers live in `src/pptx`: `objects.ts` finds uniquely named shapes across slides; `text-table.ts` fills text and tables; `charts.ts` synchronizes line-chart values with their embedded workbook; `package.ts` reads/writes XML parts and resolves file relationships. `TemplateReportDemoService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
+Reusable template helpers live in `src/pptx/jszip`: `objects.ts` finds uniquely named shapes across slides; `text-table.ts` fills text and tables; `charts.ts` synchronizes line-chart values with their embedded workbook; `package.ts` reads/writes XML parts and resolves file relationships. `TemplateReportDemoService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
 
 ## PDF download URLs
 

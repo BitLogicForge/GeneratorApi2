@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import JSZip from 'jszip';
 import request from 'supertest';
 import { DOMParser } from '@xmldom/xmldom';
-import { PowerPointTemplateService } from '../src/services/powerpoint-template.js';
+import { PowerPointTemplateService } from '../src/pptx/jszip/powerpoint-template.js';
 import { templatePresentationSchema } from '../src/schemas.js';
 import { createApp } from '../src/app.js';
 

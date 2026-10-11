@@ -6,10 +6,10 @@ import type { AddressInfo } from 'node:net';
 import express from 'express';
 import JSZip from 'jszip';
 import { createApp } from '../src/app.js';
-import { TemplateReportDemoService } from '../src/services/template-report-demo.js';
+import { TemplateReportDemoService } from '../src/pptx/jszip/template-report-demo.js';
 import { WebPagePdfService } from '../src/services/web-page-pdf.js';
-import { GeneratedPresentationService } from '../src/services/generated-presentation.js';
-import { PowerPointTemplateService } from '../src/services/powerpoint-template.js';
+import { GeneratedPresentationService } from '../src/pptx/pptxgenjs/generated-presentation.js';
+import { PowerPointTemplateService } from '../src/pptx/jszip/powerpoint-template.js';
 
 const outputDir = new URL('../output/routes/', import.meta.url);
 

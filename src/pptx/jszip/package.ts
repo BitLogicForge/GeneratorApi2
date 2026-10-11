@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer, type Document } from '@xmldom/xmldom';
 import { posix } from 'node:path';
-import { AppError } from '../errors.js';
+import { AppError } from '../../errors.js';
 
 export const drawing = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 export const chartNs = 'http://schemas.openxmlformats.org/drawingml/2006/chart';

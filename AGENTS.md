@@ -22,8 +22,8 @@ Poniższa mapa wskazuje główne granice odpowiedzialności:
 | Kontrakty usług, dekodowanie GET, pobieranie i błędy  | `src/http/`, `src/errors.ts`                   |
 | Kolejki, timeouty i anulowanie oczekujących zadań     | `src/queue/generation-queue.ts`                |
 | Chromium i renderowanie PDF                           | `src/services/web-page-pdf.ts`                 |
-| Generowanie i wypełnianie prezentacji                 | `src/services/`, `src/templates/brief.ts`      |
-| XML, relacje, tabele, wykresy i osadzone arkusze PPTX | `src/pptx/`                                    |
+| Generowanie i wypełnianie prezentacji                 | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`       |
+| XML, relacje, tabele, wykresy i osadzone arkusze PPTX | `src/pptx/jszip/`                              |
 | Źródłowe prezentacje                                  | `templates/`                                   |
 | Testy i przykłady                                     | `test/`, `examples/`                           |
 | Dokumentacja API i wdrożenia                          | `README-ENDPOINTS.md`, `AZURE.md`, `scripts/`  |

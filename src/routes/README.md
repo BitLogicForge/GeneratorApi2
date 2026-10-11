@@ -78,5 +78,5 @@ factories returning non-functions also fail startup.
 
 Route entry points are declared in `knip.json`; the method-file glob automatically
 covers new routes. Add HTTP behavior tests under `test/http/` and update
-`README-ENDPOINTS.md` when adding an endpoint. Run `npm run typecheck`,
+`docs/endpoints.md` when adding an endpoint. Run `npm run typecheck`,
 `npm run knip`, and `npm test`.

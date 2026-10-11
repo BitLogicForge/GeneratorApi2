@@ -1,4 +1,24 @@
-# API endpoint examples
+# API endpoints
+
+[Back to overview](../README.md)
+
+## Overview
+
+All generation endpoints also support GET with query parameters. See [GET endpoint examples](endpoints.md) for every endpoint and copyable requests. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
+
+| Endpoint                                 | Input                                                                                              | Result                   |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
+| `POST /api/exports/pdf`                  | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment           |
+| `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
+| `GET /health`                            | None                                                                                               | Process health           |
+
+PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
+
+The PDF endpoint combines the route with the configured origin. Query values may be strings, numbers, or booleans. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
+
+Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
+
+See [examples/README.md](../examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
 
 ## Generate test output files
 
@@ -64,7 +84,7 @@ Pass text fields directly. Encode `query` and `replacements` as JSON objects, `s
 
 Large presentations or replacement text may exceed URL limits imposed by browsers, proxies, or hosting servers; use POST with JSON for those larger requests.
 
-For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The included devcontainer publishes it to your computer's `127.0.0.1:3000`; rebuild the devcontainer to apply this setting. See [Docker access instructions](README.md#access-from-outside-docker).
+For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The included devcontainer publishes it to your computer's `127.0.0.1:3000`; rebuild the devcontainer to apply this setting. See [Docker access instructions](getting-started.md#access-from-outside-docker).
 
 ## Endpoint list
 
@@ -89,7 +109,7 @@ No parameters are required. The objects are found by their Selection Pane names:
 | GET    | `/api/exports/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment          |
 | GET    | `/api/exports/pptx/jszip/business`  | PowerPoint attachment with template text replaced |
 
-`brief` and `business` are the currently registered template names. The route patterns accept other names only after those templates are registered in the server; an unknown name returns 404.
+PowerPoint template names are fixed route segments: `brief` uses PptxGenJS; `business`, `summary`, and `daa` use JSZip. Exposing another template requires a dedicated route. Unknown paths return 404 `NOT_FOUND`.
 
 ## GET /health
 
@@ -329,11 +349,11 @@ These run on the separate demo server at port 3001 and return HTML for PDF rende
 | GET    | `http://localhost:3001/reports/quarterly?year=2026&quarter=3` | Quarterly report; supports numeric `year` and `quarter` query values |
 | GET    | `http://localhost:3001/documents/id2222`                      | Document page used by the default GET PDF route                      |
 
-See [README.md](README.md) for configuration, deployment, and template registration instructions.
+See [README.md](../README.md) for configuration, deployment, and template registration instructions.
 
 ## Route source files
 
 Endpoint paths come from folders under `src/routes/`; method files such as
 `get.ts` and `post.ts` export factories that receive injected services.
-See [the file-routing guide](src/routes/README.md) for adding endpoints. Existing
+See [the file-routing guide](../src/routes/README.md) for adding endpoints. Existing
 URLs, query parameters and download contracts are unchanged.

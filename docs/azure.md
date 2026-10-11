@@ -1,5 +1,7 @@
 # Azure App Service deployment
 
+[Back to overview](../README.md)
+
 This package targets **Linux App Service with Node.js 22 or newer**. Build from Linux, WSL, or the devcontainer:
 
 ```bash

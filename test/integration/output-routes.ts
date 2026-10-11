@@ -164,7 +164,7 @@ test('download real documents from HTTP routes and save output files', async (t)
         format: 'Letter',
         landscape: 'true',
       });
-      await save(`/api/exports/pdf?${params}`, 'custom-report.pdf');
+      await save(`/api/exports/pdf/test?${params}`, 'custom-report.pdf');
     });
     await t.test(
       'fixed portrait report forwards GET parameters to the webapp',
@@ -193,7 +193,7 @@ test('download real documents from HTTP routes and save output files', async (t)
             ),
           );
           await save(
-            '/api/exports/pdf',
+            '/api/exports/pdf/test',
             `${payload.filename}.pdf`,
             undefined,
             payload,

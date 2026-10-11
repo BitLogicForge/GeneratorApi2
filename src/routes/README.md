@@ -4,21 +4,25 @@ PowerPoint API routes are grouped by engine: `api/exports/pptx/jszip/`
 contains existing-file templates (`business`, `summary`, and `daa`), and
 `api/exports/pptx/pptxgenjs/` contains code-generated designs (`brief`).
 
-PDF routes all live in `api/exports/pdf/`: the base endpoint accepts a webapp
-route, while `portrait/[id].pdf` and `landscape/[id].pdf` resolve a document ID
-and force the named orientation. All PDF method factories call
-`createPdfHandler` from `api/exports/pdf/handler.ts` with `schema`, `readInput`
-and `prepareInput`. Each endpoint has a local `schema.ts` next to `get.ts`;
-target resolution also lives alongside its route. `src/services/pdf/` owns Chromium rendering and
-navigation restrictions. The base POST route reuses its GET factory; the shared
-input reader distinguishes query JSON from the POST body.
+Document/report PDF routes live in `api/exports/pdf/`: `portrait/[id].pdf`
+and `landscape/[id].pdf` resolve a document ID and force the named orientation;
+`portrait/quarterly` prints the configured quarterly webapp page.
+The generic GET/POST test export lives in `api/exports/pdf/test/`. It uses the common
+PDF renderer schema from `api/exports/pdf/schema.ts`.
+All PDF method factories call `createPdfHandler` from `api/exports/pdf/handler.ts`
+with `schema`, `readInput` and `prepareInput`. Document and quarterly endpoints
+have local URL-parameter schemas next to `get.ts`; target resolution also lives
+alongside each route.
+`src/services/pdf/` owns Chromium rendering and navigation restrictions.
+The test POST route reuses its GET factory; the shared input reader distinguishes
+query JSON from the POST body.
 
 Folders define the URL. Lowercase method files define the HTTP method:
 
 | File                                        | Endpoint                                  |
 | ------------------------------------------- | ----------------------------------------- |
 | `health/get.ts`                             | `GET /health`                             |
-| `api/exports/pdf/post.ts`                   | `POST /api/exports/pdf`                   |
+| `api/exports/pdf/test/post.ts`              | `POST /api/exports/pdf/test`              |
 | `api/exports/pptx/pptxgenjs/brief/get.ts`   | `GET /api/exports/pptx/pptxgenjs/brief`   |
 | `api/exports/pptx/jszip/business/post.ts`   | `POST /api/exports/pptx/jszip/business`   |
 | `api/exports/pdf/portrait/[id].pdf/get.ts`  | `GET /api/exports/pdf/portrait/:id.pdf`   |
@@ -91,3 +95,9 @@ Route entry points are declared in `knip.json`; the method-file glob automatical
 covers new routes. Add HTTP behavior tests under `test/http/` and update
 `docs/endpoints.md` when adding an endpoint. Run `npm run typecheck`,
 `npm run knip`, and `npm test`.
+
+For GET/POST exports, declare accepted fields and a `readInput` function in the
+endpoint's `schema.ts`. Call `decodeExportInput(req, jsonFields)` with only the
+JSON fields used by that endpoint. PDF test uses `['query', 'landscape']`, brief
+uses `['slides']`, and each template export uses `['replacements']`. The helper
+returns POST JSON directly; schemas validate the decoded data.

@@ -76,7 +76,7 @@ test('PowerPoint routes select fixed templates for GET and POST', async () => {
 test('health and PDF download contract', async () => {
   await request(app).get('/health').expect(200, { status: 'ok' });
   const res = await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/report', filename: 'report' })
     .expect(200);
   assert.match(res.headers['content-type'], /application\/pdf/);
@@ -113,10 +113,13 @@ test('invalid inputs, malformed JSON and unknown templates', async () => {
     '//example.com',
     '/\\example.com',
   ]) {
-    await request(app).post('/api/exports/pdf').send({ route }).expect(400);
+    await request(app)
+      .post('/api/exports/pdf/test')
+      .send({ route })
+      .expect(400);
   }
   await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/ok', filename: '../bad' })
     .expect(400);
   await request(app)
@@ -128,7 +131,7 @@ test('invalid inputs, malformed JSON and unknown templates', async () => {
     .send(payload)
     .expect(404);
   await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .set('Content-Type', 'application/json')
     .send('{')
     .expect(400);
@@ -144,7 +147,7 @@ test('service errors keep consistent response without leaking internals', async 
     logger: { error() {} },
   });
   const res = await request(failing)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/ok' })
     .expect(503);
   assert.equal(res.body.error.code, 'RENDER_BUSY');
@@ -169,7 +172,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
     },
   });
   const pdf = await request(getApp)
-    .get('/api/exports/pdf')
+    .get('/api/exports/pdf/test')
     .query({
       route: '/report',
       query: JSON.stringify({ year: 2026, print: true }),
@@ -223,7 +226,7 @@ test('GET generation rejects malformed, duplicate, unknown and invalid query inp
     'route=/report&unknown=value',
     'route=https://example.com',
   ])
-    await request(app).get(`/api/exports/pdf?${query}`).expect(400);
+    await request(app).get(`/api/exports/pdf/test?${query}`).expect(400);
   await request(app)
     .get('/api/exports/pptx/pptxgenjs/brief')
     .query({ title: 'Test', slides: '[]' })
@@ -236,4 +239,49 @@ test('GET generation rejects malformed, duplicate, unknown and invalid query inp
     .get('/api/exports/pptx/jszip/business')
     .query({ replacements: '{' })
     .expect(400);
+});
+
+test('each export decodes only its own declared structured query fields', async () => {
+  const cases = [
+    {
+      path: '/api/exports/pdf/test',
+      valid: { route: '/report' },
+      own: 'query',
+      other: 'slides',
+    },
+    {
+      path: '/api/exports/pptx/pptxgenjs/brief',
+      valid: { title: 'Test', slides: JSON.stringify(payload.slides) },
+      own: 'slides',
+      other: 'query',
+    },
+    {
+      path: '/api/exports/pptx/jszip/business',
+      valid: { replacements: JSON.stringify({ title: 'Test' }) },
+      own: 'replacements',
+      other: 'landscape',
+    },
+    {
+      path: '/api/exports/pptx/jszip/summary',
+      valid: { replacements: JSON.stringify({ title: 'Test' }) },
+      own: 'replacements',
+      other: 'query',
+    },
+  ];
+  for (const item of cases) {
+    const invalidJson = await request(app)
+      .get(item.path)
+      .query({ ...item.valid, [item.own]: 'not-json' })
+      .expect(400);
+    assert.equal(invalidJson.body.error.code, 'INVALID_QUERY_PARAMETER');
+    const unknownField = await request(app)
+      .get(item.path)
+      .query({ ...item.valid, [item.other]: 'not-json' })
+      .expect(400);
+    assert.equal(unknownField.body.error.code, 'VALIDATION_ERROR');
+    await request(app)
+      .head(item.path)
+      .query({ ...item.valid, [item.other]: 'not-json' })
+      .expect(400);
+  }
 });

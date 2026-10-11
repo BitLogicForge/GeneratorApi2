@@ -24,7 +24,7 @@ test('recognized JSON parser errors return stable client statuses without loggin
   const requests = [
     {
       call: request(app)
-        .post('/api/exports/pdf')
+        .post('/api/exports/pdf/test')
         .set('Content-Type', 'application/json; charset=made-up')
         .send('{"route":"/report"}'),
       status: 415,
@@ -33,7 +33,7 @@ test('recognized JSON parser errors return stable client statuses without loggin
     },
     {
       call: request(app)
-        .post('/api/exports/pdf')
+        .post('/api/exports/pdf/test')
         .set('Content-Encoding', 'made-up')
         .send({ route: '/report' }),
       status: 415,
@@ -42,7 +42,7 @@ test('recognized JSON parser errors return stable client statuses without loggin
     },
     {
       call: request(app)
-        .post('/api/exports/pdf')
+        .post('/api/exports/pdf/test')
         .set('Content-Type', 'application/json')
         .send('{'),
       status: 400,
@@ -51,7 +51,7 @@ test('recognized JSON parser errors return stable client statuses without loggin
     },
     {
       call: request(app)
-        .post('/api/exports/pdf')
+        .post('/api/exports/pdf/test')
         .send({ route: '/report', query: { value: 'x'.repeat(100 * 1024) } }),
       status: 413,
       code: 'BODY_TOO_LARGE',
@@ -88,7 +88,7 @@ test('unexpected error statuses and parser types cannot override the generic ser
     },
   });
   const response = await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/report' })
     .expect(500);
   assert.deepEqual(response.body, {

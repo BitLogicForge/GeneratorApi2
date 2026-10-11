@@ -3,7 +3,7 @@ import { sendDownload } from '@/http/download';
 import type { Request, RequestHandler } from 'express';
 import type { ZodType } from 'zod';
 import type { RouteDependencies } from '@/http/types';
-import type { PdfInput } from './schema.ts';
+import type { PdfInput } from '@/routes/api/exports/pdf/schema';
 
 /** All PDF routes validate, prepare and send downloads through the same flow. */
 export function createPdfHandler<Input>(

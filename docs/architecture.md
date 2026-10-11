@@ -16,12 +16,12 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/pdf-route.ts](../src/pdf-route.ts)                                                                                                                | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
 | [src/routes/health/get.ts](../src/routes/health/get.ts)                                                                                                | Handles `GET /health`.                                                                                         |
 | [src/routes/api/exports/pdf/portrait/[id].pdf/get.ts](../src/routes/api/exports/pdf/portrait/[id].pdf/get.ts)                                          | Handles `GET /api/exports/pdf/portrait/:id.pdf`.                                                               |
-| [src/routes/api/exports/pdf/](../src/routes/api/exports/pdf/)                                                                                          | Handles `GET/POST /api/exports/pdf`.                                                                           |
+| [src/routes/api/exports/pdf/](../src/routes/api/exports/pdf/)                                                                                          | Document/report PDF routes; generic GET/POST test export lives in `src/routes/api/exports/pdf/test/`.          |
 | [src/routes/api/exports/pptx/jszip/daa/get.ts](../src/routes/api/exports/pptx/jszip/daa/get.ts)                                                        | Handles `GET /api/exports/pptx/jszip/daa`.                                                                     |
 | [src/routes/api/exports/pptx/pptxgenjs/brief/](../src/routes/api/exports/pptx/pptxgenjs/brief/)                                                        | Handles `GET/POST /api/exports/pptx/pptxgenjs/brief`.                                                          |
 | [src/routes/api/exports/pptx/jszip/business/](../src/routes/api/exports/pptx/jszip/business/)                                                          | Handles `GET/POST /api/exports/pptx/jszip/business`.                                                           |
 | [src/http/types.ts](../src/http/types.ts)                                                                                                              | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
-| [src/http/input.ts](../src/http/input.ts)                                                                                                              | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
+| [src/http/input.ts](../src/http/input.ts)                                                                                                              | Decodes GET/HEAD JSON fields named by each route, or reads POST bodies; owns no endpoint parameter list.       |
 | [src/http/download.ts](../src/http/download.ts)                                                                                                        | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
 | [src/http/error-handler.ts](../src/http/error-handler.ts), [src/errors.ts](../src/errors.ts)                                                           | Define application errors and translate failures into HTTP responses and logs.                                 |
 | [src/queue/generation-queue.ts](../src/queue/generation-queue.ts)                                                                                      | Controls concurrency, pending capacity, wait timeouts, cancellation, and shutdown admission.                   |
@@ -75,9 +75,9 @@ Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCU
 All PDF routes use [createPdfHandler](../src/routes/api/exports/pdf/handler.ts).
 Each route supplies a schema, a `readInput` function and a `prepareInput` function.
 The shared handler validates input and sends downloads through the PDF queue.
-Each PDF endpoint has a local `schema.ts` next to `get.ts`. The base
-`api/exports/pdf/schema.ts` defines the renderer contract and arbitrary-page
-request. Both document-ID folders define their own ID/language/year schema, and
+The common `api/exports/pdf/schema.ts` defines the renderer contract used by
+every PDF endpoint, including the generic test export. Document and quarterly
+routes have local `schema.ts` files next to `get.ts` for their URL parameters. Both document-ID folders define their own ID/language/year schema, and
 `portrait/quarterly/schema.ts` defines the fixed report's GET parameters.
 
 The portrait and landscape routes each have a separate `document-pdf.ts`
@@ -88,3 +88,9 @@ already matches the renderer contract and is passed through after validation.
 Input preparation remains separate from rendering. Request usage is recorded
 centrally by `src/http/observability.ts`; `src/http/download.ts` records queue
 time, generation time and output bytes for every PDF endpoint.
+
+GET/POST export endpoints define `inputSchema` and `readInput` in their own
+`schema.ts`. PDF test decodes `query` and `landscape`; PowerPoint brief decodes
+`slides`; business and summary each decode `replacements`. The common
+`decodeExportInput` helper in `src/http/input.ts` handles HTTP transport only.
+Shared renderer contracts remain separate from the endpoint field lists.

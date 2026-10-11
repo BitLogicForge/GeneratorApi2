@@ -8,7 +8,7 @@ PDF route exports and the brief, business, and summary PowerPoint exports suppor
 
 | Endpoint                                 | Input                                                                                              | Result                           |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
-| `POST /api/exports/pdf`                  | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
+| `POST /api/exports/pdf/test`             | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
 | `GET /api/exports/pdf/portrait/:id.pdf`  | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
 | `GET /api/exports/pdf/landscape/:id.pdf` | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
 | `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment         |
@@ -40,7 +40,7 @@ The test starts local HTTP servers, downloads real files from the routes, valida
 - `quarterly-2027-q2-pl.pdf` — fixed portrait page with forwarded GET parameters.
 - `document-landscape.pdf` — landscape, from `/api/exports/pdf/landscape/id2222.pdf`.
 - `quarterly-report-portrait.pdf` and `quarterly-report-landscape.pdf` — POST payload examples from `examples/pdf/`.
-- `custom-report.pdf` — readiness selector and print options, from GET `/api/exports/pdf`.
+- `custom-report.pdf` — readiness selector and print options, from GET `/api/exports/pdf/test`.
 - `quarterly-review.pptx` — editable presentation, from GET `/api/exports/pptx/pptxgenjs/brief`.
 - `customer-proposal.pptx` — edited template, from GET `/api/exports/pptx/jszip/business`.
 - `demo-report.pptx` — native table and line chart with random data, from GET `/api/exports/pptx/jszip/daa`.
@@ -116,7 +116,7 @@ No parameters are required. The objects are found by their Selection Pane names:
 | GET, HEAD       | `/api/exports/pdf/portrait/:id.pdf`   | PDF attachment for a document ID                           |
 | GET, HEAD       | `/api/exports/pdf/portrait/quarterly` | Fixed portrait quarterly report with direct GET parameters |
 | GET, HEAD       | `/api/exports/pdf/landscape/:id.pdf`  | PDF attachment for a document ID, always landscape         |
-| GET, HEAD, POST | `/api/exports/pdf`                    | PDF attachment for a webapp route                          |
+| GET, HEAD, POST | `/api/exports/pdf/test`               | PDF attachment for a webapp route                          |
 | GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief`   | Generated editable PowerPoint attachment                   |
 | GET, HEAD, POST | `/api/exports/pptx/jszip/summary`     | PowerPoint attachment with summary template text replaced  |
 | GET, HEAD, POST | `/api/exports/pptx/jszip/business`    | PowerPoint attachment with business template text replaced |
@@ -186,7 +186,7 @@ const documentSettings = {
 
 Then `/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en`. That route must exist on your webapp; it is not provided by the demo.
 
-Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses the configured paper format (initially A4) and always forces portrait orientation and has no per-request readiness selector; use GET /api/exports/pdf for those options.
+Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses the configured paper format (initially A4) and always forces portrait orientation and has no per-request readiness selector; use GET /api/exports/pdf/test for those options.
 
 ## GET /api/exports/pdf/landscape/:id.pdf
 
@@ -231,12 +231,12 @@ Unknown keys, repeated values and invalid values return 400. The caller cannot
 change the target route or print orientation. This example's target is defined
 in `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`; other print defaults remain shared.
 
-## GET /api/exports/pdf
+## GET /api/exports/pdf/test
 
 Minimal request using the included demo:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
+curl --fail-with-body --get http://localhost:3000/api/exports/pdf/test \
   --data-urlencode 'route=/reports/quarterly' \
   --output document.pdf
 ```
@@ -244,7 +244,7 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
 Request with all supported fields:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
+curl --fail-with-body --get http://localhost:3000/api/exports/pdf/test \
   --data-urlencode 'route=/reports/quarterly' \
   --data-urlencode 'query={"year":2026,"quarter":3,"print":true}' \
   --data-urlencode 'filename=quarterly-report' \
@@ -257,7 +257,7 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
 Equivalent GET request using the values in `examples/pdf/quarterly-portrait.json`:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
+curl --fail-with-body --get http://localhost:3000/api/exports/pdf/test \
   --data-urlencode 'route=/reports/quarterly' \
   --data-urlencode 'query={"year":2026,"quarter":3,"print":true}' \
   --data-urlencode 'filename=quarterly-report' \
@@ -464,7 +464,7 @@ PDF and PPTX capacity already have separate concurrency settings.
 ## PDF print configuration
 
 Edit `pdfPrintSettings` in `src/config.ts` and rebuild/restart the application.
-These settings apply to all PDF endpoints. The document-ID endpoints always force their named orientation: `portrait` or `landscape`. GET/POST `/api/exports/pdf` can
+These settings apply to all PDF endpoints. The document-ID endpoints always force their named orientation: `portrait` or `landscape`. GET/POST `/api/exports/pdf/test` can
 still override `format` and `landscape` per request; omitted values use the
 configured defaults.
 

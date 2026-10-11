@@ -140,7 +140,7 @@ test('both API endpoints queue simultaneous requests and return downloads', asyn
   });
   const responses = await Promise.all(
     Array.from({ length: 20 }, () => [
-      request(app).post('/api/exports/pdf').send({ route: '/report' }),
+      request(app).post('/api/exports/pdf/test').send({ route: '/report' }),
       request(app)
         .post('/api/exports/pptx/pptxgenjs/brief')
         .send({
@@ -163,7 +163,7 @@ test('queue backpressure returns a retryable API error', async () => {
     logger: { error() {} },
   });
   const res = await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/report' })
     .expect(503);
   assert.equal(res.body.error.code, 'QUEUE_CLOSED');

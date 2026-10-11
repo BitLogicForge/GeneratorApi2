@@ -4,6 +4,7 @@ import { resolvePdfPrintSettings } from '@/config';
 import { hasControlCharacters } from '@/validation/control-characters';
 import { filenameSchema } from '@/validation/filename';
 
+/** Shared PDF renderer contract, used by every PDF endpoint. */
 export const pdfSchema = z
   .object({
     route: z

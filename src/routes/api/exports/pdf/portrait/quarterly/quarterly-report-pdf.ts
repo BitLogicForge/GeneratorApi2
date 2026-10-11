@@ -1,4 +1,4 @@
-import { pdfSchema } from '../../schema.ts';
+import { pdfSchema } from '@/routes/api/exports/pdf/schema';
 
 import type { QuarterlyPdfQuery } from './schema.ts';
 

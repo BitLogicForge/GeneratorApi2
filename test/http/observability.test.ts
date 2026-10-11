@@ -27,7 +27,7 @@ test('completion metrics count output and failures without sensitive input', asy
     },
   });
   await request(app)
-    .get('/api/exports/pdf')
+    .get('/api/exports/pdf/test')
     .query({
       route: '/private-report',
       query: JSON.stringify({ language: 'private-token' }),
@@ -35,16 +35,16 @@ test('completion metrics count output and failures without sensitive input', asy
     .expect(200);
   fail = true;
   await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/private-report' })
     .expect(500);
-  await request(app).get('/api/exports/pdf').expect(400);
+  await request(app).get('/api/exports/pdf/test').expect(400);
   const metrics = await request(app).get('/internal/metrics').expect(200);
   assert.equal(metrics.headers['cache-control'], 'no-store');
   assert.equal(metrics.body.queues.pdf.concurrency, 2);
   const successful = metrics.body.requests.find(
     (entry: { status: number; route: string }) =>
-      entry.status === 200 && entry.route === '/api/exports/pdf',
+      entry.status === 200 && entry.route === '/api/exports/pdf/test',
   );
   assert.equal(successful.requests, 1);
   assert.equal(successful.outputBytes, 9);

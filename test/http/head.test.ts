@@ -39,7 +39,7 @@ test('HEAD export metadata validates query inputs without entering queues or gen
       filename: 'id2222.pdf',
     },
     {
-      path: '/api/exports/pdf',
+      path: '/api/exports/pdf/test',
       query: {
         route: '/report',
         landscape: 'true',
@@ -92,9 +92,9 @@ test('HEAD export metadata validates query inputs without entering queues or gen
   for (const path of [
     '/api/exports/pdf/portrait/bad%2Fid.pdf',
     '/api/exports/pdf/portrait/id2222.pdf?language=en&language=de',
-    '/api/exports/pdf?route=/report&landscape=wrong',
-    '/api/exports/pdf?route=/report&unknown=1',
-    '/api/exports/pdf?route=/report&query=wrong',
+    '/api/exports/pdf/test?route=/report&landscape=wrong',
+    '/api/exports/pdf/test?route=/report&unknown=1',
+    '/api/exports/pdf/test?route=/report&query=wrong',
     '/api/exports/pptx/pptxgenjs/brief?title=Brief&slides=[]',
     '/api/exports/pptx/jszip/summary?replacements=%7B',
     '/api/exports/pptx/jszip/daa?unknown=1',
@@ -119,7 +119,7 @@ test('HEAD preserves unavailable-service errors and ordinary GET downloads still
     .expect(404);
   await request(app).head('/api/exports/pptx/jszip/daa').expect(404);
   await request(app)
-    .get('/api/exports/pdf')
+    .get('/api/exports/pdf/test')
     .query({ route: '/report' })
     .expect(200);
   assert.equal(calls, 1);

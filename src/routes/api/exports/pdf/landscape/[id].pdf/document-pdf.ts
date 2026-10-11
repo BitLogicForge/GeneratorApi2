@@ -1,7 +1,6 @@
 import { AppError } from '@/errors';
 import { pdfRoutePatternSchema, resolvePdfRoute } from '@/pdf-route';
-
-import { pdfSchema } from '../../schema.ts';
+import { pdfSchema } from '@/routes/api/exports/pdf/schema';
 
 import type { z } from 'zod';
 import type { Config } from '@/config';

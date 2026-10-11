@@ -38,7 +38,7 @@ Endpoint paths and response schemas are configured in [src/data-api/](../src/dat
 With Generator API running:
 
 ```bash
-curl -X POST http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json -o report.pdf
+curl -X POST http://localhost:3000/api/exports/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json -o report.pdf
 curl -X POST http://localhost:3000/api/exports/pptx/pptxgenjs/brief -H 'Content-Type: application/json' --data-binary @examples/pptx/generated.json -o brief.pptx
 curl -X POST http://localhost:3000/api/exports/pptx/jszip/business -H 'Content-Type: application/json' --data-binary @examples/pptx/template.json -o proposal.pptx
 ```

@@ -224,7 +224,7 @@ test('base PDF export accepts only declared webapp query fields for GET and POST
   const { app, inputs } = fixture();
   const query = { language: 'pl', year: 2028, quarter: 2, print: true };
   await request(app)
-    .post('/api/exports/pdf')
+    .post('/api/exports/pdf/test')
     .send({ route: '/reports/quarterly', query })
     .expect(200);
   assert.deepEqual(inputs[0].query, query);
@@ -237,17 +237,38 @@ test('base PDF export accepts only declared webapp query fields for GET and POST
     { language: '' },
   ]) {
     await request(app)
-      .post('/api/exports/pdf')
+      .post('/api/exports/pdf/test')
       .send({ route: '/report', query: invalid })
       .expect(400);
     await request(app)
-      .get('/api/exports/pdf')
+      .get('/api/exports/pdf/test')
       .query({ route: '/report', query: JSON.stringify(invalid) })
       .expect(400);
     await request(app)
-      .head('/api/exports/pdf')
+      .head('/api/exports/pdf/test')
       .query({ route: '/report', query: JSON.stringify(invalid) })
       .expect(400);
   }
   assert.equal(inputs.length, 1);
+});
+
+test('generic PDF export is available only under its test URL', async () => {
+  const { app, inputs } = fixture();
+  await request(app).get('/api/test/pdf?route=/report').expect(404);
+  await request(app)
+    .post('/api/test/pdf')
+    .send({ route: '/report' })
+    .expect(404);
+  await request(app).get('/api/exports/pdf?route=/report').expect(404);
+  await request(app).head('/api/exports/pdf?route=/report').expect(404);
+  await request(app)
+    .post('/api/exports/pdf')
+    .send({ route: '/report' })
+    .expect(404);
+  await request(app).get('/api/exports/pdf/test?route=/report').expect(200);
+  await request(app)
+    .post('/api/exports/pdf/test')
+    .send({ route: '/report' })
+    .expect(200);
+  assert.equal(inputs.length, 2);
 });

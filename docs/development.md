@@ -115,8 +115,11 @@ files, or validate input and call `res.json(data)` for JSON endpoints.
 
 For GET and POST sharing an operation, put the factory in `handler.ts` and create
 `get.ts` and `post.ts` that each contain `export { default } from './handler.ts';`.
-Use `generationInput(req)` before schema validation to decode GET query fields or
-POST JSON. Explicitly decode new structured query fields as needed.
+Define the endpoint's `inputSchema` and `readInput(req)` in its local `schema.ts`.
+The reader calls `decodeExportInput(req, ['slides'])` (with that endpoint's own
+JSON field list) before validation. This helper reads POST bodies directly and
+decodes only the named GET/HEAD fields; it has no global parameter registry.
+Keep accepted fields and transport decoding next to the route.
 
 There is no manual route registration in `src/app.ts`. See
 [src/routes/README.md](../src/routes/README.md) for folder conventions. Restart the

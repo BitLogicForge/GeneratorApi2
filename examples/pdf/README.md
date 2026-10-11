@@ -1,15 +1,16 @@
 # PDF examples
 
-All exports use Generator API on port 3000 under `/api/exports/pdf`.
+Generator API runs on port 3000. Document/report exports use
+`/api/exports/pdf`; the generic test endpoint uses `/api/exports/pdf/test`.
 The demo webapp on port 3001 supplies HTML; Chromium turns that HTML into PDF.
 
 ## What each file does
 
-| File                                                 | Role                                                                                                            | What it produces                                                                                                       |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| [webapp.ts](webapp.ts)                               | Demo HTML server, started with `npm run demo`                                                                   | `/documents/:id` supplies a simple document; `/reports/quarterly` supplies a quarterly report. This script serves HTML |
-| [quarterly-portrait.json](quarterly-portrait.json)   | POST request body for `/api/exports/pdf`; selects the quarterly page, readiness marker and portrait orientation | `quarterly-report-portrait.pdf`                                                                                        |
-| [quarterly-landscape.json](quarterly-landscape.json) | Same quarterly report and data with landscape orientation                                                       | `quarterly-report-landscape.pdf`                                                                                       |
+| File                                                 | Role                                                                                                                 | What it produces                                                                                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [webapp.ts](webapp.ts)                               | Demo HTML server, started with `npm run demo`                                                                        | `/documents/:id` supplies a simple document; `/reports/quarterly` supplies a quarterly report. This script serves HTML |
+| [quarterly-portrait.json](quarterly-portrait.json)   | POST request body for `/api/exports/pdf/test`; selects the quarterly page, readiness marker and portrait orientation | `quarterly-report-portrait.pdf`                                                                                        |
+| [quarterly-landscape.json](quarterly-landscape.json) | Same quarterly report and data with landscape orientation                                                            | `quarterly-report-landscape.pdf`                                                                                       |
 
 The former `request.json` is now `quarterly-portrait.json`.
 
@@ -54,8 +55,8 @@ These request bodies print `/reports/quarterly` with year 2026 and quarter 3,
 and wait until `[data-report-ready]` is visible.
 
 ```bash
-curl --fail-with-body http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json --output quarterly-report-portrait.pdf
-curl --fail-with-body http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-landscape.json --output quarterly-report-landscape.pdf
+curl --fail-with-body http://localhost:3000/api/exports/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json --output quarterly-report-portrait.pdf
+curl --fail-with-body http://localhost:3000/api/exports/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-landscape.json --output quarterly-report-landscape.pdf
 ```
 
 ## Example 3: fixed portrait report with direct GET parameters
@@ -95,16 +96,19 @@ Every PDF route calls `createPdfHandler` with the same three fields:
 - `prepareInput`: converts validated data into the shared `PdfInput` contract.
 
 The handler handles validation and calls the common queue/download flow.
-Each PDF endpoint has a `schema.ts` beside `get.ts`:
+Document and quarterly endpoints have local URL-parameter schemas. The common
+PDF renderer schema is shared by all endpoints, including the generic test export:
 
-| Schema file under `src/routes/api/exports/pdf/` | Accepted input                                                 |
-| ----------------------------------------------- | -------------------------------------------------------------- |
-| `schema.ts`                                     | Arbitrary-page export options and the shared renderer contract |
-| `portrait/[id].pdf/schema.ts`                   | Document ID plus optional language/year                        |
-| `landscape/[id].pdf/schema.ts`                  | Document ID plus optional language/year                        |
-| `portrait/quarterly/schema.ts`                  | Direct year, quarter and language parameters                   |
+| Schema file (document paths relative to `src/routes/api/exports/pdf/`) | Accepted input                                                          |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `src/routes/api/exports/pdf/schema.ts`                                 | Shared PDF renderer contract, also validated by the generic test export |
+| `portrait/[id].pdf/schema.ts`                                          | Document ID plus optional language/year                                 |
+| `landscape/[id].pdf/schema.ts`                                         | Document ID plus optional language/year                                 |
+| `portrait/quarterly/schema.ts`                                         | Direct year, quarter and language parameters                            |
 
-The generic endpoint passes validated `PdfInput` through directly. Its `query`
+The test endpoint declares accepted export fields and GET JSON decoding in
+`test/schema.ts`. It reuses the shared PDF contract for validation and passes
+the resulting `PdfInput` through directly. Its `query`
 object accepts only `language`, `year`, `quarter` and `print`.
 Each document route resolves its target in a separate `document-pdf.ts` next to
 `get.ts`, including language defaults, reserved query checks, fixed orientation

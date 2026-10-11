@@ -4,7 +4,7 @@
 
 ## Overview
 
-All generation endpoints also support GET with query parameters. See [GET endpoint examples](endpoints.md) for every endpoint and copyable requests. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
+PDF route exports and the brief, business, and summary PowerPoint exports support GET and POST. The document-ID PDF link and DAA demo support GET. All GET exports also accept HEAD with the same query schemas: successful HEAD responses return download headers without generating a document or entering a queue, and omit the unknown `Content-Length`. HEAD checks request syntax and configured services; it does not fetch upstream data or confirm that generation will succeed. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
 
 | Endpoint                                 | Input                                                                                              | Result                   |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
@@ -104,14 +104,15 @@ No parameters are required. The objects are found by their Selection Pane names:
 
 ### All routes
 
-| Method | Endpoint                            | Successful response                               |
-| ------ | ----------------------------------- | ------------------------------------------------- |
-| GET    | `/health`                           | JSON process health                               |
-| GET    | `/api/exports/pptx/jszip/daa`       | Native table and line chart with random data      |
-| GET    | `/:id.pdf`                          | PDF attachment for a document ID                  |
-| GET    | `/api/exports/pdf`                  | PDF attachment for a webapp route                 |
-| GET    | `/api/exports/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment          |
-| GET    | `/api/exports/pptx/jszip/business`  | PowerPoint attachment with template text replaced |
+| Method          | Endpoint                            | Successful GET/POST response                               |
+| --------------- | ----------------------------------- | ---------------------------------------------------------- |
+| GET, HEAD       | `/health`                           | JSON process health (HEAD omits the body)                  |
+| GET, HEAD       | `/api/exports/pptx/jszip/daa`       | Native table and line chart with random data               |
+| GET, HEAD       | `/:id.pdf`                          | PDF attachment for a document ID                           |
+| GET, HEAD, POST | `/api/exports/pdf`                  | PDF attachment for a webapp route                          |
+| GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment                   |
+| GET, HEAD, POST | `/api/exports/pptx/jszip/summary`   | PowerPoint attachment with summary template text replaced  |
+| GET, HEAD, POST | `/api/exports/pptx/jszip/business`  | PowerPoint attachment with business template text replaced |
 
 PowerPoint template names are fixed route segments: `brief` uses PptxGenJS; `business`, `summary`, and `daa` use JSZip. Exposing another template requires a dedicated route. Unknown paths return 404 `NOT_FOUND`.
 

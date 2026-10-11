@@ -6,14 +6,14 @@ Reviewed on 2026-10-11. Scope: application wiring, GET/POST contracts, validatio
 
 The findings below describe the original review baseline. Each fix is maintained in a separate commit.
 
-| Finding | Status  | Regression coverage                                                                      |
-| ------- | ------- | ---------------------------------------------------------------------------------------- |
-| R1      | Fixed   | Chromium redirects, frames, script navigation, popups, and renderer recovery             |
-| R2      | Fixed   | GET/POST XML text validation, Unicode preservation, and serialization guard              |
-| R3      | Fixed   | CI verification fails on lint/install/test errors; packaging smoke test gates deployment |
-| R4      | Pending | —                                                                                        |
-| R5      | Pending | —                                                                                        |
-| R6      | Pending | —                                                                                        |
+| Finding | Status  | Regression coverage                                                                        |
+| ------- | ------- | ------------------------------------------------------------------------------------------ |
+| R1      | Fixed   | Chromium redirects, frames, script navigation, popups, and renderer recovery               |
+| R2      | Fixed   | GET/POST XML text validation, Unicode preservation, and serialization guard                |
+| R3      | Fixed   | CI verification fails on lint/install/test errors; packaging smoke test gates deployment   |
+| R4      | Fixed   | All export HEAD metadata, validation, unavailable services, and zero generation/queue work |
+| R5      | Pending | —                                                                                          |
+| R6      | Pending | —                                                                                          |
 
 The project has a good foundation for an internal document service. The most useful next steps are to fix the confirmed correctness gaps, make the existing checks mandatory in CI, and connect the typed data client to a real report export. Keep the current separation between HTTP handling, services, and document helpers.
 

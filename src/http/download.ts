@@ -6,7 +6,7 @@ const contentTypes = {
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 };
 
-/** Queues generation, cancels waiting jobs on disconnect, and sends a download. */
+/** Sends HEAD metadata without rendering; queues GET/POST downloads and cancels disconnected waits. */
 export async function sendDownload(
   res: Response,
   queue: GenerationQueue,
@@ -14,6 +14,15 @@ export async function sendDownload(
   filename: string,
   format: keyof typeof contentTypes,
 ) {
+  const setDownloadHeaders = () =>
+    res
+      .set('Cache-Control', 'no-store')
+      .attachment(`${filename}.${format}`)
+      .type(contentTypes[format]);
+  if (res.req.method === 'HEAD') {
+    setDownloadHeaders().end();
+    return;
+  }
   const controller = new AbortController();
   const onClose = () => {
     if (!res.writableFinished) controller.abort();
@@ -26,9 +35,5 @@ export async function sendDownload(
     res.off('close', onClose);
   }
   if (res.destroyed) return;
-  res
-    .set('Cache-Control', 'no-store')
-    .attachment(`${filename}.${format}`)
-    .type(contentTypes[format])
-    .send(buffer);
+  setDownloadHeaders().send(buffer);
 }

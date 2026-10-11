@@ -2,9 +2,9 @@ import { AppError } from '@/errors';
 
 import type { Request } from 'express';
 
-/** Gives GET exports the same structured input as POST by decoding JSON query fields. */
+/** Gives GET/HEAD exports the same structured input as POST by decoding JSON query fields. */
 export function generationInput(req: Request) {
-  if (req.method !== 'GET') return req.body;
+  if (req.method !== 'GET' && req.method !== 'HEAD') return req.body;
   const input: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(req.query)) {
     if (typeof value !== 'string')

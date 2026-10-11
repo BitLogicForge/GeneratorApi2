@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { pdfRoutePatternSchema } from '@/pdf-route';
-import { pdfSchema } from '@/schemas';
+import { pdfSchema } from '@/schemas/pdf';
 import { buildDataApiUrl } from '@/services/data-api/url';
 
 test('PDF routes, route patterns, and data API paths reject every ASCII control character', () => {

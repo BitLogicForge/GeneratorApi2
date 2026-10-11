@@ -6,7 +6,7 @@ import request from 'supertest';
 import { createApp } from '@/app';
 import { loadConfig } from '@/config';
 
-import type { PdfInput } from '@/schemas';
+import type { PdfInput } from '@/schemas/pdf';
 
 function fixture(pdfRoutePattern?: string, defaultLanguage?: string) {
   const inputs: PdfInput[] = [];
@@ -145,4 +145,47 @@ test('PDF document downloads use only the exports namespace', async () => {
     .expect(200);
   assert.equal(inputs.length, 1);
   assert.equal(inputs[0].landscape, false);
+});
+
+test('quarterly portrait route forwards validated direct GET parameters to a fixed page', async () => {
+  const { app, inputs } = fixture();
+  const response = await request(app)
+    .get('/api/exports/pdf/portrait/quarterly?year=2027&quarter=2&language=pl')
+    .expect(200);
+  assert.equal(inputs[0].route, '/reports/quarterly');
+  assert.deepEqual(inputs[0].query, {
+    year: '2027',
+    quarter: '2',
+    language: 'pl',
+  });
+  assert.equal(inputs[0].landscape, false);
+  assert.equal(inputs[0].waitForSelector, '[data-report-ready]');
+  assert.match(response.headers['content-type'], /application\/pdf/);
+  assert.match(
+    response.headers['content-disposition'],
+    /quarterly-2027-q2-pl.pdf/,
+  );
+  assert.equal(response.headers['cache-control'], 'no-store');
+  assert.ok(response.headers['x-request-id']);
+  await request(app).get('/api/exports/pdf/portrait/quarterly').expect(200);
+  assert.deepEqual(inputs[1].query, {
+    year: '2026',
+    quarter: '3',
+    language: 'en',
+  });
+  for (const query of [
+    'year=1999',
+    'year=2101',
+    'year=abc',
+    'quarter=5',
+    'language=fr',
+    'year=2026&year=2027',
+    'route=/other',
+    'landscape=true',
+  ]) {
+    await request(app)
+      .get(`/api/exports/pdf/portrait/quarterly?${query}`)
+      .expect(400);
+  }
+  assert.equal(inputs.length, 2);
 });

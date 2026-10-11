@@ -1,1 +1,1 @@
-export { default } from './handler.ts';
+export { default } from './get.ts';

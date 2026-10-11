@@ -24,6 +24,11 @@ test('HEAD export metadata validates query inputs without entering queues or gen
   });
   const routes = [
     {
+      path: '/api/exports/pdf/portrait/quarterly',
+      query: { year: '2027', quarter: '2', language: 'pl' },
+      filename: 'quarterly-2027-q2-pl.pdf',
+    },
+    {
       path: '/api/exports/pdf/portrait/id2222.pdf',
       query: { language: 'de' },
       filename: 'id2222.pdf',

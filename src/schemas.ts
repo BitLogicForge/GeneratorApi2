@@ -1,43 +1,11 @@
 import { z } from 'zod';
 
-import { resolvePdfPrintSettings } from './config.ts';
-import { hasControlCharacters } from './validation/control-characters.ts';
 import { documentTextSchema } from './validation/document-text.ts';
+import { filenameSchema } from './validation/filename.ts';
 
-const filename = z
-  .string()
-  .min(1)
-  .max(80)
-  .regex(/^[a-zA-Z0-9_-]+$/);
-export const pdfSchema = z
-  .object({
-    route: z
-      .string()
-      .min(1)
-      .max(2000)
-      .startsWith('/')
-      .refine(
-        (v) =>
-          !v.startsWith('//') && !v.includes('\\') && !hasControlCharacters(v),
-        'Use a relative webapp route',
-      ),
-    query: z
-      .record(
-        z.string().max(100),
-        z.union([z.string().max(2000), z.number(), z.boolean()]),
-      )
-      .default({}),
-    filename: filename.default('document'),
-    waitForSelector: z.string().min(1).max(300).optional(),
-    format: z
-      .enum(['A3', 'A4', 'A5', 'A6', 'Letter', 'Legal', 'Tabloid', 'Ledger'])
-      .default(() => resolvePdfPrintSettings().format),
-    landscape: z.boolean().default(() => resolvePdfPrintSettings().landscape),
-  })
-  .strict();
 export const presentationSchema = z
   .object({
-    filename: filename.default('presentation'),
+    filename: filenameSchema.default('presentation'),
     title: documentTextSchema.min(1).max(100),
     subtitle: documentTextSchema.max(180).default(''),
     author: documentTextSchema.max(100).default('Generator API'),
@@ -60,12 +28,11 @@ export const presentationSchema = z
   })
   .strict();
 
-export type PdfInput = z.infer<typeof pdfSchema>;
 export type PresentationInput = z.infer<typeof presentationSchema>;
 
 export const templatePresentationSchema = z
   .object({
-    filename: filename.default('presentation'),
+    filename: filenameSchema.default('presentation'),
     replacements: z
       .record(
         z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,63}$/),

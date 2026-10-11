@@ -8,7 +8,7 @@ import { navigationBoundary } from './navigation-boundary.ts';
 
 import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
-import type { PdfInput } from '@/schemas';
+import type { PdfInput } from '@/schemas/pdf';
 
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;

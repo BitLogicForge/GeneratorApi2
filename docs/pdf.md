@@ -6,11 +6,12 @@
 
 All PDF downloads are under `/api/exports/pdf`:
 
-| Endpoint                                 | Source                                                          | Orientation                                         |
-| ---------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
-| GET/POST `/api/exports/pdf`              | Explicit relative webapp `route`                                | Request options, falling back to `pdfPrintSettings` |
-| GET `/api/exports/pdf/portrait/:id.pdf`  | Document ID resolved through `documentSettings.pdfRoutePattern` | Always portrait                                     |
-| GET `/api/exports/pdf/landscape/:id.pdf` | Same document-ID source                                         | Always landscape                                    |
+| Endpoint                                  | Source                                                                       | Orientation                                         |
+| ----------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------- |
+| GET/POST `/api/exports/pdf`               | Explicit relative webapp `route`                                             | Request options, falling back to `pdfPrintSettings` |
+| GET `/api/exports/pdf/portrait/:id.pdf`   | Document ID resolved through `documentSettings.pdfRoutePattern`              | Always portrait                                     |
+| GET `/api/exports/pdf/portrait/quarterly` | Fixed `/reports/quarterly` page with direct year/quarter/language parameters | Always portrait                                     |
+| GET `/api/exports/pdf/landscape/:id.pdf`  | Same document-ID source                                                      | Always landscape                                    |
 
 GET endpoints also support HEAD metadata without rendering. The old root-level
 `/:id.pdf` and `/landscape/:id.pdf` endpoints have been removed.

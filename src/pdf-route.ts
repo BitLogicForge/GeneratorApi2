@@ -24,11 +24,6 @@ export const documentIdSchema = z
   .min(1)
   .max(80)
   .regex(/^[A-Za-z0-9_-]+$/);
-export const pdfUrlQuerySchema = z.record(
-  z.string().max(100),
-  z.string().max(2000),
-);
-
 export function resolvePdfRoute(pattern: string, id: string) {
   return pattern.replaceAll('{id}', encodeURIComponent(id));
 }

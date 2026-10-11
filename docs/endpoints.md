@@ -37,6 +37,7 @@ The test starts local HTTP servers, downloads real files from the routes, valida
 
 - `document-portrait.pdf` — portrait, default language, from `/api/exports/pdf/portrait/id2222.pdf`.
 - `document-portrait-de.pdf` — portrait, language override, from `/api/exports/pdf/portrait/id2222.pdf?language=de`.
+- `quarterly-2027-q2-pl.pdf` — fixed portrait page with forwarded GET parameters.
 - `document-landscape.pdf` — landscape, from `/api/exports/pdf/landscape/id2222.pdf`.
 - `quarterly-report-portrait.pdf` and `quarterly-report-landscape.pdf` — POST payload examples from `examples/pdf/`.
 - `custom-report.pdf` — readiness selector and print options, from GET `/api/exports/pdf`.
@@ -108,16 +109,17 @@ No parameters are required. The objects are found by their Selection Pane names:
 
 ### All routes
 
-| Method          | Endpoint                             | Successful GET/POST response                               |
-| --------------- | ------------------------------------ | ---------------------------------------------------------- |
-| GET, HEAD       | `/health`                            | JSON process health (HEAD omits the body)                  |
-| GET, HEAD       | `/api/exports/pptx/jszip/daa`        | Native table and line chart with random data               |
-| GET, HEAD       | `/api/exports/pdf/portrait/:id.pdf`  | PDF attachment for a document ID                           |
-| GET, HEAD       | `/api/exports/pdf/landscape/:id.pdf` | PDF attachment for a document ID, always landscape         |
-| GET, HEAD, POST | `/api/exports/pdf`                   | PDF attachment for a webapp route                          |
-| GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief`  | Generated editable PowerPoint attachment                   |
-| GET, HEAD, POST | `/api/exports/pptx/jszip/summary`    | PowerPoint attachment with summary template text replaced  |
-| GET, HEAD, POST | `/api/exports/pptx/jszip/business`   | PowerPoint attachment with business template text replaced |
+| Method          | Endpoint                              | Successful GET/POST response                               |
+| --------------- | ------------------------------------- | ---------------------------------------------------------- |
+| GET, HEAD       | `/health`                             | JSON process health (HEAD omits the body)                  |
+| GET, HEAD       | `/api/exports/pptx/jszip/daa`         | Native table and line chart with random data               |
+| GET, HEAD       | `/api/exports/pdf/portrait/:id.pdf`   | PDF attachment for a document ID                           |
+| GET, HEAD       | `/api/exports/pdf/portrait/quarterly` | Fixed portrait quarterly report with direct GET parameters |
+| GET, HEAD       | `/api/exports/pdf/landscape/:id.pdf`  | PDF attachment for a document ID, always landscape         |
+| GET, HEAD, POST | `/api/exports/pdf`                    | PDF attachment for a webapp route                          |
+| GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief`   | Generated editable PowerPoint attachment                   |
+| GET, HEAD, POST | `/api/exports/pptx/jszip/summary`     | PowerPoint attachment with summary template text replaced  |
+| GET, HEAD, POST | `/api/exports/pptx/jszip/business`    | PowerPoint attachment with business template text replaced |
 
 PowerPoint template names are fixed route segments: `brief` uses PptxGenJS; `business`, `summary`, and `daa` use JSZip. Exposing another template requires a dedicated route. Unknown paths return 404 `NOT_FOUND`.
 
@@ -191,6 +193,31 @@ curl --fail-with-body 'http://localhost:3000/api/exports/pdf/landscape/id2222.pd
 
 Both responses use attachment filename `id2222.pdf`. The existing `/api/exports/pdf/portrait/:id.pdf`
 always forces portrait orientation.
+
+## GET /api/exports/pdf/portrait/quarterly
+
+Prints the fixed `/reports/quarterly` endpoint on `WEBAPP_BASE_URL`, always in
+portrait. Direct query parameters are validated and forwarded to that webapp
+endpoint through GET. The page must expose `[data-report-ready]` before printing.
+HEAD validates parameters and returns download headers without fetching the page.
+
+```bash
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/quarterly?year=2027&quarter=2&language=pl' --output quarterly-2027-q2-pl.pdf
+```
+
+With the demo configuration, Chromium requests
+`http://localhost:3001/reports/quarterly?year=2027&quarter=2&language=pl`.
+The attachment filename is `quarterly-2027-q2-pl.pdf`.
+
+| Parameter  | Accepted values        | Default |
+| ---------- | ---------------------- | ------- |
+| `year`     | Four digits, 2000–2100 | 2026    |
+| `quarter`  | 1, 2, 3, 4             | 3       |
+| `language` | en, de, pl             | en      |
+
+Unknown keys, repeated values and invalid values return 400. The caller cannot
+change the target route or print orientation. This example's target is defined
+in `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`; other print defaults remain shared.
 
 ## GET /api/exports/pdf
 

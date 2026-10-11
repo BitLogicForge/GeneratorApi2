@@ -53,18 +53,53 @@ curl --fail-with-body http://localhost:3000/api/exports/pdf -H 'Content-Type: ap
 curl --fail-with-body http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-landscape.json --output quarterly-report-landscape.pdf
 ```
 
+## Example 3: fixed portrait report with direct GET parameters
+
+```bash
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/quarterly?year=2027&quarter=2&language=pl' --output quarterly-2027-q2-pl.pdf
+```
+
+Generator API navigates with GET to:
+
+```text
+http://localhost:3001/reports/quarterly?year=2027&quarter=2&language=pl
+```
+
+The webapp endpoint is fixed in `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`.
+`year` accepts 2000–2100 (default 2026), `quarter` accepts 1–4 (default 3), and
+`language` accepts en/de/pl (default en). Values are passed as query strings.
+Unknown and repeated parameters are rejected. The output is always portrait and
+waits for `[data-report-ready]`. The demo uses year/quarter in the heading and
+translates the quarter label according to language.
+
+## Shared endpoint structure
+
+Every PDF route calls `createPdfHandler` with the same three fields:
+
+- `schema`: validates that endpoint's input;
+- `readInput`: reads GET/POST data or the document ID from the request;
+- `prepareInput`: converts validated data into the shared `PdfInput` contract.
+
+The handler handles validation and calls the common queue/download flow.
+`src/schemas/pdf.ts`, `src/schemas/document-pdf.ts` and
+`src/schemas/quarterly-pdf.ts` keep the three input contracts separate.
+The generic endpoint passes validated `PdfInput` through directly. Document and
+quarterly endpoints resolve their webapp targets alongside their route handlers.
+All use the same Chromium renderer and central usage statistics.
+
 ## Where generation happens
 
-| Application file                                       | Responsibility                                         |
-| ------------------------------------------------------ | ------------------------------------------------------ |
-| `src/routes/api/exports/pdf/handler.ts`                | Decodes and validates arbitrary-page GET/POST requests |
-| `src/routes/api/exports/pdf/document-handler.ts`       | Shared HTTP handler for document-ID downloads          |
-| `src/routes/api/exports/pdf/portrait/[id].pdf/get.ts`  | Selects fixed portrait orientation                     |
-| `src/routes/api/exports/pdf/landscape/[id].pdf/get.ts` | Selects fixed landscape orientation                    |
-| `src/services/pdf/document-pdf.ts`                     | Resolves document ID, route and language defaults      |
-| `src/services/pdf/web-page-pdf.ts`                     | Uses Chromium to render HTML and create PDF bytes      |
-| `src/config.ts`                                        | Contains `documentSettings` and `pdfPrintSettings`     |
-| `src/http/download.ts`, `src/http/observability.ts`    | Queue/download handling and central usage statistics   |
+| Application file                                                        | Responsibility                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `src/routes/api/exports/pdf/handler.ts`                                 | Shared validation, preparation and queued download flow       |
+| `src/routes/api/exports/pdf/portrait/[id].pdf/get.ts`                   | Selects fixed portrait orientation                            |
+| `src/routes/api/exports/pdf/landscape/[id].pdf/get.ts`                  | Selects fixed landscape orientation                           |
+| `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts` | Selects the fixed quarterly webapp endpoint and print options |
+| `src/routes/api/exports/pdf/portrait/quarterly/get.ts`                  | Selects quarterly schema, query reader and input resolver     |
+| `src/routes/api/exports/pdf/document-pdf.ts`                            | Resolves document ID, route and language defaults             |
+| `src/services/pdf/web-page-pdf.ts`                                      | Uses Chromium to render HTML and create PDF bytes             |
+| `src/config.ts`                                                         | Contains `documentSettings` and `pdfPrintSettings`            |
+| `src/http/download.ts`, `src/http/observability.ts`                     | Queue/download handling and central usage statistics          |
 
 ## Generate verified artifacts
 
@@ -74,7 +109,7 @@ npm run test:outputs
 
 This starts isolated servers and saves files under `output/routes/`:
 `document-portrait.pdf`, `document-landscape.pdf`, `document-portrait-de.pdf`,
-`quarterly-report-portrait.pdf`, `quarterly-report-landscape.pdf`, and
+`quarterly-2027-q2-pl.pdf`, `quarterly-report-portrait.pdf`, `quarterly-report-landscape.pdf`, and
 `custom-report.pdf` (Letter landscape with a readiness selector).
 The suite also produces PPTX examples. `manifest.json` records request URLs,
 output paths and sizes. These generated files are ignored by Git.

@@ -27,7 +27,10 @@ test('download real documents from HTTP routes and save output files', async (t)
       `<html><body><h1 data-ready>${language === 'de' ? 'Dokument' : 'Document'} id2222</h1><p>Language: ${language}</p></body></html>`,
     );
   });
+  let quarterlyRequest:
+    { method: string; query: Record<string, unknown> } | undefined;
   webapp.get('/reports/quarterly', (req, res) => {
+    quarterlyRequest = { method: req.method, query: { ...req.query } };
     res.send(
       '<html><body><h1 data-report-ready>Quarterly report</h1><p>Projects delivered: 12</p></body></html>',
     );
@@ -159,6 +162,19 @@ test('download real documents from HTTP routes and save output files', async (t)
       });
       await save(`/api/exports/pdf?${params}`, 'custom-report.pdf');
     });
+    await t.test(
+      'fixed portrait report forwards GET parameters to the webapp',
+      async () => {
+        await save(
+          '/api/exports/pdf/portrait/quarterly?year=2027&quarter=2&language=pl',
+          'quarterly-2027-q2-pl.pdf',
+        );
+        assert.deepEqual(quarterlyRequest, {
+          method: 'GET',
+          query: { year: '2027', quarter: '2', language: 'pl' },
+        });
+      },
+    );
     for (const orientation of ['portrait', 'landscape']) {
       await t.test(
         `quarterly ${orientation} POST request example`,

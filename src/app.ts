@@ -6,8 +6,12 @@ import { createGenerationQueues } from './queue/generation-queue.js';
 import { AppError } from './errors.js';
 import { createErrorHandler } from './http/error-handler.js';
 import type { AppOptions } from './http/types.js';
-import { createPdfRoutes } from './routes/pdf.js';
-import { createPresentationRoutes } from './routes/presentations.js';
+import { createHealthRoute } from './routes/health.js';
+import { createDocumentPdfRoute } from './routes/document-pdf.js';
+import { createExportPdfRoute } from './routes/export-pdf.js';
+import { createDemoReportRoute } from './routes/demo-report.js';
+import { createGeneratedPresentationRoute } from './routes/generated-presentation.js';
+import { createTemplatePresentationRoute } from './routes/template-presentation.js';
 
 /** Assembles HTTP handling around injected services so routes can be tested independently. */
 export function createApp(options: AppOptions) {
@@ -26,9 +30,12 @@ export function createApp(options: AppOptions) {
     next();
   });
   app.use(express.json({ limit: '100kb' }));
-  app.get('/health', (req, res) => res.json({ status: 'ok' }));
-  app.use(createPdfRoutes(dependencies));
-  app.use(createPresentationRoutes(dependencies));
+  app.use(createHealthRoute());
+  app.use(createDocumentPdfRoute(dependencies));
+  app.use(createExportPdfRoute(dependencies));
+  app.use(createDemoReportRoute(dependencies));
+  app.use(createGeneratedPresentationRoute(dependencies));
+  app.use(createTemplatePresentationRoute(dependencies));
   app.use((req, res, next) =>
     next(new AppError(404, 'NOT_FOUND', 'Endpoint not found')),
   );

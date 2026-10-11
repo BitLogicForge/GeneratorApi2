@@ -13,8 +13,12 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/config.ts](src/config.ts)                                                                                                   | Defines document route/language defaults and validates environment settings and runtime limits.                |
 | [src/schemas.ts](src/schemas.ts)                                                                                                 | Defines accepted export inputs, validation rules, and inferred TypeScript types.                               |
 | [src/pdf-route.ts](src/pdf-route.ts)                                                                                             | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
-| [src/routes/pdf.ts](src/routes/pdf.ts)                                                                                           | Handles PDF links and exports, including language defaults and reserved query parameters.                      |
-| [src/routes/presentations.ts](src/routes/presentations.ts)                                                                       | Registers generated decks, file-template exports, and the report demo. Add presentation endpoints here.        |
+| [src/routes/health.ts](src/routes/health.ts)                                                                                     | Handles `GET /health`.                                                                                         |
+| [src/routes/document-pdf.ts](src/routes/document-pdf.ts)                                                                         | Handles `GET /:id.pdf`.                                                                                        |
+| [src/routes/export-pdf.ts](src/routes/export-pdf.ts)                                                                             | Handles `GET/POST /api/exports/pdf`.                                                                           |
+| [src/routes/demo-report.ts](src/routes/demo-report.ts)                                                                           | Handles `GET /demo-report.pptx`.                                                                               |
+| [src/routes/generated-presentation.ts](src/routes/generated-presentation.ts)                                                     | Handles `GET/POST /api/exports/pptx/generated/:template`.                                                      |
+| [src/routes/template-presentation.ts](src/routes/template-presentation.ts)                                                       | Handles `GET/POST /api/exports/pptx/templates/:template`.                                                      |
 | [src/http/types.ts](src/http/types.ts)                                                                                           | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
 | [src/http/input.ts](src/http/input.ts)                                                                                           | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
 | [src/http/download.ts](src/http/download.ts)                                                                                     | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
@@ -148,8 +152,7 @@ src/
   index.ts                 startup and shutdown
   app.ts                   middleware setup and route registration
   http/                    shared downloads, input parsing, errors, and contracts
-  routes/pdf.ts            document URLs and web-page PDF exports
-  routes/presentations.ts  generated decks, templates, and report demo
+  routes/                  one module per endpoint path
   config.ts                validated environment configuration
   schemas.ts               runtime validation and inferred input types
   errors.ts                application errors
@@ -237,33 +240,46 @@ For a different template, place its `.pptx` in the root `templates/` directory a
 
 ### 5. Register the route
 
-In `src/routes/presentations.ts`, import `salesReportSchema` from `../schemas.js` and add `salesReport` to the destructured arguments of `createPresentationRoutes`. Insert this handler before `return router`:
+Create `src/routes/sales-report.ts` with a router factory:
 
 ```ts
-router.get('/sales-report.pptx', async (req, res) => {
-  const input = salesReportSchema.parse(req.query);
-  if (!salesReport) {
-    throw new AppError(
-      404,
-      'REPORT_NOT_CONFIGURED',
-      'Sales report not configured',
+import { Router } from 'express';
+import type { RouteDependencies } from '../http/types.js';
+import { salesReportSchema } from '../schemas.js';
+import { AppError } from '../errors.js';
+import { sendDownload } from '../http/download.js';
+
+export function createSalesReportRoute({
+  salesReport,
+  queues,
+}: RouteDependencies) {
+  const router = Router();
+  router.get('/sales-report.pptx', async (req, res) => {
+    const input = salesReportSchema.parse(req.query);
+    if (!salesReport) {
+      throw new AppError(
+        404,
+        'REPORT_NOT_CONFIGURED',
+        'Sales report not configured',
+      );
+    }
+    await sendDownload(
+      res,
+      queues.presentations,
+      () => salesReport.generate(input),
+      'sales-report',
+      'pptx',
     );
-  }
-  await sendDownload(
-    res,
-    queues.presentations,
-    () => salesReport.generate(input),
-    'sales-report',
-    'pptx',
-  );
-});
+  });
+  return router;
+}
 ```
 
-The existing route module already imports `AppError` and `sendDownload`. The download helper handles queuing, disconnected clients, filename extensions, content type, and attachment headers. Use `queues.pdf` and format `'pdf'` for PDF downloads. For a JSON endpoint, validate the input and use `res.json(data)` instead.
+The download helper handles queuing, disconnected clients, filename extensions, content type, and attachment headers. Use `queues.pdf` and format `'pdf'` for PDF downloads. For a JSON endpoint, validate the input and use `res.json(data)` instead.
 
 For a route supporting both GET query parameters and POST JSON, use `generationInput(req)` before schema validation and register the same handler with `.get(handler).post(handler)`. Its supported JSON query fields are currently `query`, `slides`, `replacements`, and `landscape`; explicitly decode any new nested query fields you introduce.
 
-Adding a handler to an existing router requires no change in `app.ts`. For a new route module, export a router factory and register it with `app.use(createYourRoutes(dependencies))` before the 404 handler and error middleware.
+Import `createSalesReportRoute` in `src/app.ts` and register it with `app.use(createSalesReportRoute(dependencies))` before the 404 handler and error middleware. Keep each endpoint path in its own route module.
 
 ### 6. Test and document it
 

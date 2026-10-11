@@ -1,6 +1,5 @@
-import { Router, type RequestHandler } from 'express';
+import { Router } from 'express';
 import type { RouteDependencies } from '../http/types.js';
-import { generationInput } from '../http/input.js';
 import { sendDownload } from '../http/download.js';
 import {
   documentIdSchema,
@@ -11,8 +10,12 @@ import {
 import { pdfSchema } from '../schemas.js';
 import { AppError } from '../errors.js';
 
-/** Shares PDF generation between document links and explicit exports; server query values take precedence. */
-export function createPdfRoutes({ pdf, config, queues }: RouteDependencies) {
+/** Generates a PDF from a document link with server-controlled query values. */
+export function createDocumentPdfRoute({
+  pdf,
+  config,
+  queues,
+}: RouteDependencies) {
   const router = Router();
   const routePattern = pdfRoutePatternSchema.parse(config.pdfRoutePattern);
   router.get('/:id.pdf', async (req, res) => {
@@ -42,16 +45,5 @@ export function createPdfRoutes({ pdf, config, queues }: RouteDependencies) {
       'pdf',
     );
   });
-  const exportPdf: RequestHandler = async (req, res) => {
-    const input = pdfSchema.parse(generationInput(req));
-    await sendDownload(
-      res,
-      queues.pdf,
-      () => pdf.generate(input),
-      input.filename,
-      'pdf',
-    );
-  };
-  router.route('/api/exports/pdf').get(exportPdf).post(exportPdf);
   return router;
 }

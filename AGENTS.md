@@ -12,21 +12,21 @@ do testowania kontraktów HTTP.
 Najpierw sprawdź `package.json` i sekcję „Where to look” w `README.md`.
 Poniższa mapa wskazuje główne granice odpowiedzialności:
 
-| Obszar                                                | Pliki                                              |
-| ----------------------------------------------------- | -------------------------------------------------- |
-| Uruchomienie, zależności i shutdown                   | `src/index.ts`                                     |
-| Express, middleware i request ID                      | `src/app.ts`                                       |
-| Konfiguracja i limity                                 | `src/config.ts`                                    |
-| Walidacja wejścia i trasy dokumentów                  | `src/schemas.ts`, `src/pdf-route.ts`               |
-| Endpointy                                             | `src/routes/pdf.ts`, `src/routes/presentations.ts` |
-| Kontrakty usług, dekodowanie GET, pobieranie i błędy  | `src/http/`, `src/errors.ts`                       |
-| Kolejki, timeouty i anulowanie oczekujących zadań     | `src/queue/generation-queue.ts`                    |
-| Chromium i renderowanie PDF                           | `src/services/web-page-pdf.ts`                     |
-| Generowanie i wypełnianie prezentacji                 | `src/services/`, `src/templates/brief.ts`          |
-| XML, relacje, tabele, wykresy i osadzone arkusze PPTX | `src/pptx/`                                        |
-| Źródłowe prezentacje                                  | `templates/`                                       |
-| Testy i przykłady                                     | `test/`, `examples/`                               |
-| Dokumentacja API i wdrożenia                          | `README-ENDPOINTS.md`, `AZURE.md`, `scripts/`      |
+| Obszar                                                | Pliki                                          |
+| ----------------------------------------------------- | ---------------------------------------------- |
+| Uruchomienie, zależności i shutdown                   | `src/index.ts`                                 |
+| Express, middleware i request ID                      | `src/app.ts`                                   |
+| Konfiguracja i limity                                 | `src/config.ts`                                |
+| Walidacja wejścia i trasy dokumentów                  | `src/schemas.ts`, `src/pdf-route.ts`           |
+| Endpointy                                             | `src/routes/` (osobny plik dla każdej ścieżki) |
+| Kontrakty usług, dekodowanie GET, pobieranie i błędy  | `src/http/`, `src/errors.ts`                   |
+| Kolejki, timeouty i anulowanie oczekujących zadań     | `src/queue/generation-queue.ts`                |
+| Chromium i renderowanie PDF                           | `src/services/web-page-pdf.ts`                 |
+| Generowanie i wypełnianie prezentacji                 | `src/services/`, `src/templates/brief.ts`      |
+| XML, relacje, tabele, wykresy i osadzone arkusze PPTX | `src/pptx/`                                    |
+| Źródłowe prezentacje                                  | `templates/`                                   |
+| Testy i przykłady                                     | `test/`, `examples/`                           |
+| Dokumentacja API i wdrożenia                          | `README-ENDPOINTS.md`, `AZURE.md`, `scripts/`  |
 
 ## Jak badać kod
 

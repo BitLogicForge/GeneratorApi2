@@ -1,6 +1,7 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { listSlides, removeSlide } from '@/pptx/jszip/slides';
+import { listSlides } from '@/pptx/jszip/slides/list';
+import { removeSlide } from '@/pptx/jszip/slides/remove';
 
 // Run the duplicate-slide example first to create a deck with two slides.
 const zip = await JSZip.loadAsync(

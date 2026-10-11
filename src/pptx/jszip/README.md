@@ -10,25 +10,32 @@ Always write a new output file rather than overwriting the source template.
 
 ## Functionality
 
-| Module                             | Utility                                              | Use                                                                                                                                                                 |
-| ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [objects.ts](objects.ts)           | `findNamedObjects(zip, names, slidePaths?)`          | Find Selection Pane names, optionally within specific active slides; reject missing or ambiguous matches. Returns object handles and parsed slide XML.              |
-| [text-table.ts](text-table.ts)     | `fillTextShape(element, text)`                       | Set whole-shape text using its first run's style.                                                                                                                   |
-| [paragraphs.ts](paragraphs.ts)     | `replaceParagraphText(element, search, replacement)` | Replace literal text within paragraphs, including matches split across formatted runs. Returns the replacement count.                                               |
-| [paragraphs.ts](paragraphs.ts)     | `fillParagraphs(element, strings)`                   | Fill paragraphs/bullets; clone the last paragraph when growing and remove excess paragraphs when shrinking.                                                         |
-| [placeholders.ts](placeholders.ts) | `replacePlaceholders(zip, replacements)`             | Fill `{{key}}` tokens in active slides and their notes. Reject missing replacement keys and supplied keys absent from the template. Saves changed parts.            |
-| [text-table.ts](text-table.ts)     | `fillTable(element, rows, options)`                  | Fill cells; `startRow: 1` keeps the header and `resizeRows: true` grows/shrinks rows with matching styles and adjusts frame height.                                 |
-| [charts.ts](charts.ts)             | `fillCategoryChart(zip, object, rows, options)`      | Fill line, bar/column, area, pie, doughnut and radar charts, synchronizing caches, formulas, embedded worksheet cells and table ranges. Saves chart/workbook parts. |
-| [slides.ts](slides.ts)             | `listSlides(zip)`                                    | Get active slide paths in presentation order, including hidden slides.                                                                                              |
-| [slides.ts](slides.ts)             | `duplicateSlide(zip, path)`                          | Insert a copy after its source with independent charts, embedded workbooks and notes. Share layouts/media. Return the copied slide path.                            |
-| [slides.ts](slides.ts)             | `removeSlide(zip, path)`                             | Remove the deck entry and custom-show/section references; keep at least one slide. Retain package assets to preserve shared relationships.                          |
-| [spreadsheet.ts](spreadsheet.ts)   | `setWorksheetCell(document, address, value)`         | Set workbook cell content, creating missing rows/cells and retaining styles.                                                                                        |
-| [package.ts](package.ts)           | `readXml`, `writeXml`, `resolveRelationship`         | Read/write XML and follow typed internal relationships without guessing part paths.                                                                                 |
+| Module                                                           | Utility                                              | Use                                                                                                                                                                 |
+| ---------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [objects.ts](objects.ts)                                         | `findNamedObjects(zip, names, slidePaths?)`          | Find Selection Pane names, optionally within specific active slides; reject missing or ambiguous matches. Returns object handles and parsed slide XML.              |
+| [text/fill-shape.ts](text/fill-shape.ts)                         | `fillTextShape(element, text)`                       | Set whole-shape text using its first run's style.                                                                                                                   |
+| [text/replace-paragraph-text.ts](text/replace-paragraph-text.ts) | `replaceParagraphText(element, search, replacement)` | Replace literal text within paragraphs, including matches split across formatted runs. Returns the replacement count.                                               |
+| [text/fill-paragraphs.ts](text/fill-paragraphs.ts)               | `fillParagraphs(element, strings)`                   | Fill paragraphs/bullets; clone the last paragraph when growing and remove excess paragraphs when shrinking.                                                         |
+| [placeholders.ts](placeholders.ts)                               | `replacePlaceholders(zip, replacements)`             | Fill `{{key}}` tokens in active slides and their notes. Reject missing replacement keys and supplied keys absent from the template. Saves changed parts.            |
+| [tables/fill.ts](tables/fill.ts)                                 | `fillTable(element, rows, options)`                  | Fill cells; `startRow: 1` keeps the header and `resizeRows: true` grows/shrinks rows with matching styles and adjusts frame height.                                 |
+| [charts.ts](charts.ts)                                           | `fillCategoryChart(zip, object, rows, options)`      | Fill line, bar/column, area, pie, doughnut and radar charts, synchronizing caches, formulas, embedded worksheet cells and table ranges. Saves chart/workbook parts. |
+| [slides/list.ts](slides/list.ts)                                 | `listSlides(zip)`                                    | Get active slide paths in presentation order, including hidden slides.                                                                                              |
+| [slides/duplicate.ts](slides/duplicate.ts)                       | `duplicateSlide(zip, path)`                          | Insert a copy after its source with independent charts, embedded workbooks and notes. Share layouts/media. Return the copied slide path.                            |
+| [slides/remove.ts](slides/remove.ts)                             | `removeSlide(zip, path)`                             | Remove the deck entry and custom-show/section references; keep at least one slide. Retain package assets to preserve shared relationships.                          |
+| [spreadsheet.ts](spreadsheet.ts)                                 | `setWorksheetCell(document, address, value)`         | Set workbook cell content, creating missing rows/cells and retaining styles.                                                                                        |
+| [package/](package/)                                             | `readXml`, `writeXml`, `resolveRelationship`         | Read/write XML and follow typed internal relationships using `read-xml.ts`, `write-xml.ts` and `resolve-relationship.ts`.                                           |
 
 The chart implementation is split into [charts/](charts/): `cache.ts` updates
 cached points, `ranges.ts` resizes formulas and clears obsolete cells, `series.ts`
-fills values/categories/titles, `workbook.ts` loads worksheets and resizes Excel
+fills values/categories/titles, `load-workbook.ts` loads worksheets, `resize-workbook-tables.ts` resizes Excel
 tables, and `types.ts` defines options. Use `fillCategoryChart` as the entry point.
+
+Operations are grouped in `text/`, `tables/`, `slides/`, `package/` and `charts/`.
+Import directly from the operation's file. Shared implementations live alongside
+these operations: `text/set-text.ts` retains run formatting, `tables/resize-rows.ts`
+resizes styled rows, `slides/deck.ts` reads presentation order, and
+`slides/copy-parts.ts` copies dependent parts. `package/namespaces.ts` contains XML
+namespace constants and `package/invalid-template.ts` creates template errors.
 
 ## Minimal text example
 
@@ -36,8 +43,8 @@ tables, and `types.ts` defines options. Use `fillCategoryChart` as the entry poi
 import { readFile, writeFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { findNamedObjects } from '@/pptx/jszip/objects';
-import { fillTextShape } from '@/pptx/jszip/text-table';
-import { writeXml } from '@/pptx/jszip/package';
+import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects, slides } = await findNamedObjects(zip, ['TEXT_ME']);

@@ -1,15 +1,13 @@
 import type JSZip from 'jszip';
 import type { NamedObject } from './objects.ts';
-import {
-  chartNs,
-  relationshipNs,
-  readXml,
-  writeXml,
-  resolveRelationship,
-  invalidTemplate,
-} from './package.ts';
+import { chartNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import type { CategoryChartOptions } from './charts/types.ts';
-import { loadChartWorkbook, resizeWorkbookTables } from './charts/workbook.ts';
+import { loadChartWorkbook } from '@/pptx/jszip/charts/load-workbook';
+import { resizeWorkbookTables } from '@/pptx/jszip/charts/resize-workbook-tables';
 import { createChartRange } from './charts/ranges.ts';
 import { fillChartSeries } from './charts/series.ts';
 

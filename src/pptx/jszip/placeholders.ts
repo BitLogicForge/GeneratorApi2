@@ -1,8 +1,11 @@
 import type JSZip from 'jszip';
 import { AppError } from '@/errors';
 import { posix } from 'node:path';
-import { drawing, readXml, writeXml, resolveRelationship } from './package.ts';
-import { listSlides } from './slides.ts';
+import { drawing } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
+import { listSlides } from '@/pptx/jszip/slides/list';
 
 const tokenPattern = /\{\{([A-Za-z][A-Za-z0-9_]{0,63})\}\}/g;
 

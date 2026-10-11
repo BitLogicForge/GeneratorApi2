@@ -1,8 +1,8 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { findNamedObjects } from '@/pptx/jszip/objects';
-import { writeXml } from '@/pptx/jszip/package';
-import { fillTable } from '@/pptx/jszip/text-table';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { fillTable } from '@/pptx/jszip/tables/fill';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects, slides } = await findNamedObjects(zip, ['TAB100']);

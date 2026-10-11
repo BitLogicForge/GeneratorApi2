@@ -1,5 +1,6 @@
 import type { Document, Element } from '@xmldom/xmldom';
-import { chartNs, invalidTemplate } from '@/pptx/jszip/package';
+import { chartNs } from '@/pptx/jszip/package/namespaces';
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { setWorksheetCell } from '@/pptx/jszip/spreadsheet';
 import { fillCache } from './cache.ts';
 import type { CategoryChartOptions } from './types.ts';

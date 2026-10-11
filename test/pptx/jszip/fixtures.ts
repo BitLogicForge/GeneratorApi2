@@ -1,11 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { findNamedObjects } from '@/pptx/jszip/objects';
-import {
-  chartNs,
-  resolveRelationship,
-  relationshipNs,
-} from '@/pptx/jszip/package';
+import { chartNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
+import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 
 export const loadTemplate = async () =>
   JSZip.loadAsync(await readFile('templates/daa.pptx'));

@@ -1,7 +1,9 @@
 import type JSZip from 'jszip';
 import type { Element } from '@xmldom/xmldom';
-import { readXml, presentationNs, invalidTemplate } from './package.ts';
-import { listSlides } from './slides.ts';
+import { readXml } from '@/pptx/jszip/package/read-xml';
+import { presentationNs } from '@/pptx/jszip/package/namespaces';
+import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+import { listSlides } from '@/pptx/jszip/slides/list';
 
 export interface NamedObject {
   path: string;

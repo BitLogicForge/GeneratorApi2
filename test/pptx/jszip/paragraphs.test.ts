@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { fillParagraphs, replaceParagraphText } from '@/pptx/jszip/paragraphs';
-import { drawing } from '@/pptx/jszip/package';
+import { fillParagraphs } from '@/pptx/jszip/text/fill-paragraphs';
+import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
+import { drawing } from '@/pptx/jszip/package/namespaces';
 
 test('paragraph edits preserve run properties, escape text, and do not cross paragraphs', () => {
   const document = new DOMParser().parseFromString(

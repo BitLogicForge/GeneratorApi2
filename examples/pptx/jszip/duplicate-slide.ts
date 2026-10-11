@@ -1,6 +1,7 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { listSlides, duplicateSlide } from '@/pptx/jszip/slides';
+import { listSlides } from '@/pptx/jszip/slides/list';
+import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const [source] = await listSlides(zip);

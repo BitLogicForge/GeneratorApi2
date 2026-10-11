@@ -2,15 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import JSZip from 'jszip';
 import PptxGenJS from 'pptxgenjs';
-import { listSlides } from '@/pptx/jszip/slides';
+import { listSlides } from '@/pptx/jszip/slides/list';
 import { findNamedObjects } from '@/pptx/jszip/objects';
 import { fillCategoryChart } from '@/pptx/jszip/charts';
-import {
-  chartNs,
-  readXml,
-  resolveRelationship,
-  relationshipNs,
-} from '@/pptx/jszip/package';
+import { chartNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
+import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 import { chartPath } from './fixtures.ts';
 
 for (const type of ['bar', 'area', 'pie', 'doughnut', 'radar'] as const) {

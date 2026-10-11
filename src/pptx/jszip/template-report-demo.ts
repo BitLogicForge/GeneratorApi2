@@ -2,9 +2,10 @@ import { randomInt } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { findNamedObjects } from './objects.ts';
-import { fillTable, fillTextShape } from './text-table.ts';
+import { fillTable } from '@/pptx/jszip/tables/fill';
+import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { fillCategoryChart } from './charts.ts';
-import { writeXml } from './package.ts';
+import { writeXml } from '@/pptx/jszip/package/write-xml';
 
 export class TemplateReportDemoService {
   constructor(

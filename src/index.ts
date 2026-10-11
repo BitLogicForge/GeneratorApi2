@@ -2,6 +2,11 @@ import { fileURLToPath } from 'node:url';
 
 import { createApp } from './app.ts';
 import { loadConfig } from './config.ts';
+import {
+  LogEvent,
+  RendererState,
+  TemplateState,
+} from './observability/constants.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 import { DaaPocPresentationService } from './services/jszip/daa-poc-presentation-service.ts';
 import { PowerPointTemplateService } from './services/jszip/power-point-template-service.ts';
@@ -26,27 +31,30 @@ const templateReportDemo = new DaaPocPresentationService(
   fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
 );
 let stopping = false;
-let templates = 'validating';
+let templates: TemplateState = TemplateState.Validating;
 Promise.all([
   templatePresentations.validate(),
   templateReportDemo.validate(),
 ]).then(
   () => {
-    templates = 'ready';
+    templates = TemplateState.Ready;
   },
   () => {
-    templates = 'failed';
-    console.error({ event: 'template_validation_failed' });
+    templates = TemplateState.Failed;
+    console.error({ event: LogEvent.TemplateValidationFailed });
   },
 );
 // Warm Chromium once; probes only inspect state. Failed launches can retry on a PDF request.
 void pdf
   .browser()
-  .catch(() => console.error({ event: 'browser_warmup_failed' }));
+  .catch(() => console.error({ event: LogEvent.BrowserWarmupFailed }));
 const server = createApp({
   templateReportDemo,
   readiness: () => ({
-    ready: !stopping && templates === 'ready' && pdf.stats.state === 'ready',
+    ready:
+      !stopping &&
+      templates === TemplateState.Ready &&
+      pdf.stats.state === RendererState.Ready,
     shuttingDown: stopping,
     templates,
     renderer: pdf.stats.state,

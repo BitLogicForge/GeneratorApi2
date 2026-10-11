@@ -1,6 +1,7 @@
 import { chromium, errors } from 'playwright';
 
 import { AppError } from '@/errors';
+import { RendererState } from '@/observability/constants';
 
 import { navigationBoundary } from './navigation-boundary.ts';
 
@@ -11,7 +12,7 @@ import type { PdfInput } from '@/schemas';
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
   #active = 0;
-  #state = 'idle';
+  #state: RendererState = RendererState.Idle;
   #launches = 0;
   #launchFailures = 0;
   #disconnects = 0;
@@ -33,22 +34,22 @@ export class WebPagePdfService {
   /** Shares one Chromium launch across requests and permits relaunch after failure or disconnect. */
   async browser() {
     if (!this.#browserPromise) {
-      this.#state = 'starting';
+      this.#state = RendererState.Starting;
       this.#browserPromise = chromium
         .launch()
         .then((browser) => {
           this.#launches++;
-          this.#state = 'ready';
+          this.#state = RendererState.Ready;
           browser.on('disconnected', () => {
             this.#disconnects++;
-            this.#state = 'disconnected';
+            this.#state = RendererState.Disconnected;
             this.#browserPromise = undefined;
           });
           return browser;
         })
         .catch((error) => {
           this.#launchFailures++;
-          this.#state = 'failed';
+          this.#state = RendererState.Failed;
           this.#browserPromise = undefined;
           throw error;
         });

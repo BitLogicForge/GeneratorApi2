@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import request from 'supertest';
 
 import { createApp } from '@/app';
+import { RendererState, TemplateState } from '@/observability/constants';
 import { createGenerationQueues } from '@/queue/generation-queue';
 
 test('completion metrics count output and failures without sensitive input', async () => {
@@ -85,8 +86,8 @@ test('readiness reflects initialization and shutdown without generating document
     readiness: () => ({
       ready,
       shuttingDown: false,
-      templates: ready ? 'ready' : 'validating',
-      renderer: ready ? 'ready' : 'starting',
+      templates: ready ? TemplateState.Ready : TemplateState.Validating,
+      renderer: ready ? RendererState.Ready : RendererState.Starting,
     }),
     logger: { error() {} },
   });

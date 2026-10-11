@@ -1,6 +1,7 @@
 import { ZodError } from 'zod';
 
 import { AppError } from '@/errors';
+import { LogEvent } from '@/observability/constants';
 
 import type { ErrorRequestHandler } from 'express';
 
@@ -60,7 +61,7 @@ export function createErrorHandler(
     if (status === 503) res.set('Retry-After', '5');
     if (status >= 500)
       logger.error({
-        event: 'request_failed',
+        event: LogEvent.RequestFailed,
         requestId: res.locals.requestId,
         status,
         code,

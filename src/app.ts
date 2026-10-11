@@ -9,6 +9,7 @@ import { createErrorHandler } from './http/error-handler.ts';
 import { discoverRoutes } from './http/file-routes/discover.ts';
 import { registerRoutes } from './http/file-routes/register.ts';
 import { createObservability } from './http/observability.ts';
+import { ManagedExternally } from './observability/constants.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 
 import type { AppOptions } from './http/types.ts';
@@ -50,8 +51,8 @@ export function createApp(options: AppOptions) {
     const state = options.readiness?.() ?? {
       ready: true,
       shuttingDown: false,
-      templates: 'managed-externally',
-      renderer: 'managed-externally',
+      templates: ManagedExternally,
+      renderer: ManagedExternally,
     };
     const ready =
       state.ready &&

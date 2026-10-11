@@ -1,3 +1,5 @@
+import { LogEvent } from '@/observability/constants';
+
 import type { RequestHandler } from 'express';
 
 /** Aggregates only registered route patterns; never URLs or payloads. */
@@ -29,7 +31,7 @@ export function createObservability(logger: {
           : null;
       const status = res.writableFinished ? res.statusCode : 499;
       const event = {
-        event: 'request_completed',
+        event: LogEvent.RequestCompleted,
         requestId: res.locals.requestId,
         method: req.method,
         route,

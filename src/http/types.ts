@@ -1,4 +1,5 @@
 import type { Config } from '@/config';
+import type { ReadinessState, RendererState } from '@/observability/constants';
 import type { GenerationQueues } from '@/queue/generation-queue';
 import type {
   PdfInput,
@@ -11,7 +12,7 @@ export interface AppOptions {
   pdf: {
     generate(input: PdfInput): Promise<Buffer>;
     readonly stats?: {
-      state: string;
+      state: RendererState;
       launches: number;
       launchFailures: number;
       disconnects: number;
@@ -30,12 +31,7 @@ export interface AppOptions {
   config?: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
   queues?: GenerationQueues;
   logger?: Pick<Console, 'error'> & Partial<Pick<Console, 'info'>>;
-  readiness?: () => {
-    ready: boolean;
-    shuttingDown: boolean;
-    templates: string;
-    renderer: string;
-  };
+  readiness?: () => ReadinessState;
 }
 
 export type RouteDependencies = AppOptions & {

@@ -39,7 +39,7 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [examples/data-api/single/fetch.ts](examples/data-api/single/fetch.ts), [src/data-api/report-data-schema.ts](src/data-api/report-data-schema.ts) | Show upstream data fetching and the expected report data shape.                                                |
 | [examples/pdf/webapp.ts](examples/pdf/webapp.ts), [examples/data-api/server/index.ts](examples/data-api/server/index.ts)                         | Provide local demo pages and synthetic report data.                                                            |
 | [test/](test/)                                                                                                                                   | Covers HTTP behavior, queues, PDF rendering, upstream data, and generated PowerPoint contents.                 |
-| [test/output-routes.ts](test/output-routes.ts)                                                                                                   | Produces downloadable sample artifacts for manual inspection via `npm run test:outputs`.                       |
+| [test/integration/output-routes.ts](test/integration/output-routes.ts)                                                                           | Produces downloadable sample artifacts for manual inspection via `npm run test:outputs`.                       |
 | [scripts/build-azure.mjs](scripts/build-azure.mjs), [scripts/start-azure.sh](scripts/start-azure.sh)                                             | Package the app for Azure and start it with its browser runtime.                                               |
 | [README-ENDPOINTS.md](README-ENDPOINTS.md)                                                                                                       | Lists endpoint parameters and copyable GET requests.                                                           |
 | [AZURE.md](AZURE.md)                                                                                                                             | Explains Azure deployment and runtime configuration.                                                           |
@@ -327,9 +327,9 @@ Import `createSalesReportRoute` in `src/app.ts` and register it with `app.use(cr
 
 ### 6. Test and document it
 
-Add a `test/sales-report.test.ts` using `createApp` and Supertest, following `test/template-report-demo.test.ts`. Cover a successful download, the default title, a custom title, invalid parameters, and generation failures. Check that the PPTX contains the supplied text, rather than only checking HTTP 200.
+Add a `test/http/sales-report.test.ts` using `createApp` and Supertest, following `test/pptx/jszip/template-report-demo.test.ts`. Cover a successful download, the default title, a custom title, invalid parameters, and generation failures. Check that the PPTX contains the supplied text, rather than only checking HTTP 200.
 
-Add a file-producing case to `test/output-routes.ts`: configure `salesReport` in its `createApp` fixture and call `save('/sales-report.pptx?title=Sales%20demo', 'sales-report.pptx', 'Sales demo')` inside a subtest. Add the endpoint, accepted parameters, and a request example to `README-ENDPOINTS.md`.
+Add a file-producing case to `test/integration/output-routes.ts`: configure `salesReport` in its `createApp` fixture and call `save('/sales-report.pptx?title=Sales%20demo', 'sales-report.pptx', 'Sales demo')` inside a subtest. Add the endpoint, accepted parameters, and a request example to `README-ENDPOINTS.md`.
 
 ### 7. Verify and rebuild
 
@@ -443,5 +443,6 @@ The GET endpoint uses the same PDF queue and rendering settings as `POST /api/ex
 
 ## JSZip template utilities
 
-See [the template utility guide](examples/pptx/README.md) and run
+See [the JSZip utility reference](src/pptx/jszip/README.md),
+[small examples](examples/pptx/jszip/README.md), and run
 `npm run example:fill-template` for a complete duplicate → fill → remove example.

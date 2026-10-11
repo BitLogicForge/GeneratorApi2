@@ -50,5 +50,6 @@ Distant source imports use `@/` for `src/` (for example `@/config`), and tests c
 ## Fill a PPTX template
 
 Run `npm run example:fill-template` to produce `output/filled-template.pptx`.
+Start with the [one-operation JSZip examples](pptx/jszip/README.md).
 See [pptx/README.md](pptx/README.md) for slide operations, chart filling, paragraph
 replacement and table resizing.

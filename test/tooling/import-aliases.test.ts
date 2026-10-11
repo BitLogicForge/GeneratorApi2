@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const execute = promisify(execFile);
 const rewriter = fileURLToPath(
-  new URL('../scripts/rewrite-imports.mjs', import.meta.url),
+  new URL('../../scripts/rewrite-imports.mjs', import.meta.url),
 );
 
 test('built aliases support imports, re-exports, and dynamic imports in plain Node', async (t) => {

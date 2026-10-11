@@ -10,7 +10,8 @@ import { PowerPointTemplateService } from '@/pptx/jszip/powerpoint-template';
 import { templatePresentationSchema } from '@/schemas';
 import { createApp } from '@/app';
 
-const path = new URL('../templates/business.pptx', import.meta.url).pathname;
+const path = new URL('../../../templates/business.pptx', import.meta.url)
+  .pathname;
 const service = new PowerPointTemplateService({ business: path });
 const input = templatePresentationSchema.parse({
   replacements: {

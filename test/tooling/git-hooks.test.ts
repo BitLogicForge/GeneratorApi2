@@ -8,7 +8,7 @@ import { join, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const execute = promisify(execFile);
-const root = fileURLToPath(new URL('../', import.meta.url));
+const root = fileURLToPath(new URL('../../', import.meta.url));
 
 test('hook installer skips production and CI without requiring Husky', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'generator-hooks-install-'));

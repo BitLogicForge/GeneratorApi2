@@ -19,7 +19,7 @@ import JSZip from 'jszip';
 test('Azure ZIP includes production assets and runs real document downloads', async (t) => {
   const archive = await JSZip.loadAsync(
     await readFile(
-      new URL('../output/azure/generator-api.zip', import.meta.url),
+      new URL('../../output/azure/generator-api.zip', import.meta.url),
     ),
   );
   for (const name of [

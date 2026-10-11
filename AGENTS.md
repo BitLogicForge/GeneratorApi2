@@ -80,16 +80,16 @@ Nie wyciszaj zgłoszeń bez sprawdzenia, czy wskazany kod jest rzeczywiście uż
 
 Dobieraj sprawdzenia do zmiany. Dostępne polecenia sprawdzaj w `package.json`.
 
-| Zmiana                                | Weryfikacja                                                               |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| TypeScript                            | `npm run typecheck` oraz odpowiednie testy                                |
-| Jeden moduł                           | `npx --no-install tsx --test test/api.test.ts` (podmień plik na właściwy) |
-| Wspólna logika, routing lub kontrakty | `npm test`                                                                |
-| Formatowanie zmienionego pliku        | `npx --no-install prettier --check AGENTS.md` (podmień ścieżkę)           |
-| Formatowanie całego projektu          | `npm run format:check`                                                    |
-| Kompilacja i uruchamianie z `dist`    | `npm run build`                                                           |
-| Pakowanie Azure                       | `npm run test:azure`; szczegóły w `AZURE.md`                              |
-| Wygląd dokumentów                     | `npm run test:outputs` i inspekcja odpowiednich artefaktów                |
+| Zmiana                                | Weryfikacja                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------ |
+| TypeScript                            | `npm run typecheck` oraz odpowiednie testy                                     |
+| Jeden moduł                           | `npx --no-install tsx --test test/http/api.test.ts` (podmień plik na właściwy) |
+| Wspólna logika, routing lub kontrakty | `npm test`                                                                     |
+| Formatowanie zmienionego pliku        | `npx --no-install prettier --check AGENTS.md` (podmień ścieżkę)                |
+| Formatowanie całego projektu          | `npm run format:check`                                                         |
+| Kompilacja i uruchamianie z `dist`    | `npm run build`                                                                |
+| Pakowanie Azure                       | `npm run test:azure`; szczegóły w `AZURE.md`                                   |
+| Wygląd dokumentów                     | `npm run test:outputs` i inspekcja odpowiednich artefaktów                     |
 
 - Dla zmiany zachowania lub naprawy błędu dodaj test sprawdzający obserwowalny
   rezultat. Nie dodawaj testów odtwarzających wyłącznie implementację.

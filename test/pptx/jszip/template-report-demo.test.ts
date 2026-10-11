@@ -11,7 +11,7 @@ import { TemplateReportDemoService } from '@/pptx/jszip/template-report-demo';
 import { createApp } from '@/app';
 
 const template = fileURLToPath(
-  new URL('../templates/daa.pptx', import.meta.url),
+  new URL('../../../templates/daa.pptx', import.meta.url),
 );
 const drawing = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const chartNs = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
@@ -232,7 +232,7 @@ test('GET /demo-report.pptx needs no parameters and returns random native table 
 
 test('Template report demo rejects a template without the expected table and chart', async () => {
   const service = new TemplateReportDemoService(
-    fileURLToPath(new URL('../templates/business.pptx', import.meta.url)),
+    fileURLToPath(new URL('../../../templates/business.pptx', import.meta.url)),
   );
   await assert.rejects(service.generate(), { code: 'INVALID_TEMPLATE' });
 });

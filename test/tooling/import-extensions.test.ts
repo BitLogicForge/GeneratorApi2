@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
+const root = fileURLToPath(new URL('../../', import.meta.url));
 
 test('import check rejects JavaScript extensions in TypeScript source imports and re-exports', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'generator-import-check-'));

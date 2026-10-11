@@ -1,5 +1,8 @@
 # Filling PowerPoint templates with JSZip
 
+Start with the [small JSZip examples](jszip/README.md), each focused on one operation.
+The [utility reference](../../src/pptx/jszip/README.md) lists all available functions.
+
 Run `npm run example:fill-template` from the project root. The example reads
 `templates/daa.pptx` and writes `output/filled-template.pptx`. It duplicates a
 slide, fills the copy's chart/table/text, then removes the original from the deck.

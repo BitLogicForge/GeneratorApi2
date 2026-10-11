@@ -11,7 +11,7 @@ import { WebPagePdfService } from '@/services/web-page-pdf';
 import { GeneratedPresentationService } from '@/pptx/pptxgenjs/generated-presentation';
 import { PowerPointTemplateService } from '@/pptx/jszip/powerpoint-template';
 
-const outputDir = new URL('../output/routes/', import.meta.url);
+const outputDir = new URL('../../output/routes/', import.meta.url);
 
 test('download real documents from HTTP routes and save output files', async (t) => {
   await mkdir(outputDir, { recursive: true });
@@ -34,13 +34,13 @@ test('download real documents from HTTP routes and save output files', async (t)
   });
   const app = createApp({
     templateReportDemo: new TemplateReportDemoService(
-      fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
+      fileURLToPath(new URL('../../templates/daa.pptx', import.meta.url)),
     ),
     pdf,
     presentations: new GeneratedPresentationService(),
     templatePresentations: new PowerPointTemplateService({
       business: fileURLToPath(
-        new URL('../templates/business.pptx', import.meta.url),
+        new URL('../../templates/business.pptx', import.meta.url),
       ),
     }),
   });
@@ -116,7 +116,7 @@ test('download real documents from HTTP routes and save output files', async (t)
     await t.test('generated editable PowerPoint', async () => {
       const payload = JSON.parse(
         await readFile(
-          new URL('../examples/pptx/generated.json', import.meta.url),
+          new URL('../../examples/pptx/generated.json', import.meta.url),
           'utf8',
         ),
       );
@@ -135,7 +135,7 @@ test('download real documents from HTTP routes and save output files', async (t)
     await t.test('edited business PowerPoint template', async () => {
       const payload = JSON.parse(
         await readFile(
-          new URL('../examples/pptx/template.json', import.meta.url),
+          new URL('../../examples/pptx/template.json', import.meta.url),
           'utf8',
         ),
       );

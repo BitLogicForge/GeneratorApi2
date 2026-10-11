@@ -46,3 +46,9 @@ curl -X POST http://localhost:3000/api/exports/pptx/templates/business -H 'Conte
 PDF generation needs the demo webapp (`npm run demo`). [pptx/create-template.ts](pptx/create-template.ts) recreates the business source template when explicitly run; it is not needed to try the request examples.
 
 Distant source imports use `@/` for `src/` (for example `@/config`), and tests can use `@examples/` for example modules. Aliases omit file extensions; nearby imports remain relative with `.ts`.
+
+## Fill a PPTX template
+
+Run `npm run example:fill-template` to produce `output/filled-template.pptx`.
+See [pptx/README.md](pptx/README.md) for slide operations, chart filling, paragraph
+replacement and table resizing.

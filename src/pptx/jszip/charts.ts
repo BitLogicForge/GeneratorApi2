@@ -25,16 +25,19 @@ function fillCache(cache: Element, values: (string | number)[]) {
   const count = cache.getElementsByTagNameNS(chartNs, 'ptCount')[0];
   if (!count) throw invalidTemplate();
   count.setAttribute('val', String(values.length));
+  const levels = Array.from(cache.getElementsByTagNameNS(chartNs, 'lvl'));
+  if (levels.length > 1) throw invalidTemplate();
+  const container = levels[0] ?? cache;
   for (const point of Array.from(cache.getElementsByTagNameNS(chartNs, 'pt')))
-    cache.removeChild(point);
-  const extension = cache.getElementsByTagNameNS(chartNs, 'extLst')[0];
+    point.parentNode!.removeChild(point);
+  const extension = container.getElementsByTagNameNS(chartNs, 'extLst')[0];
   for (const [index, value] of values.entries()) {
     const point = document.createElementNS(chartNs, 'c:pt');
     point.setAttribute('idx', String(index));
     const node = document.createElementNS(chartNs, 'c:v');
     node.textContent = String(value);
     point.appendChild(node);
-    cache.insertBefore(point, extension ?? null);
+    container.insertBefore(point, extension ?? null);
   }
 }
 
@@ -167,12 +170,15 @@ export async function fillCategoryChart(
       data.map((row) => row[seriesIndex]),
     );
     const category = item.getElementsByTagNameNS(chartNs, 'cat')[0];
-    const categoryCache = category?.getElementsByTagNameNS(
-      chartNs,
-      'strCache',
-    )[0];
+    const categoryCache =
+      category?.getElementsByTagNameNS(chartNs, 'strCache')[0] ??
+      category?.getElementsByTagNameNS(chartNs, 'multiLvlStrCache')[0];
     const categoryFormula = category?.getElementsByTagNameNS(chartNs, 'f')[0];
-    if (!categoryCache) throw invalidTemplate();
+    if (
+      !categoryCache ||
+      categoryCache.getElementsByTagNameNS(chartNs, 'lvl').length > 1
+    )
+      throw invalidTemplate();
     const labels =
       categories ??
       Array.from(categoryCache.getElementsByTagNameNS(chartNs, 'v')).map(
@@ -228,6 +234,20 @@ export async function fillCategoryChart(
     if (!range?.startsWith(`${categoryColumn}${firstRow - 1}:`)) continue;
     const resized = range.replace(/\d+$/, String(lastRow));
     root.setAttribute('ref', resized);
+    if (seriesNames) {
+      const columns = Array.from(
+        root.getElementsByTagNameNS(spreadsheet, 'tableColumn'),
+      );
+      if (
+        columns.length !== seriesNames.length + 1 ||
+        new Set([columns[0].getAttribute('name'), ...seriesNames]).size !==
+          columns.length ||
+        seriesNames.some((name) => !name)
+      )
+        throw invalidTemplate();
+      for (const [index, name] of seriesNames.entries())
+        columns[index + 1].setAttribute('name', name);
+    }
     for (const filter of Array.from(
       root.getElementsByTagNameNS(spreadsheet, 'autoFilter'),
     ))

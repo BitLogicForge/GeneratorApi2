@@ -27,6 +27,7 @@ build_zip:
   image: '$NODE_IMAGE'
   script:
     - npm ci --no-audit --no-fund
+    - npm run knip
     - npm run build:azure
   artifacts:
     paths:

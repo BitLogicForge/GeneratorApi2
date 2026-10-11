@@ -11,7 +11,7 @@ export const presentationNs =
   'http://schemas.openxmlformats.org/presentationml/2006/main';
 export const relationshipNs =
   'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-export const packageNs =
+const packageNs =
   'http://schemas.openxmlformats.org/package/2006/relationships';
 export const invalidTemplate = () =>
   new AppError(

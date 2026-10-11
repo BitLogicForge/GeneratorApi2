@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { pdfRoutePatternSchema } from './pdf-route.js';
 
 // Application behavior: edit these values here, then rebuild the deployment package.
-export const documentSettings = {
+const documentSettings = {
   defaultLanguage: 'en',
   pdfRoutePattern: '/documents/{id}',
 };

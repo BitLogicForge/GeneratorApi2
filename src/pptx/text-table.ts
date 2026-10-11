@@ -2,7 +2,7 @@ import type { Element } from '@xmldom/xmldom';
 import { drawing, invalidTemplate } from './package.js';
 
 /** Uses the first text run for replacement content, retaining its formatting and clearing remaining runs. */
-export function setText(element: Element, value: string) {
+function setText(element: Element, value: string) {
   const document = element.ownerDocument!;
   let texts = Array.from(element.getElementsByTagNameNS(drawing, 't'));
   if (!texts.length) {

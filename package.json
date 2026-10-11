@@ -15,6 +15,7 @@
     "start:azure": "bash scripts/start-azure.sh",
     "test:azure": "tsx --test test/azure-package.ts",
     "typecheck": "tsc -p tsconfig.check.json",
+    "knip": "knip",
     "demo": "tsx examples/webapp.ts",
     "demo:data-api": "tsx --env-file-if-exists=.env examples/data-api.ts",
     "example:fetch-data": "tsx --env-file-if-exists=.env examples/fetch-report-data.ts"
@@ -36,6 +37,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.4",
     "@types/supertest": "^7.2.1",
+    "knip": "^6.41.0",
     "prettier": "^3.9.9",
     "supertest": "^7.3.1",
     "tsx": "^4.23.15",

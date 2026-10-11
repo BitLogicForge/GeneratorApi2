@@ -21,7 +21,7 @@ Poniższa mapa wskazuje główne granice odpowiedzialności:
 | Endpointy                                             | `src/routes/` (foldery określają URL; `get.ts`, `post.ts` określają metodę) |
 | Kontrakty usług, dekodowanie GET, pobieranie i błędy  | `src/http/`, `src/errors.ts`                                                |
 | Kolejki, timeouty i anulowanie oczekujących zadań     | `src/queue/generation-queue.ts`                                             |
-| Chromium i renderowanie PDF                           | `src/services/web-page-pdf.ts`                                              |
+| Chromium i renderowanie PDF                           | `src/services/pdf/web-page-pdf.ts`                                          |
 | Generowanie i wypełnianie prezentacji                 | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                                    |
 | XML, relacje, tabele, wykresy i osadzone arkusze PPTX | `src/pptx/jszip/`                                                           |
 | Konfiguracja endpointów API danych i typy odpowiedzi  | `src/data-api/endpoints.ts`, `src/data-api/report-data-schema.ts`           |

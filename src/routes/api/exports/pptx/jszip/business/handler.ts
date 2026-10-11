@@ -1,18 +1,16 @@
+import { AppError } from '@/errors';
+import { sendDownload } from '@/http/download';
+import { generationInput } from '@/http/input';
+import { templatePresentationSchema } from '@/schemas';
+
 import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
-import { generationInput } from '@/http/input';
-import { sendDownload } from '@/http/download';
-import { templatePresentationSchema } from '@/schemas';
-import { AppError } from '@/errors';
 
 export default function createHandler({
   templatePresentations,
   queues,
 }: RouteDependencies): RequestHandler<Record<string, string>> {
-  return async (
-    req,
-    res,
-  ) => {
+  return async (req, res) => {
     const input = templatePresentationSchema.parse(generationInput(req));
     if (!templatePresentations)
       throw new AppError(
@@ -23,7 +21,7 @@ export default function createHandler({
     await sendDownload(
       res,
       queues.presentations,
-      () => templatePresentations.generate(req.params.template, input),
+      () => templatePresentations.generate('business', input),
       input.filename,
       'pptx',
     );

@@ -1,13 +1,12 @@
 import pptxgen from 'pptxgenjs';
 
 import { AppError } from '@/errors';
+import { briefTemplate } from '@/pptx/pptxgenjs/templates/brief';
 
-import { briefTemplate } from './templates/brief.ts';
-
+import type { PresentationTemplate } from '@/pptx/pptxgenjs/types';
 import type { PresentationInput } from '@/schemas';
-import type { PresentationTemplate } from './types.ts';
 
-export class GeneratedPresentationService {
+export class PowerPointGenerationService {
   private readonly templates: Map<string, PresentationTemplate>;
   constructor(
     templates: Record<string, PresentationTemplate> = { brief: briefTemplate },

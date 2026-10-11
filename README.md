@@ -16,19 +16,19 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/routes/health/get.ts](src/routes/health/get.ts)                                                                                             | Handles `GET /health`.                                                                                         |
 | [src/routes/[id].pdf/get.ts](src/routes/[id].pdf/get.ts)                                                                                         | Handles `GET /:id.pdf`.                                                                                        |
 | [src/routes/api/exports/pdf/](src/routes/api/exports/pdf/)                                                                                       | Handles `GET/POST /api/exports/pdf`.                                                                           |
-| [src/routes/demo-report.pptx/get.ts](src/routes/demo-report.pptx/get.ts)                                                                         | Handles `GET /demo-report.pptx`.                                                                               |
-| [src/routes/api/exports/pptx/generated/[template]/](src/routes/api/exports/pptx/generated/[template]/)                                           | Handles `GET/POST /api/exports/pptx/generated/:template`.                                                      |
-| [src/routes/api/exports/pptx/templates/[template]/](src/routes/api/exports/pptx/templates/[template]/)                                           | Handles `GET/POST /api/exports/pptx/templates/:template`.                                                      |
+| [src/routes/api/exports/pptx/jszip/daa/get.ts](src/routes/api/exports/pptx/jszip/daa/get.ts)                                                     | Handles `GET /api/exports/pptx/jszip/daa`.                                                                     |
+| [src/routes/api/exports/pptx/pptxgenjs/brief/](src/routes/api/exports/pptx/pptxgenjs/brief/)                                                     | Handles `GET/POST /api/exports/pptx/pptxgenjs/brief`.                                                          |
+| [src/routes/api/exports/pptx/jszip/business/](src/routes/api/exports/pptx/jszip/business/)                                                       | Handles `GET/POST /api/exports/pptx/jszip/business`.                                                           |
 | [src/http/types.ts](src/http/types.ts)                                                                                                           | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
 | [src/http/input.ts](src/http/input.ts)                                                                                                           | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
 | [src/http/download.ts](src/http/download.ts)                                                                                                     | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
 | [src/http/error-handler.ts](src/http/error-handler.ts), [src/errors.ts](src/errors.ts)                                                           | Define application errors and translate failures into HTTP responses and logs.                                 |
 | [src/queue/generation-queue.ts](src/queue/generation-queue.ts)                                                                                   | Controls concurrency, pending capacity, wait timeouts, cancellation, and shutdown admission.                   |
-| [src/services/web-page-pdf.ts](src/services/web-page-pdf.ts)                                                                                     | Manages Chromium, navigation restrictions, page readiness, printing, and browser context cleanup.              |
-| [src/pptx/pptxgenjs/generated-presentation.ts](src/pptx/pptxgenjs/generated-presentation.ts)                                                     | Registers code-based presentation designs and creates a fresh deck for each export.                            |
+| [src/services/pdf/web-page-pdf.ts](src/services/pdf/web-page-pdf.ts)                                                                             | Manages Chromium, navigation restrictions, page readiness, printing, and browser context cleanup.              |
+| [src/services/pptxgenjs/power-point-generation-service.ts](src/services/pptxgenjs/power-point-generation-service.ts)                             | Registers code-based presentation designs and creates a fresh deck for each export.                            |
 | [src/pptx/pptxgenjs/templates/brief.ts](src/pptx/pptxgenjs/templates/brief.ts)                                                                   | Defines the brief deck's slide layout, typography, colors, and speaker notes. Change its visual design here.   |
-| [src/pptx/jszip/powerpoint-template.ts](src/pptx/jszip/powerpoint-template.ts)                                                                   | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
-| [src/pptx/jszip/template-report-demo.ts](src/pptx/jszip/template-report-demo.ts)                                                                 | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
+| [src/services/jszip/power-point-template-service.ts](src/services/jszip/power-point-template-service.ts)                                         | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
+| [src/services/jszip/daa-poc-presentation-service.ts](src/services/jszip/daa-poc-presentation-service.ts)                                         | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
 | [src/services/data-api-client.ts](src/services/data-api-client.ts)                                                                               | Fetches and validates upstream JSON; handles API prefixes, bearer tokens, and timeouts.                        |
 | [src/pptx/jszip/objects.ts](src/pptx/jszip/objects.ts)                                                                                           | Locates template objects by Selection Pane name. Check here for missing or duplicate objects.                  |
 | [src/pptx/jszip/text/](src/pptx/jszip/text/), [tables/](src/pptx/jszip/tables/)                                                                  | Fills text and paragraphs, and fills/resizes tables while retaining formatting.                                |
@@ -53,7 +53,7 @@ cp .env.example .env
 npm run dev
 ```
 
-On minimal Linux installations, run `npx playwright install-deps chromium` once to install browser system libraries.
+`npm run browser:install` installs Chromium and its required system libraries. On Linux, installing system packages may require sudo access.
 
 Set `WEBAPP_BASE_URL` to your webapp's origin. The API defaults to port 3000 and the webapp to port 3001. For a complete local demo, run `npm run demo` in another terminal.
 
@@ -62,7 +62,7 @@ curl http://localhost:3000/health
 curl -X POST http://localhost:3000/api/exports/pdf \
   -H 'Content-Type: application/json' \
   --data-binary @examples/pdf/request.json --output report.pdf
-curl -X POST http://localhost:3000/api/exports/pptx/generated/brief \
+curl -X POST http://localhost:3000/api/exports/pptx/pptxgenjs/brief \
   -H 'Content-Type: application/json' \
   --data-binary @examples/pptx/generated.json --output presentation.pptx
 ```
@@ -90,11 +90,11 @@ For a container started manually, use `docker run -p 127.0.0.1:3000:3000 ...`. I
 
 All generation endpoints also support GET with query parameters. See [GET endpoint examples](README-ENDPOINTS.md) for every endpoint and copyable requests. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
 
-| Endpoint                                     | Input                                                                                             | Result                   |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------ |
-| `POST /api/exports/pdf`                      | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`          | PDF attachment           |
-| `POST /api/exports/pptx/generated/:template` | Template in route; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
-| `GET /health`                                | None                                                                                              | Process health           |
+| Endpoint                                 | Input                                                                                              | Result                   |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
+| `POST /api/exports/pdf`                  | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment           |
+| `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment |
+| `GET /health`                            | None                                                                                               | Process health           |
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
@@ -201,15 +201,15 @@ src/
   schemas.ts               runtime validation and inferred input types
   errors.ts                application errors
   queue/generation-queue.ts bounded FIFO queues and admission control
-  services/web-page-pdf.ts          webapp PDF rendering and browser cleanup
-  pptx/pptxgenjs/generated-presentation.ts new PPTX decks from slide data
-  pptx/jszip/powerpoint-template.ts   text replacement in existing PPTX files
-  pptx/jszip/template-report-demo.ts demo of native tables, charts, and text
+  services/pdf/web-page-pdf.ts          webapp PDF rendering and browser cleanup
+  services/pptxgenjs/power-point-generation-service.ts new PPTX decks from slide data
+  services/jszip/power-point-template-service.ts   text replacement in existing PPTX files
+  services/jszip/daa-poc-presentation-service.ts demo of native tables, charts, and text
   pptx/jszip/                      reusable template XML helpers
   pptx/pptxgenjs/templates/brief.ts       slide design
 ```
 
-Services are injected into `createApp`, keeping HTTP handling independent from document generation. To add a presentation template, implement the `PresentationTemplate` function type and register it in `GeneratedPresentationService`. It receives a fresh deck and validated input. Add template-specific schemas when new templates need different fields. Add new output formats as separate services and routes.
+Services are injected into `createApp`, keeping HTTP handling independent from document generation. To add a presentation template, implement the `PresentationTemplate` function type and register it in `PowerPointGenerationService`. It receives a fresh deck and validated input. Add template-specific schemas when new templates need different fields. Add new output formats as separate services and routes.
 
 Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
 
@@ -236,15 +236,15 @@ Give optional parameters defaults so the URL also works without a query string. 
 Create `src/pptx/jszip/sales-report.ts`:
 
 ```ts
-import { TemplateReportDemoService } from './template-report-demo.ts';
+import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
 
 import type { SalesReportInput } from '@/schemas';
 
 export class SalesReportService {
-  private readonly template: TemplateReportDemoService;
+  private readonly template: DaaPocPresentationService;
 
   constructor(templatePath: string) {
-    this.template = new TemplateReportDemoService(templatePath);
+    this.template = new DaaPocPresentationService(templatePath);
   }
 
   generate(input: SalesReportInput): Promise<Buffer> {
@@ -335,7 +335,7 @@ server after adding or moving route files; production changes need a fresh build
 
 ### 6. Test and document it
 
-Add a `test/http/sales-report.test.ts` using `createApp` and Supertest, following `test/pptx/jszip/template-report-demo.test.ts`. Cover a successful download, the default title, a custom title, invalid parameters, and generation failures. Check that the PPTX contains the supplied text, rather than only checking HTTP 200.
+Add a `test/http/sales-report.test.ts` using `createApp` and Supertest, following `test/pptx/jszip/daa-poc-presentation-service.test.ts`. Cover a successful download, the default title, a custom title, invalid parameters, and generation failures. Check that the PPTX contains the supplied text, rather than only checking HTTP 200.
 
 Add a file-producing case to `test/integration/output-routes.ts`: configure `salesReport` in its `createApp` fixture and call `save('/sales-report.pptx?title=Sales%20demo', 'sales-report.pptx', 'Sales demo')` inside a subtest. Add the endpoint, accepted parameters, and a request example to `README-ENDPOINTS.md`.
 
@@ -404,27 +404,31 @@ Library references: [Playwright page API](https://playwright.dev/docs/api/class-
 
 ## Edit an existing PowerPoint template
 
-`POST /api/exports/pptx/templates/:template` reads a registered `.pptx` file and modifies its text directly. The included `business` template is `templates/business.pptx`.
+`GET/POST /api/exports/pptx/jszip/summary` fills the existing
+`templates/summary.pptx` with `title`, `subtitle`, and `customer` replacements,
+using the same contract as the business route. See [the endpoint example](README-ENDPOINTS.md#getpost-apiexportspptxjszipsummary).
+
+`POST /api/exports/pptx/jszip/business` reads a registered `.pptx` file and modifies its text directly. The included `business` template is `templates/business.pptx`.
 
 ```bash
-curl -X POST http://localhost:3000/api/exports/pptx/templates/business \
+curl -X POST http://localhost:3000/api/exports/pptx/jszip/business \
   -H 'Content-Type: application/json' \
   --data-binary @examples/pptx/template.json --output proposal.pptx
 ```
 
 In PowerPoint, add placeholders such as `{{title}}`, `{{subtitle}}`, and `{{customer}}` to text boxes or table cells. Supply matching strings in the JSON `replacements` object. Placeholders can span formatting runs within a paragraph; replacement text inherits the formatting of the first run. Speaker-note placeholders are also replaced. Replacements are literal text, with XML characters escaped automatically. Missing replacements and unknown keys return 400, so spelling errors do not silently produce incomplete decks.
 
-Register your own files in `src/index.ts` when constructing `PowerPointTemplateService`. The registry accepts trusted server-side paths; callers select a template name and cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
+Register your own files in `src/index.ts` when constructing `PowerPointTemplateService`. The registry accepts trusted server-side paths; the business route selects its fixed template and callers cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
 
 Only slide and speaker-note text is changed. Untouched ZIP parts, including media, masters, layouts, charts, and relationships, are preserved. This endpoint supports modern `.pptx`, not legacy `.ppt`. Placeholders in masters, layouts, chart data, or across paragraphs are not supported. Replacement strings are single-paragraph text; layout and text-box sizing remain the template author's responsibility. This initial manipulation service does not resize images, update chart data, or add/remove slides. It shares the existing PowerPoint queue and concurrency limit.
 
 ## Template report demo
 
-Open `http://localhost:3000/demo-report.pptx` to download `templates/daa.pptx` populated with random integers from 1–100. No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/demo-report.pptx?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. The first table row stays unchanged as the header; only the last three rows receive random values. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and template styling stay as authored. The embedded Excel workbook and chart cache are updated together, keeping **Edit Data** available in PowerPoint. The source file remains unchanged, and generation shares the PowerPoint queue.
+Open `http://localhost:3000/api/exports/pptx/jszip/daa` to download `templates/daa.pptx` populated with random integers from 1–100. No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/api/exports/pptx/jszip/daa?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. The first table row stays unchanged as the header; only the last three rows receive random values. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and template styling stay as authored. The embedded Excel workbook and chart cache are updated together, keeping **Edit Data** available in PowerPoint. The source file remains unchanged, and generation shares the PowerPoint queue.
 
 Run `npm run test:outputs` to save a sample to `output/routes/demo-report.pptx` along with the other route outputs.
 
-Reusable template helpers live in `src/pptx/jszip`: `objects.ts` finds uniquely named shapes across slides; `text/` fills text and paragraphs; `tables/` fills and resizes tables; `slides/` lists, duplicates and removes slides; `charts.ts` coordinates category-chart filling, with cache, range, series and workbook logic in `charts/`; `package/` reads/writes XML parts and resolves file relationships. `TemplateReportDemoService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
+Reusable template helpers live in `src/pptx/jszip`: `objects.ts` finds uniquely named shapes across slides; `text/` fills text and paragraphs; `tables/` fills and resizes tables; `slides/` lists, duplicates and removes slides; `charts.ts` coordinates category-chart filling, with cache, range, series and workbook logic in `charts/`; `package/` reads/writes XML parts and resolves file relationships. `DaaPocPresentationService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
 
 ## PDF download URLs
 

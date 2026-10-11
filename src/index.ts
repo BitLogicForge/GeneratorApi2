@@ -2,11 +2,11 @@ import { fileURLToPath } from 'node:url';
 
 import { createApp } from './app.ts';
 import { loadConfig } from './config.ts';
-import { PowerPointTemplateService } from './pptx/jszip/powerpoint-template.ts';
-import { TemplateReportDemoService } from './pptx/jszip/template-report-demo.ts';
-import { GeneratedPresentationService } from './pptx/pptxgenjs/generated-presentation.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
-import { WebPagePdfService } from './services/web-page-pdf.ts';
+import { DaaPocPresentationService } from './services/jszip/daa-poc-presentation-service.ts';
+import { PowerPointTemplateService } from './services/jszip/power-point-template-service.ts';
+import { WebPagePdfService } from './services/pdf/web-page-pdf.ts';
+import { PowerPointGenerationService } from './services/pptxgenjs/power-point-generation-service.ts';
 
 const config = loadConfig();
 const pdf = new WebPagePdfService(config);
@@ -17,19 +17,20 @@ const queues = createGenerationQueues({
   waitTimeoutMs: config.waitTimeoutMs,
 });
 const templatePresentations = new PowerPointTemplateService({
+  summary: fileURLToPath(new URL('../templates/summary.pptx', import.meta.url)),
   business: fileURLToPath(
     new URL('../templates/business.pptx', import.meta.url),
   ),
 });
 const server = createApp({
-  templateReportDemo: new TemplateReportDemoService(
+  templateReportDemo: new DaaPocPresentationService(
     fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
   ),
   config,
   templatePresentations,
   queues,
   pdf,
-  presentations: new GeneratedPresentationService(),
+  presentations: new PowerPointGenerationService(),
 }).listen(config.port, config.host, () =>
   console.log(`Generator API listening on ${config.host}:${config.port}`),
 );

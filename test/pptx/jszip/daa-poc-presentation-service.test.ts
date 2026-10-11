@@ -10,7 +10,7 @@ import JSZip from 'jszip';
 import request from 'supertest';
 
 import { createApp } from '@/app';
-import { TemplateReportDemoService } from '@/pptx/jszip/template-report-demo';
+import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
 
 const template = fileURLToPath(
   new URL('../../../templates/daa.pptx', import.meta.url),
@@ -136,7 +136,7 @@ test('Template report demo preserves table headers, fills the last three rows, a
   const source = await readFile(template);
   const original = await JSZip.loadAsync(source);
   let next = 0;
-  const result = await new TemplateReportDemoService(
+  const result = await new DaaPocPresentationService(
     template,
     () => ++next,
   ).generate();
@@ -211,14 +211,14 @@ test('Template report demo preserves table headers, fills the last three rows, a
   assert.deepEqual(await readFile(template), source);
 });
 
-test('GET /demo-report.pptx needs no parameters and returns random native table and chart data', async () => {
+test('GET /api/exports/pptx/jszip/daa needs no parameters and returns random native table and chart data', async () => {
   const app = createApp({
-    templateReportDemo: new TemplateReportDemoService(template),
+    templateReportDemo: new DaaPocPresentationService(template),
     pdf: { generate: async () => Buffer.alloc(0) },
     presentations: { generate: async () => Buffer.alloc(0) },
   });
   const response = await request(app)
-    .get('/demo-report.pptx')
+    .get('/api/exports/pptx/jszip/daa')
     .buffer(true)
     .parse((res, done) => {
       const chunks: Buffer[] = [];
@@ -233,7 +233,7 @@ test('GET /demo-report.pptx needs no parameters and returns random native table 
 });
 
 test('Template report demo rejects a template without the expected table and chart', async () => {
-  const service = new TemplateReportDemoService(
+  const service = new DaaPocPresentationService(
     fileURLToPath(new URL('../../../templates/business.pptx', import.meta.url)),
   );
   await assert.rejects(service.generate(), { code: 'INVALID_TEMPLATE' });
@@ -241,13 +241,13 @@ test('Template report demo rejects a template without the expected table and cha
 
 test('TEXT_ME query is escaped as literal text and invalid query values are rejected', async () => {
   const app = createApp({
-    templateReportDemo: new TemplateReportDemoService(template),
+    templateReportDemo: new DaaPocPresentationService(template),
     pdf: { generate: async () => Buffer.alloc(0) },
     presentations: { generate: async () => Buffer.alloc(0) },
   });
   const text = 'Revenue & growth <2026> — Żółć';
   const response = await request(app)
-    .get('/demo-report.pptx')
+    .get('/api/exports/pptx/jszip/daa')
     .query({ TEXT_ME: text })
     .buffer(true)
     .parse((res, done) => {
@@ -258,10 +258,10 @@ test('TEXT_ME query is escaped as literal text and invalid query values are reje
     .expect(200);
   await verifyData(response.body, text);
   await request(app)
-    .get('/demo-report.pptx?TEXT_ME=one&TEXT_ME=two')
+    .get('/api/exports/pptx/jszip/daa?TEXT_ME=one&TEXT_ME=two')
     .expect(400);
   await request(app)
-    .get('/demo-report.pptx')
+    .get('/api/exports/pptx/jszip/daa')
     .query({ TEXT_ME: 'x'.repeat(5001) })
     .expect(400);
 });
@@ -321,7 +321,7 @@ test('named lookup ignores other tables and resolves renamed chart and workbook 
     const path = join(dir, 'named.pptx');
     await writeFile(path, await zip.generateAsync({ type: 'nodebuffer' }));
     const result = await JSZip.loadAsync(
-      await new TemplateReportDemoService(path).generate('Found by name'),
+      await new DaaPocPresentationService(path).generate('Found by name'),
     );
     const outputSlide = new DOMParser().parseFromString(
       await result.file('ppt/slides/slide1.xml')!.async('string'),
@@ -355,7 +355,7 @@ test('named lookup ignores other tables and resolves renamed chart and workbook 
       { createFolders: false },
     );
     await writeFile(path, await zip.generateAsync({ type: 'nodebuffer' }));
-    await assert.rejects(new TemplateReportDemoService(path).generate(), {
+    await assert.rejects(new DaaPocPresentationService(path).generate(), {
       code: 'INVALID_TEMPLATE',
     });
   } finally {

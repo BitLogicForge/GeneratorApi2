@@ -3,14 +3,13 @@ import { readFile } from 'node:fs/promises';
 
 import JSZip from 'jszip';
 
+import { fillCategoryChart } from '@/pptx/jszip/charts';
+import { findNamedObjects } from '@/pptx/jszip/objects';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 
-import { fillCategoryChart } from './charts.ts';
-import { findNamedObjects } from './objects.ts';
-
-export class TemplateReportDemoService {
+export class DaaPocPresentationService {
   constructor(
     private readonly path: string,
     private readonly nextNumber: () => number = () => randomInt(1, 101),

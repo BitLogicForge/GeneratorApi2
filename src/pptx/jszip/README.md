@@ -76,7 +76,7 @@ slide retains unused ZIP assets, so it does not necessarily reduce the file size
 
 ## Services using these utilities
 
-[PowerPointTemplateService](powerpoint-template.ts) loads templates from a registry
+[PowerPointTemplateService](../../services/jszip/power-point-template-service.ts) loads templates from a registry
 and returns placeholder-filled PPTX bytes.
-[TemplateReportDemoService](template-report-demo.ts) demonstrates filling the named
+[DaaPocPresentationService](../../services/jszip/daa-poc-presentation-service.ts) demonstrates filling the named
 `TAB100`, `GGO` and `TEXT_ME` objects in `templates/daa.pptx`.

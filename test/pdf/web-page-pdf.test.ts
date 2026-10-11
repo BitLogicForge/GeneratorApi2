@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import express from 'express';
 
 import { pdfSchema } from '@/schemas';
-import { WebPagePdfService } from '@/services/web-page-pdf';
+import { WebPagePdfService } from '@/services/pdf/web-page-pdf';
 
 test('real Chromium PDF, query parameters, upstream errors and readiness timeout', async () => {
   const webapp = express();

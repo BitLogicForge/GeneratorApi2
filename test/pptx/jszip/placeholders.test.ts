@@ -9,8 +9,8 @@ import JSZip from 'jszip';
 import request from 'supertest';
 
 import { createApp } from '@/app';
-import { PowerPointTemplateService } from '@/pptx/jszip/powerpoint-template';
 import { templatePresentationSchema } from '@/schemas';
+import { PowerPointTemplateService } from '@/services/jszip/power-point-template-service';
 
 const path = new URL('../../../templates/business.pptx', import.meta.url)
   .pathname;
@@ -119,17 +119,17 @@ test('template endpoint returns an edited PPTX attachment', async () => {
     presentations: { generate: async () => Buffer.alloc(0) },
   });
   const response = await request(app)
-    .post('/api/exports/pptx/templates/business')
+    .post('/api/exports/pptx/jszip/business')
     .send(input)
     .expect(200);
   assert.match(response.headers['content-disposition'], /presentation.pptx/);
   assert.match(response.headers['content-type'], /presentationml/);
   await request(app)
-    .post('/api/exports/pptx/templates/business')
+    .post('/api/exports/pptx/jszip/business')
     .send({ replacements: {} })
     .expect(400);
   await request(app)
-    .post('/api/exports/pptx/templates/unknown')
+    .post('/api/exports/pptx/jszip/unknown')
     .send(input)
     .expect(404);
 });

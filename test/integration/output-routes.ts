@@ -7,10 +7,10 @@ import express from 'express';
 import JSZip from 'jszip';
 
 import { createApp } from '@/app';
-import { PowerPointTemplateService } from '@/pptx/jszip/powerpoint-template';
-import { TemplateReportDemoService } from '@/pptx/jszip/template-report-demo';
-import { GeneratedPresentationService } from '@/pptx/pptxgenjs/generated-presentation';
-import { WebPagePdfService } from '@/services/web-page-pdf';
+import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
+import { PowerPointTemplateService } from '@/services/jszip/power-point-template-service';
+import { WebPagePdfService } from '@/services/pdf/web-page-pdf';
+import { PowerPointGenerationService } from '@/services/pptxgenjs/power-point-generation-service';
 
 import type { AddressInfo } from 'node:net';
 
@@ -36,11 +36,11 @@ test('download real documents from HTTP routes and save output files', async (t)
     timeout: 10000,
   });
   const app = createApp({
-    templateReportDemo: new TemplateReportDemoService(
+    templateReportDemo: new DaaPocPresentationService(
       fileURLToPath(new URL('../../templates/daa.pptx', import.meta.url)),
     ),
     pdf,
-    presentations: new GeneratedPresentationService(),
+    presentations: new PowerPointGenerationService(),
     templatePresentations: new PowerPointTemplateService({
       business: fileURLToPath(
         new URL('../../templates/business.pptx', import.meta.url),
@@ -130,7 +130,7 @@ test('download real documents from HTTP routes and save output files', async (t)
         ]),
       );
       await save(
-        `/api/exports/pptx/generated/brief?${params}`,
+        `/api/exports/pptx/pptxgenjs/brief?${params}`,
         'quarterly-review.pptx',
         'A clearer path forward',
       );
@@ -147,7 +147,7 @@ test('download real documents from HTTP routes and save output files', async (t)
         replacements: JSON.stringify(payload.replacements),
       });
       await save(
-        `/api/exports/pptx/templates/business?${params}`,
+        `/api/exports/pptx/jszip/business?${params}`,
         'customer-proposal.pptx',
         'Acme Corporation',
       );
@@ -156,7 +156,7 @@ test('download real documents from HTTP routes and save output files', async (t)
       'Template report demo with random table and chart data',
       async () => {
         await save(
-          '/demo-report.pptx?TEXT_ME=Example%20report',
+          '/api/exports/pptx/jszip/daa?TEXT_ME=Example%20report',
           'demo-report.pptx',
           'Example report',
         );

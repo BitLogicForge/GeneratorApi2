@@ -6,7 +6,7 @@ import request from 'supertest';
 
 import { createApp } from '@/app';
 import { AppError } from '@/errors';
-import { GeneratedPresentationService } from '@/pptx/pptxgenjs/generated-presentation';
+import { PowerPointGenerationService } from '@/services/pptxgenjs/power-point-generation-service';
 
 const payload = {
   title: 'Roadmap',
@@ -20,8 +20,58 @@ const payload = {
 };
 const app = createApp({
   pdf: { generate: async () => Buffer.from('%PDF-1.7') },
-  presentations: new GeneratedPresentationService(),
+  presentations: new PowerPointGenerationService(),
   logger: { error() {} },
+});
+test('PowerPoint routes select fixed templates for GET and POST', async () => {
+  const templates: string[] = [];
+  const fixedApp = createApp({
+    pdf: { generate: async () => Buffer.alloc(0) },
+    presentations: {
+      generate: async (template) => {
+        templates.push(template);
+        return Buffer.from('pptx');
+      },
+    },
+    templatePresentations: {
+      generate: async (template) => {
+        templates.push(template);
+        return Buffer.from('pptx');
+      },
+    },
+  });
+  await request(fixedApp)
+    .get('/api/exports/pptx/pptxgenjs/brief')
+    .query({ title: payload.title, slides: JSON.stringify(payload.slides) })
+    .expect(200);
+  await request(fixedApp)
+    .post('/api/exports/pptx/pptxgenjs/brief')
+    .send(payload)
+    .expect(200);
+  await request(fixedApp)
+    .get('/api/exports/pptx/jszip/business')
+    .query({ replacements: JSON.stringify({ title: 'Proposal' }) })
+    .expect(200);
+  await request(fixedApp)
+    .post('/api/exports/pptx/jszip/business')
+    .send({ replacements: { title: 'Proposal' } })
+    .expect(200);
+  assert.deepEqual(templates, ['brief', 'brief', 'business', 'business']);
+  for (const path of [
+    '/demo-report.pptx',
+    '/api/exports/pptx/generated/brief',
+    '/api/exports/pptx/templates/business',
+    '/api/exports/pptx/pptxgenjs/other',
+    '/api/exports/pptx/jszip/other',
+  ]) {
+    const get = await request(fixedApp).get(path).expect(404);
+    const post = await request(fixedApp).post(path).send({}).expect(404);
+    assert.equal(get.body.error.code, 'NOT_FOUND');
+    assert.equal(post.body.error.code, 'NOT_FOUND');
+    assert.ok(get.headers['x-request-id']);
+    assert.ok(post.headers['x-request-id']);
+  }
+  assert.equal(templates.length, 4);
 });
 test('health and PDF download contract', async () => {
   await request(app).get('/health').expect(200, { status: 'ok' });
@@ -34,7 +84,7 @@ test('health and PDF download contract', async () => {
 });
 test('PowerPoint contains editable title, content and notes', async () => {
   const res = await request(app)
-    .post('/api/exports/pptx/generated/brief')
+    .post('/api/exports/pptx/pptxgenjs/brief')
     .send(payload)
     .buffer(true)
     .parse((res, done) => {
@@ -70,11 +120,11 @@ test('invalid inputs, malformed JSON and unknown templates', async () => {
     .send({ route: '/ok', filename: '../bad' })
     .expect(400);
   await request(app)
-    .post('/api/exports/pptx/generated/brief')
+    .post('/api/exports/pptx/pptxgenjs/brief')
     .send({ ...payload, slides: [] })
     .expect(400);
   await request(app)
-    .post('/api/exports/pptx/generated/missing')
+    .post('/api/exports/pptx/pptxgenjs/missing')
     .send(payload)
     .expect(404);
   await request(app)
@@ -90,7 +140,7 @@ test('service errors keep consistent response without leaking internals', async 
         throw new AppError(503, 'RENDER_BUSY', 'Renderer is busy');
       },
     },
-    presentations: new GeneratedPresentationService(),
+    presentations: new PowerPointGenerationService(),
     logger: { error() {} },
   });
   const res = await request(failing)
@@ -110,7 +160,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
         return Buffer.from('%PDF-1.7');
       },
     },
-    presentations: new GeneratedPresentationService(),
+    presentations: new PowerPointGenerationService(),
     templatePresentations: {
       generate: async (template, input) => {
         inputs.push({ template, ...input });
@@ -136,7 +186,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
     format: 'A4',
   });
   const deck = await request(getApp)
-    .get('/api/exports/pptx/generated/brief')
+    .get('/api/exports/pptx/pptxgenjs/brief')
     .query({ title: payload.title, slides: JSON.stringify(payload.slides) })
     .buffer(true)
     .parse((res, done) => {
@@ -151,7 +201,7 @@ test('GET generation endpoints decode query inputs and return attachments', asyn
     /Ship the API/,
   );
   const template = await request(getApp)
-    .get('/api/exports/pptx/templates/business')
+    .get('/api/exports/pptx/jszip/business')
     .query({
       replacements: JSON.stringify({ title: 'A & B' }),
       filename: 'proposal',
@@ -175,15 +225,15 @@ test('GET generation rejects malformed, duplicate, unknown and invalid query inp
   ])
     await request(app).get(`/api/exports/pdf?${query}`).expect(400);
   await request(app)
-    .get('/api/exports/pptx/generated/brief')
+    .get('/api/exports/pptx/pptxgenjs/brief')
     .query({ title: 'Test', slides: '[]' })
     .expect(400);
   await request(app)
-    .get('/api/exports/pptx/generated/missing')
+    .get('/api/exports/pptx/pptxgenjs/missing')
     .query({ title: payload.title, slides: JSON.stringify(payload.slides) })
     .expect(404);
   await request(app)
-    .get('/api/exports/pptx/templates/business')
+    .get('/api/exports/pptx/jszip/business')
     .query({ replacements: '{' })
     .expect(400);
 });

@@ -11,7 +11,7 @@
     "start": "node --env-file-if-exists=.env dist/index.js",
     "test": "tsx --test \"test/**/*.test.ts\"",
     "test:outputs": "tsx --test test/integration/output-routes.ts",
-    "browser:install": "playwright install chromium",
+    "browser:install": "playwright install --with-deps chromium",
     "build": "node scripts/clean-dist.mjs && tsc && node scripts/rewrite-imports.mjs dist",
     "build:azure": "node scripts/build-azure.mjs",
     "start:azure": "bash scripts/start-azure.sh",

@@ -142,7 +142,7 @@ test('both API endpoints queue simultaneous requests and return downloads', asyn
     Array.from({ length: 20 }, () => [
       request(app).post('/api/exports/pdf').send({ route: '/report' }),
       request(app)
-        .post('/api/exports/pptx/generated/brief')
+        .post('/api/exports/pptx/pptxgenjs/brief')
         .send({
           title: 'Report',
           slides: [{ title: 'Summary', bullets: ['Done'] }],

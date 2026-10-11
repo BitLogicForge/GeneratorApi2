@@ -123,7 +123,7 @@ test('Azure ZIP includes production assets and runs real document downloads', as
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { status: 'ok' });
   const pptx = await fetch(
-    `${baseUrl}/demo-report.pptx?TEXT_ME=Azure%20smoke%20test`,
+    `${baseUrl}/api/exports/pptx/jszip/daa?TEXT_ME=Azure%20smoke%20test`,
   );
   assert.equal(pptx.status, 200);
   const deck = await JSZip.loadAsync(await pptx.arrayBuffer());

@@ -3,8 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 
 import { AppError } from '@/errors';
-
-import { replacePlaceholders } from './placeholders.ts';
+import { replacePlaceholders } from '@/pptx/jszip/placeholders';
 
 import type { TemplatePresentationInput } from '@/schemas';
 

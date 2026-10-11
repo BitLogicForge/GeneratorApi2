@@ -14,7 +14,7 @@ export default function createHandler({
     await sendDownload(
       res,
       queues.presentations,
-      () => presentations.generate(req.params.template, input),
+      () => presentations.generate('brief', input),
       input.filename,
       'pptx',
     );

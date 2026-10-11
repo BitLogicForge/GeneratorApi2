@@ -39,8 +39,8 @@ With Generator API running:
 
 ```bash
 curl -X POST http://localhost:3000/api/exports/pdf -H 'Content-Type: application/json' --data-binary @examples/pdf/request.json -o report.pdf
-curl -X POST http://localhost:3000/api/exports/pptx/generated/brief -H 'Content-Type: application/json' --data-binary @examples/pptx/generated.json -o brief.pptx
-curl -X POST http://localhost:3000/api/exports/pptx/templates/business -H 'Content-Type: application/json' --data-binary @examples/pptx/template.json -o proposal.pptx
+curl -X POST http://localhost:3000/api/exports/pptx/pptxgenjs/brief -H 'Content-Type: application/json' --data-binary @examples/pptx/generated.json -o brief.pptx
+curl -X POST http://localhost:3000/api/exports/pptx/jszip/business -H 'Content-Type: application/json' --data-binary @examples/pptx/template.json -o proposal.pptx
 ```
 
 PDF generation needs the demo webapp (`npm run demo`). [pptx/create-template.ts](pptx/create-template.ts) recreates the business source template when explicitly run; it is not needed to try the request examples.

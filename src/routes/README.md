@@ -1,21 +1,30 @@
 # File-based routes
 
+PowerPoint API routes are grouped by engine: `api/exports/pptx/jszip/`
+contains existing-file templates (`business`, `summary`, and `daa`), and
+`api/exports/pptx/pptxgenjs/` contains code-generated designs (`brief`).
+
 Folders define the URL. Lowercase method files define the HTTP method:
 
-| File                                           | Endpoint                                    |
-| ---------------------------------------------- | ------------------------------------------- |
-| `health/get.ts`                                | `GET /health`                               |
-| `api/exports/pdf/post.ts`                      | `POST /api/exports/pdf`                     |
-| `api/exports/pptx/generated/[template]/get.ts` | `GET /api/exports/pptx/generated/:template` |
-| `[id].pdf/get.ts`                              | `GET /:id.pdf`                              |
-| `demo-report.pptx/get.ts`                      | `GET /demo-report.pptx`                     |
-| `get.ts`                                       | `GET /` (if added)                          |
+| File                                      | Endpoint                                |
+| ----------------------------------------- | --------------------------------------- |
+| `health/get.ts`                           | `GET /health`                           |
+| `api/exports/pdf/post.ts`                 | `POST /api/exports/pdf`                 |
+| `api/exports/pptx/pptxgenjs/brief/get.ts` | `GET /api/exports/pptx/pptxgenjs/brief` |
+| `api/exports/pptx/jszip/business/post.ts` | `POST /api/exports/pptx/jszip/business` |
+| `[id].pdf/get.ts`                         | `GET /:id.pdf`                          |
+| `api/exports/pptx/jszip/daa/get.ts`       | `GET /api/exports/pptx/jszip/daa`       |
+| `get.ts`                                  | `GET /` (if added)                      |
 
 Supported filenames: `get.ts`, `post.ts`, `put.ts`, `patch.ts`, `delete.ts`,
 `head.ts`, `options.ts`. `[name]` becomes a named parameter; suffixes such as
 `[id].pdf` are supported. Use letters, numbers, underscores, dots and hyphens for
 static folder names. Parameter names start with a letter/underscore and must not
 repeat within a path. `index` is a literal URL segment, not a special filename.
+
+PowerPoint routes use literal template folders (`brief`, `business`, `summary`, and `daa`). Each
+handler selects its existing registered template; template names are not URL
+parameters. Add a dedicated route when exposing another template.
 
 ## Add an endpoint
 

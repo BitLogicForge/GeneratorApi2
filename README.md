@@ -13,12 +13,12 @@ Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flo
 | [src/config.ts](src/config.ts)                                                                                                                   | Defines document route/language defaults and validates environment settings and runtime limits.                |
 | [src/schemas.ts](src/schemas.ts)                                                                                                                 | Defines accepted export inputs, validation rules, and inferred TypeScript types.                               |
 | [src/pdf-route.ts](src/pdf-route.ts)                                                                                                             | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
-| [src/routes/health.ts](src/routes/health.ts)                                                                                                     | Handles `GET /health`.                                                                                         |
-| [src/routes/document-pdf.ts](src/routes/document-pdf.ts)                                                                                         | Handles `GET /:id.pdf`.                                                                                        |
-| [src/routes/export-pdf.ts](src/routes/export-pdf.ts)                                                                                             | Handles `GET/POST /api/exports/pdf`.                                                                           |
-| [src/routes/demo-report.ts](src/routes/demo-report.ts)                                                                                           | Handles `GET /demo-report.pptx`.                                                                               |
-| [src/routes/generated-presentation.ts](src/routes/generated-presentation.ts)                                                                     | Handles `GET/POST /api/exports/pptx/generated/:template`.                                                      |
-| [src/routes/template-presentation.ts](src/routes/template-presentation.ts)                                                                       | Handles `GET/POST /api/exports/pptx/templates/:template`.                                                      |
+| [src/routes/health/get.ts](src/routes/health/get.ts)                                                                                             | Handles `GET /health`.                                                                                         |
+| [src/routes/[id].pdf/get.ts](src/routes/[id].pdf/get.ts)                                                                                         | Handles `GET /:id.pdf`.                                                                                        |
+| [src/routes/api/exports/pdf/](src/routes/api/exports/pdf/)                                                                                       | Handles `GET/POST /api/exports/pdf`.                                                                           |
+| [src/routes/demo-report.pptx/get.ts](src/routes/demo-report.pptx/get.ts)                                                                         | Handles `GET /demo-report.pptx`.                                                                               |
+| [src/routes/api/exports/pptx/generated/[template]/](src/routes/api/exports/pptx/generated/[template]/)                                           | Handles `GET/POST /api/exports/pptx/generated/:template`.                                                      |
+| [src/routes/api/exports/pptx/templates/[template]/](src/routes/api/exports/pptx/templates/[template]/)                                           | Handles `GET/POST /api/exports/pptx/templates/:template`.                                                      |
 | [src/http/types.ts](src/http/types.ts)                                                                                                           | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
 | [src/http/input.ts](src/http/input.ts)                                                                                                           | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
 | [src/http/download.ts](src/http/download.ts)                                                                                                     | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
@@ -196,7 +196,7 @@ src/
   index.ts                 startup and shutdown
   app.ts                   middleware setup and route registration
   http/                    shared downloads, input parsing, errors, and contracts
-  routes/                  one module per endpoint path
+  routes/                  folders define URLs; method files define handlers
   config.ts                validated environment configuration
   schemas.ts               runtime validation and inferred input types
   errors.ts                application errors
@@ -282,23 +282,23 @@ salesReport: new SalesReportService(
 
 For a different template, place its `.pptx` in the root `templates/` directory and use that path. The Azure build includes those files. Match its object names and chart/table structure to your service.
 
-### 5. Register the route
+### 5. Add the route file
 
-Create `src/routes/sales-report.ts` with a router factory:
+Create `src/routes/sales-report.pptx/get.ts`. The folder defines `/sales-report.pptx`
+and the filename defines GET; the loader registers it automatically:
 
 ```ts
-import { Router } from 'express';
-import type { RouteDependencies } from '../http/types.ts';
-import { salesReportSchema } from '../schemas.ts';
-import { AppError } from '../errors.ts';
-import { sendDownload } from '../http/download.ts';
+import type { RequestHandler } from 'express';
+import type { RouteDependencies } from '@/http/types';
+import { salesReportSchema } from '@/schemas';
+import { AppError } from '@/errors';
+import { sendDownload } from '@/http/download';
 
-export function createSalesReportRoute({
+export default function createHandler({
   salesReport,
   queues,
-}: RouteDependencies) {
-  const router = Router();
-  router.get('/sales-report.pptx', async (req, res) => {
+}: RouteDependencies): RequestHandler {
+  return async (req, res) => {
     const input = salesReportSchema.parse(req.query);
     if (!salesReport) {
       throw new AppError(
@@ -314,16 +314,22 @@ export function createSalesReportRoute({
       'sales-report',
       'pptx',
     );
-  });
-  return router;
+  };
 }
 ```
 
-The download helper handles queuing, disconnected clients, filename extensions, content type, and attachment headers. Use `queues.pdf` and format `'pdf'` for PDF downloads. For a JSON endpoint, validate the input and use `res.json(data)` instead.
+The download helper handles queuing, disconnected clients, filename extensions,
+content type, and attachment headers. Use `queues.pdf` and format `'pdf'` for PDF
+files, or validate input and call `res.json(data)` for JSON endpoints.
 
-For a route supporting both GET query parameters and POST JSON, use `generationInput(req)` before schema validation and register the same handler with `.get(handler).post(handler)`. Its supported JSON query fields are currently `query`, `slides`, `replacements`, and `landscape`; explicitly decode any new nested query fields you introduce.
+For GET and POST sharing an operation, put the factory in `handler.ts` and create
+`get.ts` and `post.ts` that each contain `export { default } from './handler.ts';`.
+Use `generationInput(req)` before schema validation to decode GET query fields or
+POST JSON. Explicitly decode new structured query fields as needed.
 
-Import `createSalesReportRoute` in `src/app.ts` and register it with `app.use(createSalesReportRoute(dependencies))` before the 404 handler and error middleware. Keep each endpoint path in its own route module.
+There is no manual route registration in `src/app.ts`. See
+[src/routes/README.md](src/routes/README.md) for folder conventions. Restart the
+server after adding or moving route files; production changes need a fresh build.
 
 ### 6. Test and document it
 

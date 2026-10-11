@@ -311,3 +311,10 @@ These run on the separate demo server at port 3001 and return HTML for PDF rende
 | GET    | `http://localhost:3001/documents/id2222`                      | Document page used by the default GET PDF route                      |
 
 See [README.md](README.md) for configuration, deployment, and template registration instructions.
+
+## Route source files
+
+Endpoint paths come from folders under `src/routes/`; method files such as
+`get.ts` and `post.ts` export factories that receive injected services.
+See [the file-routing guide](src/routes/README.md) for adding endpoints. Existing
+URLs, query parameters and download contracts are unchanged.

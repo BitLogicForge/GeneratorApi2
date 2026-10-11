@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 import { z } from 'zod';
 import { sendDownload } from '@/http/download';
@@ -8,12 +8,11 @@ const demoQuerySchema = z
   .object({ TEXT_ME: z.string().max(5000).default('Generated report') })
   .strict();
 
-export function createDemoReportRoute({
+export default function createHandler({
   templateReportDemo,
   queues,
-}: RouteDependencies) {
-  const router = Router();
-  router.get('/demo-report.pptx', async (req, res) => {
+}: RouteDependencies): RequestHandler {
+  return async (req, res) => {
     const input = demoQuerySchema.parse(req.query);
     if (!templateReportDemo)
       throw new AppError(
@@ -28,6 +27,5 @@ export function createDemoReportRoute({
       'demo-report',
       'pptx',
     );
-  });
-  return router;
+  };
 }

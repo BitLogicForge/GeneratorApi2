@@ -1,12 +1,14 @@
-import { Router, type RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 import { generationInput } from '@/http/input';
 import { sendDownload } from '@/http/download';
 import { pdfSchema } from '@/schemas';
 
-export function createExportPdfRoute({ pdf, queues }: RouteDependencies) {
-  const router = Router();
-  const exportPdf: RequestHandler = async (req, res) => {
+export default function createHandler({
+  pdf,
+  queues,
+}: RouteDependencies): RequestHandler<Record<string, string>> {
+  return async (req, res) => {
     const input = pdfSchema.parse(generationInput(req));
     await sendDownload(
       res,
@@ -16,6 +18,4 @@ export function createExportPdfRoute({ pdf, queues }: RouteDependencies) {
       'pdf',
     );
   };
-  router.route('/api/exports/pdf').get(exportPdf).post(exportPdf);
-  return router;
 }

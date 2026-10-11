@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 import { sendDownload } from '@/http/download';
 import {
@@ -11,14 +11,13 @@ import { pdfSchema } from '@/schemas';
 import { AppError } from '@/errors';
 
 /** Generates a PDF from a document link with server-controlled query values. */
-export function createDocumentPdfRoute({
+export default function createHandler({
   pdf,
   config,
   queues,
-}: RouteDependencies) {
-  const router = Router();
+}: RouteDependencies): RequestHandler {
   const routePattern = pdfRoutePatternSchema.parse(config.pdfRoutePattern);
-  router.get('/:id.pdf', async (req, res) => {
+  return async (req, res) => {
     const id = documentIdSchema.parse(req.params.id);
     const query = pdfUrlQuerySchema.parse(req.query);
     const route = resolvePdfRoute(routePattern, id);
@@ -44,6 +43,5 @@ export function createDocumentPdfRoute({
       input.filename,
       'pdf',
     );
-  });
-  return router;
+  };
 }

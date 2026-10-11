@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "entry": ["test/**/*.test.ts", "examples/pptx/create-template.ts"],
+  "entry": [
+    "test/**/*.test.ts",
+    "examples/pptx/create-template.ts",
+    "src/routes/**/{get,post,put,patch,delete,head,options}.ts"
+  ],
   "project": [
     "src/**/*.ts",
     "test/**/*.ts",

@@ -1,16 +1,15 @@
-import { Router, type RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 import { generationInput } from '@/http/input';
 import { sendDownload } from '@/http/download';
 import { templatePresentationSchema } from '@/schemas';
 import { AppError } from '@/errors';
 
-export function createTemplatePresentationRoute({
+export default function createHandler({
   templatePresentations,
   queues,
-}: RouteDependencies) {
-  const router = Router();
-  const exportTemplate: RequestHandler<{ template: string }> = async (
+}: RouteDependencies): RequestHandler<Record<string, string>> {
+  return async (
     req,
     res,
   ) => {
@@ -29,9 +28,4 @@ export function createTemplatePresentationRoute({
       'pptx',
     );
   };
-  router
-    .route('/api/exports/pptx/templates/:template')
-    .get(exportTemplate)
-    .post(exportTemplate);
-  return router;
 }

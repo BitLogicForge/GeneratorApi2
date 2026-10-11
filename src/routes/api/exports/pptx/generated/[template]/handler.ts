@@ -1,18 +1,14 @@
-import { Router, type RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import type { RouteDependencies } from '@/http/types';
 import { generationInput } from '@/http/input';
 import { sendDownload } from '@/http/download';
 import { presentationSchema } from '@/schemas';
 
-export function createGeneratedPresentationRoute({
+export default function createHandler({
   presentations,
   queues,
-}: RouteDependencies) {
-  const router = Router();
-  const exportGenerated: RequestHandler<{ template: string }> = async (
-    req,
-    res,
-  ) => {
+}: RouteDependencies): RequestHandler<Record<string, string>> {
+  return async (req, res) => {
     const input = presentationSchema.parse(generationInput(req));
     await sendDownload(
       res,
@@ -22,9 +18,4 @@ export function createGeneratedPresentationRoute({
       'pptx',
     );
   };
-  router
-    .route('/api/exports/pptx/generated/:template')
-    .get(exportGenerated)
-    .post(exportGenerated);
-  return router;
 }

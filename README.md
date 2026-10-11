@@ -6,43 +6,43 @@ A TypeScript + Express proof of concept for exporting a webapp route to PDF and 
 
 Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flow. Use this guide to find the code for a specific change.
 
-| File                                                                                                                                     | Purpose / when to look here                                                                                    |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| [src/index.ts](src/index.ts)                                                                                                             | Starts the server, registers template files, wires services and queues, and handles shutdown.                  |
-| [src/app.ts](src/app.ts)                                                                                                                 | Sets up middleware, request IDs, routers, and error handling.                                                  |
-| [src/config.ts](src/config.ts)                                                                                                           | Defines document route/language defaults and validates environment settings and runtime limits.                |
-| [src/schemas.ts](src/schemas.ts)                                                                                                         | Defines accepted export inputs, validation rules, and inferred TypeScript types.                               |
-| [src/pdf-route.ts](src/pdf-route.ts)                                                                                                     | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
-| [src/routes/health.ts](src/routes/health.ts)                                                                                             | Handles `GET /health`.                                                                                         |
-| [src/routes/document-pdf.ts](src/routes/document-pdf.ts)                                                                                 | Handles `GET /:id.pdf`.                                                                                        |
-| [src/routes/export-pdf.ts](src/routes/export-pdf.ts)                                                                                     | Handles `GET/POST /api/exports/pdf`.                                                                           |
-| [src/routes/demo-report.ts](src/routes/demo-report.ts)                                                                                   | Handles `GET /demo-report.pptx`.                                                                               |
-| [src/routes/generated-presentation.ts](src/routes/generated-presentation.ts)                                                             | Handles `GET/POST /api/exports/pptx/generated/:template`.                                                      |
-| [src/routes/template-presentation.ts](src/routes/template-presentation.ts)                                                               | Handles `GET/POST /api/exports/pptx/templates/:template`.                                                      |
-| [src/http/types.ts](src/http/types.ts)                                                                                                   | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
-| [src/http/input.ts](src/http/input.ts)                                                                                                   | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
-| [src/http/download.ts](src/http/download.ts)                                                                                             | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
-| [src/http/error-handler.ts](src/http/error-handler.ts), [src/errors.ts](src/errors.ts)                                                   | Define application errors and translate failures into HTTP responses and logs.                                 |
-| [src/queue/generation-queue.ts](src/queue/generation-queue.ts)                                                                           | Controls concurrency, pending capacity, wait timeouts, cancellation, and shutdown admission.                   |
-| [src/services/web-page-pdf.ts](src/services/web-page-pdf.ts)                                                                             | Manages Chromium, navigation restrictions, page readiness, printing, and browser context cleanup.              |
-| [src/pptx/pptxgenjs/generated-presentation.ts](src/pptx/pptxgenjs/generated-presentation.ts)                                             | Registers code-based presentation designs and creates a fresh deck for each export.                            |
-| [src/pptx/pptxgenjs/templates/brief.ts](src/pptx/pptxgenjs/templates/brief.ts)                                                           | Defines the brief deck's slide layout, typography, colors, and speaker notes. Change its visual design here.   |
-| [src/pptx/jszip/powerpoint-template.ts](src/pptx/jszip/powerpoint-template.ts)                                                           | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
-| [src/pptx/jszip/template-report-demo.ts](src/pptx/jszip/template-report-demo.ts)                                                         | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
-| [src/services/data-api-client.ts](src/services/data-api-client.ts)                                                                       | Fetches and validates upstream JSON; handles API prefixes, bearer tokens, and timeouts.                        |
-| [src/pptx/jszip/objects.ts](src/pptx/jszip/objects.ts)                                                                                   | Locates template objects by Selection Pane name. Check here for missing or duplicate objects.                  |
-| [src/pptx/jszip/text-table.ts](src/pptx/jszip/text-table.ts)                                                                             | Fills text shapes and fixed-size tables while retaining formatting.                                            |
-| [src/pptx/jszip/charts.ts](src/pptx/jszip/charts.ts)                                                                                     | Updates line-chart caches, formulas, and embedded workbook data together so charts remain editable.            |
-| [src/pptx/jszip/spreadsheet.ts](src/pptx/jszip/spreadsheet.ts)                                                                           | Writes embedded workbook cells, creating rows/cells and retaining styles.                                      |
-| [src/pptx/jszip/package.ts](src/pptx/jszip/package.ts)                                                                                   | Reads/writes package XML and follows internal relationships between slides, charts, and workbooks.             |
-| [templates/business.pptx](templates/business.pptx), [templates/daa.pptx](templates/daa.pptx)                                             | Source decks for placeholder replacement and the report demo. Edit named objects and styling in PowerPoint.    |
-| [examples/fetch-report-data.ts](examples/fetch-report-data.ts), [src/data-api/report-data-schema.ts](src/data-api/report-data-schema.ts) | Show upstream data fetching and the expected report data shape.                                                |
-| [examples/webapp.ts](examples/webapp.ts), [examples/data-api.ts](examples/data-api.ts)                                                   | Provide local demo pages and synthetic report data.                                                            |
-| [test/](test/)                                                                                                                           | Covers HTTP behavior, queues, PDF rendering, upstream data, and generated PowerPoint contents.                 |
-| [test/output-routes.ts](test/output-routes.ts)                                                                                           | Produces downloadable sample artifacts for manual inspection via `npm run test:outputs`.                       |
-| [scripts/build-azure.mjs](scripts/build-azure.mjs), [scripts/start-azure.sh](scripts/start-azure.sh)                                     | Package the app for Azure and start it with its browser runtime.                                               |
-| [README-ENDPOINTS.md](README-ENDPOINTS.md)                                                                                               | Lists endpoint parameters and copyable GET requests.                                                           |
-| [AZURE.md](AZURE.md)                                                                                                                     | Explains Azure deployment and runtime configuration.                                                           |
+| File                                                                                                                                             | Purpose / when to look here                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| [src/index.ts](src/index.ts)                                                                                                                     | Starts the server, registers template files, wires services and queues, and handles shutdown.                  |
+| [src/app.ts](src/app.ts)                                                                                                                         | Sets up middleware, request IDs, routers, and error handling.                                                  |
+| [src/config.ts](src/config.ts)                                                                                                                   | Defines document route/language defaults and validates environment settings and runtime limits.                |
+| [src/schemas.ts](src/schemas.ts)                                                                                                                 | Defines accepted export inputs, validation rules, and inferred TypeScript types.                               |
+| [src/pdf-route.ts](src/pdf-route.ts)                                                                                                             | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
+| [src/routes/health.ts](src/routes/health.ts)                                                                                                     | Handles `GET /health`.                                                                                         |
+| [src/routes/document-pdf.ts](src/routes/document-pdf.ts)                                                                                         | Handles `GET /:id.pdf`.                                                                                        |
+| [src/routes/export-pdf.ts](src/routes/export-pdf.ts)                                                                                             | Handles `GET/POST /api/exports/pdf`.                                                                           |
+| [src/routes/demo-report.ts](src/routes/demo-report.ts)                                                                                           | Handles `GET /demo-report.pptx`.                                                                               |
+| [src/routes/generated-presentation.ts](src/routes/generated-presentation.ts)                                                                     | Handles `GET/POST /api/exports/pptx/generated/:template`.                                                      |
+| [src/routes/template-presentation.ts](src/routes/template-presentation.ts)                                                                       | Handles `GET/POST /api/exports/pptx/templates/:template`.                                                      |
+| [src/http/types.ts](src/http/types.ts)                                                                                                           | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
+| [src/http/input.ts](src/http/input.ts)                                                                                                           | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
+| [src/http/download.ts](src/http/download.ts)                                                                                                     | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
+| [src/http/error-handler.ts](src/http/error-handler.ts), [src/errors.ts](src/errors.ts)                                                           | Define application errors and translate failures into HTTP responses and logs.                                 |
+| [src/queue/generation-queue.ts](src/queue/generation-queue.ts)                                                                                   | Controls concurrency, pending capacity, wait timeouts, cancellation, and shutdown admission.                   |
+| [src/services/web-page-pdf.ts](src/services/web-page-pdf.ts)                                                                                     | Manages Chromium, navigation restrictions, page readiness, printing, and browser context cleanup.              |
+| [src/pptx/pptxgenjs/generated-presentation.ts](src/pptx/pptxgenjs/generated-presentation.ts)                                                     | Registers code-based presentation designs and creates a fresh deck for each export.                            |
+| [src/pptx/pptxgenjs/templates/brief.ts](src/pptx/pptxgenjs/templates/brief.ts)                                                                   | Defines the brief deck's slide layout, typography, colors, and speaker notes. Change its visual design here.   |
+| [src/pptx/jszip/powerpoint-template.ts](src/pptx/jszip/powerpoint-template.ts)                                                                   | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
+| [src/pptx/jszip/template-report-demo.ts](src/pptx/jszip/template-report-demo.ts)                                                                 | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
+| [src/services/data-api-client.ts](src/services/data-api-client.ts)                                                                               | Fetches and validates upstream JSON; handles API prefixes, bearer tokens, and timeouts.                        |
+| [src/pptx/jszip/objects.ts](src/pptx/jszip/objects.ts)                                                                                           | Locates template objects by Selection Pane name. Check here for missing or duplicate objects.                  |
+| [src/pptx/jszip/text-table.ts](src/pptx/jszip/text-table.ts)                                                                                     | Fills text shapes and fixed-size tables while retaining formatting.                                            |
+| [src/pptx/jszip/charts.ts](src/pptx/jszip/charts.ts)                                                                                             | Updates line-chart caches, formulas, and embedded workbook data together so charts remain editable.            |
+| [src/pptx/jszip/spreadsheet.ts](src/pptx/jszip/spreadsheet.ts)                                                                                   | Writes embedded workbook cells, creating rows/cells and retaining styles.                                      |
+| [src/pptx/jszip/package.ts](src/pptx/jszip/package.ts)                                                                                           | Reads/writes package XML and follows internal relationships between slides, charts, and workbooks.             |
+| [templates/business.pptx](templates/business.pptx), [templates/daa.pptx](templates/daa.pptx)                                                     | Source decks for placeholder replacement and the report demo. Edit named objects and styling in PowerPoint.    |
+| [examples/data-api/single/fetch.ts](examples/data-api/single/fetch.ts), [src/data-api/report-data-schema.ts](src/data-api/report-data-schema.ts) | Show upstream data fetching and the expected report data shape.                                                |
+| [examples/pdf/webapp.ts](examples/pdf/webapp.ts), [examples/data-api/server/index.ts](examples/data-api/server/index.ts)                         | Provide local demo pages and synthetic report data.                                                            |
+| [test/](test/)                                                                                                                                   | Covers HTTP behavior, queues, PDF rendering, upstream data, and generated PowerPoint contents.                 |
+| [test/output-routes.ts](test/output-routes.ts)                                                                                                   | Produces downloadable sample artifacts for manual inspection via `npm run test:outputs`.                       |
+| [scripts/build-azure.mjs](scripts/build-azure.mjs), [scripts/start-azure.sh](scripts/start-azure.sh)                                             | Package the app for Azure and start it with its browser runtime.                                               |
+| [README-ENDPOINTS.md](README-ENDPOINTS.md)                                                                                                       | Lists endpoint parameters and copyable GET requests.                                                           |
+| [AZURE.md](AZURE.md)                                                                                                                             | Explains Azure deployment and runtime configuration.                                                           |
 
 ## Run
 
@@ -61,10 +61,10 @@ Set `WEBAPP_BASE_URL` to your webapp's origin. The API defaults to port 3000 and
 curl http://localhost:3000/health
 curl -X POST http://localhost:3000/api/exports/pdf \
   -H 'Content-Type: application/json' \
-  --data-binary @examples/pdf.json --output report.pdf
+  --data-binary @examples/pdf/request.json --output report.pdf
 curl -X POST http://localhost:3000/api/exports/pptx/generated/brief \
   -H 'Content-Type: application/json' \
-  --data-binary @examples/presentation.json --output presentation.pptx
+  --data-binary @examples/pptx/generated.json --output presentation.pptx
 ```
 
 ## Access from outside Docker
@@ -101,6 +101,8 @@ PowerPoint's `brief` template creates a dark cover and light numbered content sl
 The PDF endpoint combines the route with the configured origin. Query values may be strings, numbers, or booleans. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
 
 Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
+
+See [examples/README.md](examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
 
 ## Fetch report data from another API
 
@@ -145,15 +147,41 @@ const summary = await api.get(
 
 The demo API also serves `GET /api/customers/:id` (customer name, industry, and contact email; no query parameters) and `GET /api/reports/:id/summary` (customer ID, revenue, and growth; optional `language` and `year`, defaulting to `en` and `2026`). Their response schemas live beside the endpoint registry in `src/data-api/`.
 
-See `examples/fetch-report-data.ts` for imports and complete usage. Query values can be strings, numbers, booleans, or `undefined` (omitted); they are URL-encoded automatically. Adapt `src/data-api/report-data-schema.ts` to your API's response. The example returns three table rows, twenty chart rows, and category labels, ready for the existing template helpers. Current demo exports continue using random numbers; fetching is available as a separate example for the future integration.
+See `examples/data-api/single/fetch.ts` for imports and complete usage. Query values can be strings, numbers, booleans, or `undefined` (omitted); they are URL-encoded automatically. Adapt `src/data-api/report-data-schema.ts` to your API's response. The example returns three table rows, twenty chart rows, and category labels, ready for the existing template helpers. Current demo exports continue using random numbers; fetching is available as a separate example for the future integration.
 
-For dependent requests, see [examples/report-data-chain.ts](examples/report-data-chain.ts): fetch the summary, use its `customerId` to fetch the customer, then use its report ID, language, and year to fetch the full report. Each call is awaited and validated before proceeding. A failed request stops the chain and no combined file is written. With the demo API running, execute:
+For dependent requests, see [examples/data-api/chain/collect.ts](examples/data-api/chain/collect.ts): fetch the summary, use its `customerId` to fetch the customer, then use its report ID, language, and year to fetch the full report. Each call is awaited and validated before proceeding. A failed request stops the chain and no combined file is written. With the demo API running, execute:
 
 ```bash
 DATA_API_BASE_URL=http://localhost:3002/api npm run example:fetch-chain -- id2222 en 2026
 ```
 
 The result is saved to `output/data-api/id2222-chain.json`, containing `summary`, `customer`, and `report`. The timeout applies separately to each request.
+
+To fetch a list of IDs and collect their reports, use [examples/data-api/batch/collect.ts](examples/data-api/batch/collect.ts):
+
+```ts
+const byId = await fetchReportDataBatch(
+  api,
+  { language: 'en', year: 2026 },
+  'dict',
+);
+const report = byId['id2222'];
+// Or collect a list of { requestedId, data } entries:
+const entries = await fetchReportDataBatch(
+  api,
+  { language: 'en', year: 2026 },
+  'list',
+);
+```
+
+The configured `reportIds` endpoint calls `GET /api/reports`, returning `{ ids: ['id2222', 'id3333', 'id4444'] }` in the demo. Each distinct ID is requested sequentially, then all validated responses are collected. Dictionary keys use the requested ID, even if the response contains a different ID. Duplicate IDs are fetched once; an empty list returns an empty collection. A failed request or invalid response rejects the batch and no output file is written. With the demo API running:
+
+```bash
+DATA_API_BASE_URL=http://localhost:3002/api npm run example:fetch-batch -- dict en 2026
+# Replace dict with list for an array.
+```
+
+Output is saved to `output/data-api/reports-dict.json` or `reports-list.json`.
 
 The client preserves the configured URL prefix, rejects paths outside it, and does not follow redirects. HTTP failures, connection failures, invalid JSON, and invalid response data become 502 errors; timeouts become 504 errors.
 
@@ -361,12 +389,12 @@ Library references: [Playwright page API](https://playwright.dev/docs/api/class-
 ```bash
 curl -X POST http://localhost:3000/api/exports/pptx/templates/business \
   -H 'Content-Type: application/json' \
-  --data-binary @examples/template-presentation.json --output proposal.pptx
+  --data-binary @examples/pptx/template.json --output proposal.pptx
 ```
 
 In PowerPoint, add placeholders such as `{{title}}`, `{{subtitle}}`, and `{{customer}}` to text boxes or table cells. Supply matching strings in the JSON `replacements` object. Placeholders can span formatting runs within a paragraph; replacement text inherits the formatting of the first run. Speaker-note placeholders are also replaced. Replacements are literal text, with XML characters escaped automatically. Missing replacements and unknown keys return 400, so spelling errors do not silently produce incomplete decks.
 
-Register your own files in `src/index.ts` when constructing `PowerPointTemplateService`. The registry accepts trusted server-side paths; callers select a template name and cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/create-template.ts`.
+Register your own files in `src/index.ts` when constructing `PowerPointTemplateService`. The registry accepts trusted server-side paths; callers select a template name and cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
 
 Only slide and speaker-note text is changed. Untouched ZIP parts, including media, masters, layouts, charts, and relationships, are preserved. This endpoint supports modern `.pptx`, not legacy `.ppt`. Placeholders in masters, layouts, chart data, or across paragraphs are not supported. Replacement strings are single-paragraph text; layout and text-box sizing remain the template author's responsibility. This initial manipulation service does not resize images, update chart data, or add/remove slides. It shares the existing PowerPoint queue and concurrency limit.
 

@@ -1,8 +1,8 @@
-import type { Config } from '../src/config.js';
+import type { Config } from '../../../src/config.js';
 import type {
   DataApiClient,
   DataApiQuery,
-} from '../src/services/data-api-client.js';
+} from '../../../src/services/data-api-client.js';
 
 /** Each response is validated before its values are used by the next request. */
 export async function fetchReportDataChain(

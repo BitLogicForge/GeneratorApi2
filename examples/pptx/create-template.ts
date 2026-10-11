@@ -35,6 +35,6 @@ slide.addText('Prepared for {{customer}}', {
 slide.addNotes('Presenting to {{customer}}');
 await deck.writeFile({
   fileName: fileURLToPath(
-    new URL('../templates/business.pptx', import.meta.url),
+    new URL('../../templates/business.pptx', import.meta.url),
   ),
 });

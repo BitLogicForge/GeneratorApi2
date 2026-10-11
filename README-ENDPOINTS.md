@@ -169,7 +169,7 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pdf \
   --output quarterly-report.pdf
 ```
 
-Equivalent GET request using the values in `examples/pdf.json`:
+Equivalent GET request using the values in `examples/pdf/request.json`:
 
 ```bash
 curl --fail-with-body --get http://localhost:3000/api/exports/pdf \

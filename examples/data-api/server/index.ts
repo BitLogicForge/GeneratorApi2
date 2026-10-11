@@ -1,12 +1,15 @@
 import express from 'express';
 import { z } from 'zod';
-import { documentIdSchema } from '../src/pdf-route.js';
-import { loadConfig } from '../src/config.js';
+import { documentIdSchema } from '../../../src/pdf-route.js';
+import { loadConfig } from '../../../src/config.js';
 
-import { createCustomerRoute } from './data-api/customer.js';
-import { createReportSummaryRoute } from './data-api/report-summary.js';
+import { createCustomerRoute } from './routes/customer.js';
+import { createReportSummaryRoute } from './routes/report-summary.js';
+
+import { createReportIdsRoute } from './routes/report-ids.js';
 
 const app = express();
+app.use('/api', createReportIdsRoute());
 app.use('/api', createCustomerRoute());
 app.use('/api', createReportSummaryRoute());
 const querySchema = z

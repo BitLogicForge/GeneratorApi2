@@ -116,7 +116,7 @@ test('download real documents from HTTP routes and save output files', async (t)
     await t.test('generated editable PowerPoint', async () => {
       const payload = JSON.parse(
         await readFile(
-          new URL('../examples/presentation.json', import.meta.url),
+          new URL('../examples/pptx/generated.json', import.meta.url),
           'utf8',
         ),
       );
@@ -135,7 +135,7 @@ test('download real documents from HTTP routes and save output files', async (t)
     await t.test('edited business PowerPoint template', async () => {
       const payload = JSON.parse(
         await readFile(
-          new URL('../examples/template-presentation.json', import.meta.url),
+          new URL('../examples/pptx/template.json', import.meta.url),
           'utf8',
         ),
       );

@@ -5,9 +5,9 @@ import type { AddressInfo } from 'node:net';
 import { z } from 'zod';
 import { loadConfig } from '../src/config.js';
 import request from 'supertest';
-import { fetchReportDataChain } from '../examples/report-data-chain.js';
-import { createCustomerRoute } from '../examples/data-api/customer.js';
-import { createReportSummaryRoute } from '../examples/data-api/report-summary.js';
+import { fetchReportDataChain } from '../examples/data-api/chain/collect.js';
+import { createCustomerRoute } from '../examples/data-api/server/routes/customer.js';
+import { createReportSummaryRoute } from '../examples/data-api/server/routes/report-summary.js';
 import { DataApiClient } from '../src/services/data-api-client.js';
 
 test('data API config validates URLs and supports an unconfigured API', () => {

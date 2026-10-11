@@ -1,3 +1,5 @@
+import { routeAuthentication } from '@/auth/route-authentication';
+
 import type { Express } from 'express';
 import type { RouteDependencies } from '@/http/types';
 import type { FileRoute } from './types.ts';
@@ -11,6 +13,10 @@ export function registerRoutes(
     const handler = route.factory(dependencies);
     if (typeof handler !== 'function')
       throw new Error(`Route factory must return a handler: ${route.file}`);
-    app[route.method](route.path, handler);
+    app[route.method](
+      route.path,
+      routeAuthentication(route, dependencies.authentication),
+      handler,
+    );
   }
 }

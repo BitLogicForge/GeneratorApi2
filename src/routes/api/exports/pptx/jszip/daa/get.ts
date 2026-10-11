@@ -26,7 +26,8 @@ export default function createHandler({
     await sendDownload(
       res,
       queues.presentations,
-      () => templateReportDemo.generate(input.TEXT_ME),
+      () =>
+        templateReportDemo.generate(input.TEXT_ME, { user: res.locals.user }),
       'demo-report',
       'pptx',
     );

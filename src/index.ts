@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'node:url';
 
 import { createApp } from './app.ts';
+import { loadAuthConfig } from './auth/config.ts';
+import { createEntraAuthentication } from './auth/entra.ts';
 import { loadConfig } from './config.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 import { DaaPocPresentationService } from './services/jszip/daa-poc-presentation-service.ts';
@@ -9,6 +11,7 @@ import { WebPagePdfService } from './services/pdf/web-page-pdf.ts';
 import { PowerPointGenerationService } from './services/pptxgenjs/power-point-generation-service.ts';
 
 const config = loadConfig();
+const authentication = createEntraAuthentication(loadAuthConfig());
 const pdf = new WebPagePdfService(config);
 const queues = createGenerationQueues({
   pdfConcurrency: config.concurrency,
@@ -23,6 +26,7 @@ const templatePresentations = new PowerPointTemplateService({
   ),
 });
 const server = createApp({
+  authentication,
   templateReportDemo: new DaaPocPresentationService(
     fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
   ),

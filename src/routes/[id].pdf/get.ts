@@ -40,7 +40,7 @@ export default function createHandler({
     await sendDownload(
       res,
       queues.pdf,
-      () => pdf.generate(input),
+      () => pdf.generate(input, { user: res.locals.user }),
       input.filename,
       'pdf',
     );

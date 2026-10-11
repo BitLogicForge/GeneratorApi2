@@ -1,3 +1,4 @@
+import type { AuthenticatedUser, AuthenticationOptions } from '@/auth/types';
 import type { Config } from '@/config';
 import type { GenerationQueues } from '@/queue/generation-queue';
 import type {
@@ -6,9 +7,18 @@ import type {
   TemplatePresentationInput,
 } from '@/schemas';
 
+export interface GenerationContext {
+  user?: AuthenticatedUser;
+}
+
 export interface AppOptions {
-  templateReportDemo?: { generate(text?: string): Promise<Buffer> };
-  pdf: { generate(input: PdfInput): Promise<Buffer> };
+  authentication?: AuthenticationOptions;
+  templateReportDemo?: {
+    generate(text?: string, context?: GenerationContext): Promise<Buffer>;
+  };
+  pdf: {
+    generate(input: PdfInput, context?: GenerationContext): Promise<Buffer>;
+  };
   presentations: {
     generate(template: string, input: PresentationInput): Promise<Buffer>;
   };

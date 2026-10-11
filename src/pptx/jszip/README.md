@@ -28,7 +28,9 @@ Always write a new output file rather than overwriting the source template.
 The chart implementation is split into [charts/](charts/): `cache.ts` updates
 cached points, `ranges.ts` resizes formulas and clears obsolete cells, `series.ts`
 fills values/categories/titles, `load-workbook.ts` loads worksheets, `resize-workbook-tables.ts` resizes Excel
-tables, and `types.ts` defines options. Use `fillCategoryChart` as the entry point.
+tables, and `types.ts` defines options. Helpers in `charts/workbook/` each handle one step: cell addresses, worksheet bounds, column names, dimensions, table-column names, or table resizing. Use `fillCategoryChart` as the entry point.
+
+The placeholder coordinator remains in `placeholders.ts`; its helpers live in `placeholders/`: `find-text-parts.ts`, `replace-paragraph-tokens.ts`, `replace-token-across-runs.ts`, and `validate-replacement-usage.ts`, with shared types in `types.ts`.
 
 Operations are grouped in `text/`, `tables/`, `slides/`, `package/` and `charts/`.
 Import directly from the operation's file. Shared implementations live alongside

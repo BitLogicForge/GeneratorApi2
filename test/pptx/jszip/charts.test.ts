@@ -206,3 +206,29 @@ test('chart resizing keeps all retained content and formatted cells inside works
     );
   }
 });
+
+test('worksheet dimension updates reject malformed and out-of-range addresses', async () => {
+  for (const cells of [
+    '<row r="0"><c r="A1"/></row>',
+    '<row r="1048577"><c r="A1"/></row>',
+    '<row r="1"><c r="A0"/></row>',
+    '<row r="1"><c r="XFE1"/></row>',
+    '<row r="1"><c r="A1048577"/></row>',
+  ]) {
+    const sheet = new DOMParser().parseFromString(
+      `<worksheet xmlns="${spreadsheet}"><dimension ref="A1"/><sheetData>${cells}</sheetData></worksheet>`,
+      'application/xml',
+    );
+    await assert.rejects(
+      resizeWorkbookTables(
+        new JSZip(),
+        sheet,
+        'xl/worksheets/sheet1.xml',
+        'A',
+        2,
+        2,
+      ),
+      { code: 'INVALID_TEMPLATE' },
+    );
+  }
+});

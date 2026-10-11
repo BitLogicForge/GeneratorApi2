@@ -9,6 +9,7 @@ import JSZip from 'jszip';
 import request from 'supertest';
 
 import { createApp } from '@/app';
+import { replacePlaceholders } from '@/pptx/jszip/placeholders';
 import { templatePresentationSchema } from '@/schemas';
 import { PowerPointTemplateService } from '@/services/jszip/power-point-template-service';
 
@@ -168,4 +169,32 @@ test('failed template loading can retry after the source is repaired', async (t)
   await writeFile(file, await readFile(path));
   await editor.validate();
   await editor.generate('business', input);
+});
+
+test('mixed split tokens retain offsets and insert replacement text literally', async () => {
+  const zip = await JSZip.loadAsync(await readFile(path));
+  zip.file(
+    'ppt/slides/slide1.xml',
+    '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:p><a:r><a:rPr b="1"/><a:t>Before {{fir</a:t></a:r><a:r><a:rPr i="1"/><a:t>st}} middle {{second}} tail {{first}}!</a:t></a:r></a:p></p:sld>',
+  );
+  await replacePlaceholders(zip, {
+    first: '{{second}} longer literal text',
+    second: '',
+    customer: 'Acme',
+  });
+  const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+  const document = new DOMParser().parseFromString(xml, 'application/xml');
+  assert.equal(
+    Array.from(
+      document.getElementsByTagNameNS(
+        'http://schemas.openxmlformats.org/drawingml/2006/main',
+        't',
+      ),
+    )
+      .map((node) => node.textContent)
+      .join(''),
+    'Before {{second}} longer literal text middle  tail {{second}} longer literal text!',
+  );
+  assert.match(xml, /b="1"/);
+  assert.match(xml, /i="1"/);
 });

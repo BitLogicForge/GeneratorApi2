@@ -297,6 +297,8 @@ npm run test:azure
 
 ## Verification and production build
 
+Use `npm run deps:check` to preview dependency updates within the declared version ranges. Use `npm run deps:update` to apply them with npm-check-updates doctor mode, which checks types, Knip, and tests to identify failing upgrades. Commit or stash existing changes first; PDF tests require Chromium (`npm run browser:install`).
+
 Run `npm run knip` to find unused files, exports, and dependencies. Knip analyzes source code, tests, examples, and build scripts; its configuration lives in `knip.json`. The GitLab build runs this check before packaging the app.
 
 For Linux Azure App Service, run `npm run build:azure` to create `output/azure/generator-api.zip`, then `npm run test:azure` to smoke-test the package. See [AZURE.md](AZURE.md) for startup and deployment settings.

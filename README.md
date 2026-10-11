@@ -416,7 +416,7 @@ Open `http://localhost:3000/demo-report.pptx` to download `templates/daa.pptx` p
 
 Run `npm run test:outputs` to save a sample to `output/routes/demo-report.pptx` along with the other route outputs.
 
-Reusable template helpers live in `src/pptx/jszip`: `objects.ts` finds uniquely named shapes across slides; `text-table.ts` fills text and tables; `charts.ts` synchronizes line-chart values with their embedded workbook; `package.ts` reads/writes XML parts and resolves file relationships. `TemplateReportDemoService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
+Reusable template helpers live in `src/pptx/jszip`: `objects.ts` finds uniquely named shapes across slides; `text-table.ts` fills text and tables; `charts.ts` coordinates category-chart filling, with cache, range, series and workbook logic in `charts/`; `package.ts` reads/writes XML parts and resolves file relationships. `TemplateReportDemoService` supplies the object names and random data, then calls these helpers. The chart helper resizes numeric ranges (default `Sheet1`, starting at `B2`), chart caches, worksheet rows, and the embedded Excel table range. Pass `categories` when changing the number of rows; series count must match the template. Series names and styles are preserved.
 
 ## PDF download URLs
 

@@ -104,6 +104,8 @@ Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Valida
 
 ## Fetch report data from another API
 
+`DataApiClient` coordinates helpers in `src/services/data-api/`: `url.ts` validates paths and encodes queries; `request.ts` fetches JSON, applies the timeout, and validates responses.
+
 The optional `DataApiClient` uses `config.dataApi` from `src/config.ts`:
 
 ```dotenv

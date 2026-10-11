@@ -49,6 +49,13 @@ test('data API client encodes parameters, authenticates, validates data, and han
       if (!res.destroyed) res.json({ id: 'id2222', value: 42 });
     }, 200);
   });
+  app.get('/v1/slow-body', (req, res) => {
+    res.type('json');
+    res.write('{"id":"id2222",');
+    setTimeout(() => {
+      if (!res.destroyed) res.end('"value":42}');
+    }, 200);
+  });
   const server = app.listen(0, '127.0.0.1');
   await new Promise<void>((resolve) => server.once('listening', resolve));
   t.after(async () => {
@@ -115,6 +122,14 @@ test('data API client encodes parameters, authenticates, validates data, and han
   await assert.rejects(
     new DataApiClient({ ...config.dataApi, timeoutMs: 50 }).get(
       '/slow',
+      {},
+      schema,
+    ),
+    { code: 'DATA_API_TIMEOUT', status: 504 },
+  );
+  await assert.rejects(
+    new DataApiClient({ ...config.dataApi, timeoutMs: 50 }).get(
+      '/slow-body',
       {},
       schema,
     ),

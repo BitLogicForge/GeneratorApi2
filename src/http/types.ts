@@ -6,6 +6,7 @@ import type {
   PresentationInput,
   TemplatePresentationInput,
 } from '@/schemas';
+import type { createObservability } from './observability.ts';
 
 export interface AppOptions {
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
@@ -35,6 +36,7 @@ export interface AppOptions {
 }
 
 export type RouteDependencies = AppOptions & {
+  observability: Pick<ReturnType<typeof createObservability>, 'snapshot'>;
   config: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
   queues: GenerationQueues;
 };

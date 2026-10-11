@@ -24,6 +24,7 @@ async function fixture(files: Record<string, string>) {
 }
 
 const dependencies = {
+  observability: { snapshot: () => [] },
   pdf: { generate: async () => Buffer.from('injected') },
   presentations: { generate: async () => Buffer.alloc(0) },
   config: { pdfRoutePattern: '/documents/{id}', defaultLanguage: 'en' },

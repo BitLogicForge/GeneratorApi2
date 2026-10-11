@@ -16,7 +16,7 @@
     "test:azure": "tsx --test test/azure-package.ts",
     "typecheck": "tsc -p tsconfig.check.json",
     "knip": "knip",
-    "deps:verify": "npm run typecheck && npm run knip && npm test",
+    "deps:verify": "npm run typecheck && npm run knip && npm run browser:install && npm test",
     "deps:update": "ncu --target semver --upgrade --doctor --doctorTest \"npm run deps:verify\"",
     "demo": "tsx examples/webapp.ts",
     "demo:data-api": "tsx --env-file-if-exists=.env examples/data-api.ts",
@@ -29,20 +29,20 @@
   "type": "module",
   "dependencies": {
     "@xmldom/xmldom": "^0.9.12",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "helmet": "^8.3.0",
     "jszip": "^3.10.2",
-    "playwright": "^1.63.0",
+    "playwright": "^1.64.0",
     "pptxgenjs": "^4.0.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^26.6.4",
+    "@types/node": "^26.6.5",
     "@types/supertest": "^7.2.1",
     "knip": "^6.41.0",
     "npm-check-updates": "^23.1.1",
-    "prettier": "^3.9.9",
+    "prettier": "^3.9.10",
     "supertest": "^7.3.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
@@ -52,5 +52,8 @@
   },
   "overrides": {
     "image-size": "2.0.3"
+  },
+  "allowScripts": {
+    "esbuild": true
   }
 }

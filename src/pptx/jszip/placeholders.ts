@@ -1,6 +1,8 @@
 import type JSZip from 'jszip';
 import { AppError } from '@/errors';
-import { drawing, readXml, writeXml } from './package.ts';
+import { posix } from 'node:path';
+import { drawing, readXml, writeXml, resolveRelationship } from './package.ts';
+import { listSlides } from './slides.ts';
 
 const tokenPattern = /\{\{([A-Za-z][A-Za-z0-9_]{0,63})\}\}/g;
 
@@ -11,9 +13,32 @@ export async function replacePlaceholders(
 ): Promise<void> {
   const used = new Set<string>();
   const missing = new Set<string>();
-  const files = Object.keys(zip.files).filter((name) =>
-    /^ppt\/(slides\/slide\d+|notesSlides\/notesSlide\d+)\.xml$/.test(name),
-  );
+  const files = new Set(await listSlides(zip));
+  for (const slide of Array.from(files)) {
+    const path = posix.join(
+      posix.dirname(slide),
+      '_rels',
+      `${posix.basename(slide)}.rels`,
+    );
+    if (!zip.file(path)) continue;
+    const relationships = await readXml(zip, path);
+    for (const relation of Array.from(
+      relationships.getElementsByTagNameNS(
+        'http://schemas.openxmlformats.org/package/2006/relationships',
+        'Relationship',
+      ),
+    )) {
+      if (relation.getAttribute('Type')?.endsWith('/notesSlide'))
+        files.add(
+          await resolveRelationship(
+            zip,
+            slide,
+            relation.getAttribute('Id'),
+            'notesSlide',
+          ),
+        );
+    }
+  }
   for (const name of files) {
     const document = await readXml(zip, name);
     let changed = false;

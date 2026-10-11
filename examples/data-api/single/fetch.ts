@@ -17,4 +17,4 @@ await writeFile(file, JSON.stringify(data, null, 2) + '\n');
 console.log(
   `Fetched ${data.id}, language=${data.language}, year=${data.year}; saved ${fileURLToPath(file)}`,
 );
-// In a template service, these values can feed fillTable, fillLineChart, and fillTextShape.
+// In a template service, these values can feed fillTable, fillCategoryChart, and fillTextShape.

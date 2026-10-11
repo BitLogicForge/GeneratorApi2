@@ -34,17 +34,62 @@ function setText(element: Element, value: string) {
 
 export interface FillTableOptions {
   startRow?: number;
+  resizeRows?: boolean;
 }
 
 /** Fills an existing table without resizing it; startRow preserves header rows. */
 export function fillTable(
   element: Element,
   data: (string | number)[][],
-  { startRow = 0 }: FillTableOptions = {},
+  { startRow = 0, resizeRows = false }: FillTableOptions = {},
 ) {
   const table = element.getElementsByTagNameNS(drawing, 'tbl')[0];
   if (!table) throw invalidTemplate();
   const rows = Array.from(table.getElementsByTagNameNS(drawing, 'tr'));
+  if (resizeRows) {
+    if (
+      !Number.isInteger(startRow) ||
+      startRow < 0 ||
+      startRow >= rows.length ||
+      !data.length
+    )
+      throw invalidTemplate();
+    for (const cell of Array.from(
+      table.getElementsByTagNameNS(drawing, 'tc'),
+    )) {
+      if (
+        ['rowSpan', 'gridSpan', 'hMerge', 'vMerge'].some((attribute) =>
+          cell.hasAttribute(attribute),
+        )
+      )
+        throw invalidTemplate();
+    }
+    const oldHeight = rows.reduce(
+      (sum, row) => sum + Number(row.getAttribute('h')),
+      0,
+    );
+    while (rows.length < startRow + data.length) {
+      const clone = rows.at(-1)!.cloneNode(true) as Element;
+      table.appendChild(clone);
+      rows.push(clone);
+    }
+    while (rows.length > startRow + data.length) table.removeChild(rows.pop()!);
+    const extent = element
+      .getElementsByTagNameNS(
+        'http://schemas.openxmlformats.org/presentationml/2006/main',
+        'xfrm',
+      )[0]
+      ?.getElementsByTagNameNS(drawing, 'ext')[0];
+    if (extent)
+      extent.setAttribute(
+        'cy',
+        String(
+          Number(extent.getAttribute('cy')) +
+            rows.reduce((sum, row) => sum + Number(row.getAttribute('h')), 0) -
+            oldHeight,
+        ),
+      );
+  }
   if (
     !Number.isInteger(startRow) ||
     startRow < 0 ||

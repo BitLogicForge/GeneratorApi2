@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { findNamedObjects } from './objects.ts';
 import { fillTable, fillTextShape } from './text-table.ts';
-import { fillLineChart } from './charts.ts';
+import { fillCategoryChart } from './charts.ts';
 import { writeXml } from './package.ts';
 
 export class TemplateReportDemoService {
@@ -32,7 +32,7 @@ export class TemplateReportDemoService {
     const chartData = Array.from({ length: 20 }, () =>
       Array.from({ length: 3 }, () => this.nextNumber()),
     );
-    await fillLineChart(zip, chart, chartData, {
+    await fillCategoryChart(zip, chart, chartData, {
       categories: Array.from({ length: 20 }, (_, index) => `A${index + 1}`),
     });
     for (const path of new Set([table.path, textShape.path]))

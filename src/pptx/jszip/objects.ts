@@ -1,6 +1,7 @@
 import type JSZip from 'jszip';
 import type { Element } from '@xmldom/xmldom';
 import { readXml, presentationNs, invalidTemplate } from './package.ts';
+import { listSlides } from './slides.ts';
 
 export interface NamedObject {
   path: string;
@@ -8,12 +9,16 @@ export interface NamedObject {
 }
 
 /** Finds objects by their PowerPoint Selection Pane names and rejects missing or ambiguous matches. */
-export async function findNamedObjects(zip: JSZip, names: string[]) {
+export async function findNamedObjects(
+  zip: JSZip,
+  names: string[],
+  slidePaths?: string[],
+) {
   const slides = new Map<string, Awaited<ReturnType<typeof readXml>>>();
   const objects = new Map<string, { path: string; element: Element }>();
-  for (const path of Object.keys(zip.files).filter((name) =>
-    /^ppt\/slides\/slide\d+\.xml$/.test(name),
-  )) {
+  const activeSlides = await listSlides(zip);
+  for (const path of slidePaths ?? activeSlides) {
+    if (!activeSlides.includes(path)) throw invalidTemplate();
     const document = await readXml(zip, path);
     slides.set(path, document);
     for (const properties of Array.from(

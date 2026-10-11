@@ -27,6 +27,7 @@
     "example:fetch-batch": "tsx --env-file-if-exists=.env examples/data-api/batch/fetch.ts",
     "example:fetch-chain": "tsx --env-file-if-exists=.env examples/data-api/chain/fetch.ts",
     "example:fetch-data": "tsx --env-file-if-exists=.env examples/data-api/single/fetch.ts",
+    "example:fill-template": "tsx examples/pptx/fill-template.ts",
     "deps:check": "ncu --target semver",
     "check:imports": "oxlint --config .oxlint-imports.json --deny-warnings src test examples"
   },

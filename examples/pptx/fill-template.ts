@@ -1,0 +1,53 @@
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import JSZip from 'jszip';
+import { listSlides, duplicateSlide, removeSlide } from '@/pptx/jszip/slides';
+import { findNamedObjects } from '@/pptx/jszip/objects';
+import { fillCategoryChart } from '@/pptx/jszip/charts';
+import { fillTable } from '@/pptx/jszip/text-table';
+import { fillParagraphs, replaceParagraphText } from '@/pptx/jszip/paragraphs';
+import { writeXml } from '@/pptx/jszip/package';
+
+const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
+const [source] = await listSlides(zip);
+const copy = await duplicateSlide(zip, source);
+const { objects, slides } = await findNamedObjects(
+  zip,
+  ['GGO', 'TEXT_ME', 'TAB100'],
+  [copy],
+);
+
+await fillCategoryChart(
+  zip,
+  objects.get('GGO')!,
+  [
+    [10, 20, 30],
+    [40, 50, 60],
+  ],
+  { categories: ['January', 'February'] },
+);
+fillParagraphs(objects.get('TEXT_ME')!.element, [
+  'Results for {{customer}}',
+  'Prepared for {{customer}}',
+]);
+replaceParagraphText(
+  objects.get('TEXT_ME')!.element,
+  '{{customer}}',
+  'Example Company',
+);
+fillTable(
+  objects.get('TAB100')!.element,
+  [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+  ],
+  { startRow: 1, resizeRows: true },
+);
+for (const [path, document] of slides) writeXml(zip, path, document);
+
+// Keep just the filled copy. Omit this call to keep the original too.
+await removeSlide(zip, source);
+await mkdir('output', { recursive: true });
+await writeFile(
+  'output/filled-template.pptx',
+  await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }),
+);

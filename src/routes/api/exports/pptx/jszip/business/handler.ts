@@ -8,11 +8,16 @@ import type { RouteDependencies } from '@/http/types';
 
 export default function createHandler({
   templatePresentations,
+  templateCatalog,
   queues,
 }: RouteDependencies): RequestHandler<Record<string, string>> {
   return async (req, res) => {
     const input = templatePresentationSchema.parse(generationInput(req));
-    if (!templatePresentations)
+    if (
+      !templatePresentations ||
+      (templateCatalog &&
+        !templateCatalog.some((entry) => entry.id === 'business'))
+    )
       throw new AppError(
         404,
         'UNKNOWN_TEMPLATE',

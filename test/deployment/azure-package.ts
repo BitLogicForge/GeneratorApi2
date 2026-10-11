@@ -31,6 +31,8 @@ test('Azure ZIP includes production assets and runs real document downloads', as
     'node_modules/playwright/cli.js',
     'templates/business.pptx',
     'templates/daa.pptx',
+    'templates/summary.pptx',
+    'templates/catalog.json',
     'scripts/start-azure.sh',
     'scripts/install-hooks.mjs',
   ])
@@ -122,6 +124,13 @@ test('Azure ZIP includes production assets and runs real document downloads', as
   const health = await fetch(`${baseUrl}/health`);
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { status: 'ok' });
+  const catalog = await fetch(`${baseUrl}/api/templates`);
+  assert.equal(catalog.status, 200);
+  const metadata = (await catalog.json()) as { templates: { id: string }[] };
+  assert.deepEqual(
+    metadata.templates.map((entry) => entry.id),
+    ['summary', 'business', 'daa'],
+  );
   const pptx = await fetch(
     `${baseUrl}/api/exports/pptx/jszip/daa?TEXT_ME=Azure%20smoke%20test`,
   );

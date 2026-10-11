@@ -9,6 +9,7 @@
     "src/**/*.ts",
     "test/**/*.ts",
     "examples/**/*.ts",
-    "scripts/**/*.mjs"
+    "scripts/**/*.mjs",
+    "scripts/**/*.ts"
   ]
 }

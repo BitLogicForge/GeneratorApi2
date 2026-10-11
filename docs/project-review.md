@@ -138,6 +138,12 @@ Separate the upstream response shape from the report model used by rendering. Th
 
 ### 2. Offer template discovery and preflight validation
 
+Implemented: `templates/catalog.json` now drives startup registration and
+`GET /api/templates` exposes safe discovered metadata and request schemas.
+`npm run templates:preflight` checks source presentations before deployment;
+CI and Azure packaging run it, and startup repeats validation. New registered
+text templates use the shared export route. See [the workflow](powerpoint.md#catalog-and-preflight).
+
 Introduce an internal template catalog with an ID, version, description, required placeholders or named objects, supported features, and request schema. Expose safe metadata through a catalog endpoint so consumers can discover what to send.
 
 Use the same catalog for startup wiring and template checks. A preflight command can detect missing objects, duplicate names, unsupported charts, and broken relationships before requests arrive. This builds on [findNamedObjects](../src/pptx/jszip/objects.ts) and the current registered-template boundary; caller-controlled file paths are unnecessary.

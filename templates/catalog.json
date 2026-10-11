@@ -1,0 +1,30 @@
+[
+  {
+    "id": "summary",
+    "version": "1.0.0",
+    "description": "Summary presentation with title, subtitle, and customer text.",
+    "file": "summary.pptx",
+    "mode": "placeholders",
+    "requiredPlaceholders": ["title", "subtitle", "customer"]
+  },
+  {
+    "id": "business",
+    "version": "1.0.0",
+    "description": "Business proposal with title, subtitle, and customer text.",
+    "file": "business.pptx",
+    "mode": "placeholders",
+    "requiredPlaceholders": ["title", "subtitle", "customer"]
+  },
+  {
+    "id": "daa",
+    "version": "1.0.0",
+    "description": "Demo report with editable text, table, and category chart.",
+    "file": "daa.pptx",
+    "mode": "daa-demo",
+    "requiredObjects": [
+      { "name": "TAB100", "kind": "table", "rows": 4, "columns": 4 },
+      { "name": "GGO", "kind": "chart", "series": 3 },
+      { "name": "TEXT_ME", "kind": "text" }
+    ]
+  }
+]

@@ -1,5 +1,3 @@
-import { fileURLToPath } from 'node:url';
-
 import { createApp } from './app.ts';
 import { loadConfig } from './config.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
@@ -7,8 +5,10 @@ import { DaaPocPresentationService } from './services/jszip/daa-poc-presentation
 import { PowerPointTemplateService } from './services/jszip/power-point-template-service.ts';
 import { WebPagePdfService } from './services/pdf/web-page-pdf.ts';
 import { PowerPointGenerationService } from './services/pptxgenjs/power-point-generation-service.ts';
+import { loadTemplateCatalog } from './templates/catalog.ts';
 
 const config = loadConfig();
+const catalog = await loadTemplateCatalog();
 const pdf = new WebPagePdfService(config);
 const queues = createGenerationQueues({
   pdfConcurrency: config.concurrency,
@@ -16,16 +16,20 @@ const queues = createGenerationQueues({
   maxPending: config.maxPending,
   waitTimeoutMs: config.waitTimeoutMs,
 });
-const templatePresentations = new PowerPointTemplateService({
-  summary: fileURLToPath(new URL('../templates/summary.pptx', import.meta.url)),
-  business: fileURLToPath(
-    new URL('../templates/business.pptx', import.meta.url),
+const templatePresentations = new PowerPointTemplateService(
+  Object.fromEntries(
+    catalog
+      .filter((entry) => entry.definition.mode === 'placeholders')
+      .map((entry) => [entry.definition.id, entry.path]),
   ),
-});
+);
 const server = createApp({
-  templateReportDemo: new DaaPocPresentationService(
-    fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
-  ),
+  templateCatalog: catalog.map((entry) => entry.metadata),
+  templateReportDemo: catalog.some((entry) => entry.definition.id === 'daa')
+    ? new DaaPocPresentationService(
+        catalog.find((entry) => entry.definition.id === 'daa')!.path,
+      )
+    : undefined,
   config,
   templatePresentations,
   queues,

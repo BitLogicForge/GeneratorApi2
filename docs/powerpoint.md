@@ -18,9 +18,68 @@ curl -X POST http://localhost:3000/api/exports/pptx/jszip/business \
 
 In PowerPoint, add placeholders such as `{{title}}`, `{{subtitle}}`, and `{{customer}}` to text boxes or table cells. Supply matching strings in the JSON `replacements` object. Placeholders can span formatting runs within a paragraph; replacement text inherits the formatting of the first run. Speaker-note placeholders are also replaced. Replacements are literal text, with XML characters escaped automatically. Missing replacements and unknown keys return 400, so spelling errors do not silently produce incomplete decks.
 
-Register your own files in `src/index.ts` when constructing `PowerPointTemplateService`. The registry accepts trusted server-side paths; the business route selects its fixed template and callers cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
+Register your own files in `templates/catalog.json` as described below. The registry accepts trusted server-side files; callers cannot supply filesystem paths. Include the `templates` directory, including `catalog.json`, beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
 
 Only slide and speaker-note text is changed. Untouched ZIP parts, including media, masters, layouts, charts, and relationships, are preserved. This endpoint supports modern `.pptx`, not legacy `.ppt`. Placeholders in masters, layouts, chart data, or across paragraphs are not supported. Replacement strings are single-paragraph text; layout and text-box sizing remain the template author's responsibility. This initial manipulation service does not resize images, update chart data, or add/remove slides. It shares the existing PowerPoint queue and concurrency limit.
+
+## Catalog and preflight
+
+`GET /api/templates` lists registered file templates with their ID, version,
+description, export URL, methods, supported editing features, request JSON
+Schema, placeholders, named slide objects, chart types, and preflight warnings.
+Server-side filenames and filesystem paths are excluded. The schema describes
+incoming data, including defaults; XML character restrictions also apply to text
+and are described in `textConstraints`.
+
+To register another text template:
+
+1. Put the `.pptx` file in `templates/` and author slide or speaker-note
+   placeholders such as `{{title}}`.
+2. Add an entry to `templates/catalog.json`:
+
+   ```json
+   {
+     "id": "quarterly",
+     "version": "1.0.0",
+     "description": "Quarterly customer report",
+     "file": "quarterly.pptx",
+     "mode": "placeholders",
+     "requiredPlaceholders": ["title", "customer"]
+   }
+   ```
+
+3. Run `npm run templates:preflight`. It prints discovered metadata as JSON
+   and exits nonzero when validation fails.
+4. Restart or deploy the API. The template appears in `/api/templates` and
+   supports GET/HEAD/POST at `/api/exports/pptx/jszip/quarterly` without a new
+   route file. Send `replacements` for **every discovered placeholder**; the
+   explicit `requiredPlaceholders` list is an authoring check, not an optional
+   subset of request fields.
+
+Dropping a file into the directory alone does not register it. IDs, versions,
+descriptions, and workflow requirements are authored in the catalog; inspection
+gathers structure from the PPTX. Registration uses simple local `.pptx` filenames.
+The API loads metadata once at startup, so file changes require a restart.
+
+Preflight checks the presentation structure, XML, internal relationship targets
+and references, and declared placeholders. Required named objects must exist
+uniquely with the declared kind; table dimensions and editable category charts
+are checked, including their workbook and formula support. Duplicate names for
+other objects produce warnings because PowerPoint commonly repeats default
+names across slides. Unsupported chart types produce warnings when preserved
+by text workflows, and fail if required for editing. External relationships
+are preserved without fetching their targets. Preflight does not render slides
+or validate visual layout.
+
+The `daa-demo` mode is reserved for the existing DAA workflow and also exercises
+its real generation service with deterministic data. Its catalog entry declares
+the required named objects. Adding another custom chart/table workflow still
+requires an injected service and handler; inspection cannot infer business
+logic or request data semantics from a presentation.
+
+The same catalog drives startup wiring and validation. Invalid templates stop
+startup before listening. Preflight also runs in CI and Azure packaging, before
+deployment. Checks use in-memory copies and never modify source presentations.
 
 ## Template report demo
 

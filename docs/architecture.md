@@ -4,6 +4,12 @@
 
 ## Where to look
 
+File template registrations live in [templates/catalog.json](../templates/catalog.json).
+[src/templates/catalog.ts](../src/templates/catalog.ts) loads registrations and
+request schemas; [src/templates/inspect.ts](../src/templates/inspect.ts) performs
+read-only preflight checks. Startup uses the inspected catalog for service wiring,
+and `GET /api/templates` exposes safe metadata. See [template registration](powerpoint.md#catalog-and-preflight).
+
 Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flow. Use this guide to find the code for a specific change.
 
 | File                                                                                                                                                   | Purpose / when to look here                                                                                    |

@@ -25,6 +25,11 @@ Edit these before building; rerun `npm run build:azure` after a change.
 
 ## App Service settings
 
+The ZIP includes `templates/catalog.json` and registered PPTX files. Template
+preflight runs during packaging and again before the server starts listening.
+CI verification also runs `npm run templates:preflight` after lint and before
+browser installation and tests. See [template registration](powerpoint.md#catalog-and-preflight).
+
 Configure the Web App's Node.js runtime to 22+ and set its startup command to:
 
 ```text

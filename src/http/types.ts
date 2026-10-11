@@ -5,8 +5,10 @@ import type {
   PresentationInput,
   TemplatePresentationInput,
 } from '@/schemas';
+import type { TemplateCatalog } from '@/templates/catalog';
 
 export interface AppOptions {
+  templateCatalog?: TemplateCatalog[number]['metadata'][];
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
   pdf: { generate(input: PdfInput): Promise<Buffer> };
   presentations: {

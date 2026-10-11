@@ -45,6 +45,7 @@ try {
       'Build this Linux App Service package on Linux, WSL, or in the devcontainer.',
     );
   await run(npm, ['run', 'typecheck']);
+  await run(npm, ['run', 'templates:preflight']);
   // Compile into a fresh directory so renamed/deleted services cannot leave stale files.
   await run(process.execPath, [
     'node_modules/typescript/bin/tsc',
@@ -59,12 +60,14 @@ try {
   for (const name of ['package.json', 'package-lock.json'])
     await cp(join(root, name), join(staging, name));
   await mkdir(join(staging, 'templates'));
+  await cp(
+    join(root, 'templates', 'catalog.json'),
+    join(staging, 'templates', 'catalog.json'),
+  );
   for (const file of await readdir(join(root, 'templates'))) {
     if (file.endsWith('.pptx'))
       await cp(join(root, 'templates', file), join(staging, 'templates', file));
   }
-  for (const required of ['business.pptx', 'daa.pptx'])
-    await readFile(join(staging, 'templates', required));
   await mkdir(join(staging, 'scripts'));
   await cp(
     join(root, 'scripts', 'start-azure.sh'),

@@ -92,6 +92,27 @@ For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The i
 
 ## Endpoint list
 
+### Template discovery
+
+`GET /api/templates` returns `{ "templates": [...] }` for registered PPTX file
+templates. Each entry contains `id`, `version`, `description`, `endpoint`,
+`methods`, `features`, `requestSchema`, `textConstraints`, `requiredPlaceholders`,
+`requiredObjects`, and discovered `placeholders`, `objects`, `charts`,
+`slideCount`, and `warnings`. No filesystem paths are exposed. The PptxGenJS
+brief design is not a file template and is not included.
+
+```bash
+curl --fail-with-body http://localhost:3000/api/templates
+```
+
+Registered text templates accept GET/HEAD/POST at the export URL advertised by
+the catalog, using the business/summary contract below. GET encodes
+`replacements` as JSON in a query parameter; POST sends the schema as JSON.
+Each discovered replacement key is required and extra keys are rejected during
+generation. Unknown template IDs return 404. HEAD validates request syntax and
+returns download headers without inspecting replacement completeness or
+generating a document. See [registration and preflight](powerpoint.md#catalog-and-preflight).
+
 ### Random table and chart download
 
 Open `http://localhost:3000/api/exports/pptx/jszip/daa` or download it:

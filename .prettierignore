@@ -3,6 +3,7 @@ dist/
 output/
 .cache/ms-playwright/
 package-lock.json
-templates/
+/templates/*.pptx
+src/pptx/pptxgenjs/templates/
 .env
 .env.*

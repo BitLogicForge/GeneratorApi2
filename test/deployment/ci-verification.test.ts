@@ -26,7 +26,12 @@ if (command === process.env.CI_VERIFY_FAIL) process.exit(27);
 `,
   );
   await chmod(npm, 0o755);
-  const commands = ['run lint', 'run browser:install', 'test'];
+  const commands = [
+    'run lint',
+    'run templates:preflight',
+    'run browser:install',
+    'test',
+  ];
   for (const failure of [...commands, '']) {
     const log = join(directory, 'calls.log');
     await writeFile(log, '');

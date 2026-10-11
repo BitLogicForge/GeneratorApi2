@@ -19,6 +19,7 @@
     "lint:code": "oxlint --type-aware --deny-warnings src test examples scripts",
     "lint": "npm run lint:code && npm run typecheck && npm run knip && npm run format:check",
     "verify:ci": "bash scripts/verify-ci.sh",
+    "templates:preflight": "tsx scripts/preflight-templates.ts",
     "typecheck": "npm run check:imports && tsc -p tsconfig.check.json",
     "knip": "knip",
     "deps:verify": "npm run typecheck && npm run knip && npm run browser:install && npm test",

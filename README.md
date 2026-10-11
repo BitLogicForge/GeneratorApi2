@@ -54,6 +54,7 @@ Examples live in [examples/](examples/README.md), source presentations in [templ
 ```bash
 npm run typecheck
 npm run knip
+npm run templates:preflight
 npm test
 npm run build
 ```

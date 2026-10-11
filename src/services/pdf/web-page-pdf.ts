@@ -11,6 +11,19 @@ import type { PdfInput } from '@/schemas';
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
   #active = 0;
+  #state = 'idle';
+  #launches = 0;
+  #launchFailures = 0;
+  #disconnects = 0;
+  get stats() {
+    return {
+      state: this.#state,
+      launches: this.#launches,
+      launchFailures: this.#launchFailures,
+      disconnects: this.#disconnects,
+      active: this.#active,
+    };
+  }
   constructor(
     private readonly config: Pick<
       Config,
@@ -20,15 +33,22 @@ export class WebPagePdfService {
   /** Shares one Chromium launch across requests and permits relaunch after failure or disconnect. */
   async browser() {
     if (!this.#browserPromise) {
+      this.#state = 'starting';
       this.#browserPromise = chromium
         .launch()
         .then((browser) => {
+          this.#launches++;
+          this.#state = 'ready';
           browser.on('disconnected', () => {
+            this.#disconnects++;
+            this.#state = 'disconnected';
             this.#browserPromise = undefined;
           });
           return browser;
         })
         .catch((error) => {
+          this.#launchFailures++;
+          this.#state = 'failed';
           this.#browserPromise = undefined;
           throw error;
         });

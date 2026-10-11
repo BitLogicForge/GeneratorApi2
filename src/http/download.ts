@@ -24,16 +24,27 @@ export async function sendDownload(
     return;
   }
   const controller = new AbortController();
+  const queuedAt = performance.now();
   const onClose = () => {
     if (!res.writableFinished) controller.abort();
   };
   res.once('close', onClose);
   let buffer: Buffer;
   try {
-    buffer = await queue.run(generate, controller.signal);
+    buffer = await queue.run(async () => {
+      res.locals.queueWaitMs = performance.now() - queuedAt;
+      const started = performance.now();
+      try {
+        return await generate();
+      } finally {
+        res.locals.generationMs = performance.now() - started;
+      }
+    }, controller.signal);
   } finally {
+    res.locals.queueWaitMs ??= performance.now() - queuedAt;
     res.off('close', onClose);
   }
   if (res.destroyed) return;
+  res.locals.outputBytes = buffer.length;
   setDownloadHeaders().send(buffer);
 }

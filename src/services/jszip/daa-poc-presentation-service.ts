@@ -15,6 +15,11 @@ export class DaaPocPresentationService {
     private readonly nextNumber: () => number = () => randomInt(1, 101),
   ) {}
 
+  async validate() {
+    const zip = await JSZip.loadAsync(await readFile(this.path));
+    await findNamedObjects(zip, ['TAB100', 'GGO', 'TEXT_ME']);
+  }
+
   /** Populates named template objects with demo data while retaining native editable tables and charts. */
   async generate(text = 'Generated report'): Promise<Buffer> {
     const zip = await JSZip.loadAsync(await readFile(this.path));

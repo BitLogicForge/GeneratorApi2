@@ -58,7 +58,13 @@ export function createErrorHandler(
           });
     const { status, code, message } = publicError;
     if (status === 503) res.set('Retry-After', '5');
-    if (status >= 500) logger.error({ requestId: res.locals.requestId, error });
+    if (status >= 500)
+      logger.error({
+        event: 'request_failed',
+        requestId: res.locals.requestId,
+        status,
+        code,
+      });
     res.status(status).json({
       error: {
         code,

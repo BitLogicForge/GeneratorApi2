@@ -14,6 +14,21 @@ export class PowerPointTemplateService {
     this.templates = new Map(Object.entries(templates));
   }
 
+  async validate() {
+    for (const path of this.templates.values()) {
+      const source = await readFile(path);
+      if (source.length > 20 * 1024 * 1024)
+        throw new AppError(500, 'INVALID_TEMPLATE', 'Template exceeds 20 MB');
+      const zip = await JSZip.loadAsync(source);
+      if (!zip.file('[Content_Types].xml') || !zip.file('ppt/presentation.xml'))
+        throw new AppError(
+          500,
+          'INVALID_TEMPLATE',
+          'Template must be a valid PPTX presentation',
+        );
+    }
+  }
+
   /** Replaces paragraph tokens across formatting runs and rejects missing or unused replacement keys. */
   async generate(
     template: string,

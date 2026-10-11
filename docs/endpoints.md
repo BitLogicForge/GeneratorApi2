@@ -363,3 +363,31 @@ Endpoint paths come from folders under `src/routes/`; method files such as
 `get.ts` and `post.ts` export factories that receive injected services.
 See [the file-routing guide](../src/routes/README.md) for adding endpoints. Existing
 URLs, query parameters and download contracts are unchanged.
+
+## Internal observability
+
+`GET /internal/metrics` returns JSON containing process uptime and memory bytes,
+PDF and presentation queue stats (active, pending, concurrency, maxPending,
+accepting), browser state and launch/failure/disconnect counters, and cumulative
+request counts, failures, output bytes, queue wait milliseconds and generation
+milliseconds grouped by registered route, method and status. Counters reset on
+restart; scrape and store snapshots for trends. Metrics requests include only
+previous completed requests. HEAD is supported and returns no body.
+
+`GET /internal/ready` returns 200 when startup template validation and Chromium
+warmup have completed and both queues accept work; otherwise it returns 503.
+The body reports `ready`, `shuttingDown`, `templates`, and `renderer`. Chromium
+warms up once at startup without rendering a document. Disconnects make readiness
+fail until a PDF request successfully relaunches Chromium. Probes never render,
+launch a browser, read templates, or contact the webapp. `/health` stays an
+inexpensive process check. Injected services in `createApp` may supply their own
+readiness callback; otherwise their initialization is managed externally.
+
+Both internal endpoints send `Cache-Control: no-store`. Restrict `/internal/*`
+to your monitoring network at the reverse proxy; these endpoints have no built-in
+authentication. Completion logs contain request IDs, registered route patterns,
+format, status, durations and output bytes, excluding report text, tokens,
+filenames, document IDs and query strings. Server failure logs record safe error
+codes rather than raw exceptions. Disconnected responses use status 499; output
+bytes count generated attachments sent by completed responses, not wire delivery.
+PDF and PPTX capacity already have separate concurrency settings.

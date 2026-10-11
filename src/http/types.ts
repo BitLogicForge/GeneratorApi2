@@ -8,7 +8,16 @@ import type {
 
 export interface AppOptions {
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
-  pdf: { generate(input: PdfInput): Promise<Buffer> };
+  pdf: {
+    generate(input: PdfInput): Promise<Buffer>;
+    readonly stats?: {
+      state: string;
+      launches: number;
+      launchFailures: number;
+      disconnects: number;
+      active: number;
+    };
+  };
   presentations: {
     generate(template: string, input: PresentationInput): Promise<Buffer>;
   };
@@ -20,7 +29,13 @@ export interface AppOptions {
   };
   config?: Pick<Config, 'pdfRoutePattern' | 'defaultLanguage'>;
   queues?: GenerationQueues;
-  logger?: Pick<Console, 'error'>;
+  logger?: Pick<Console, 'error'> & Partial<Pick<Console, 'info'>>;
+  readiness?: () => {
+    ready: boolean;
+    shuttingDown: boolean;
+    templates: string;
+    renderer: string;
+  };
 }
 
 export type RouteDependencies = AppOptions & {

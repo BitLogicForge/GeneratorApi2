@@ -23,6 +23,8 @@ Browser installation includes Chromium's system libraries and may require sudo o
 
 ```bash
 curl http://localhost:3000/health
+curl http://localhost:3000/internal/ready
+curl http://localhost:3000/internal/metrics
 curl -X POST http://localhost:3000/api/exports/pdf \
   -H 'Content-Type: application/json' \
   --data-binary @examples/pdf/request.json --output report.pdf

@@ -30,6 +30,9 @@ test('real Chromium PDF, query parameters, upstream errors and readiness timeout
       }),
     );
     assert.equal(bytes.subarray(0, 5).toString(), '%PDF-');
+    assert.equal(pdf.stats.state, 'ready');
+    assert.equal(pdf.stats.launches, 1);
+    assert.equal(pdf.stats.launchFailures, 0);
     assert.equal(query.year, '2026');
     await assert.rejects(pdf.generate(pdfSchema.parse({ route: '/missing' })), {
       code: 'UPSTREAM_ERROR',
@@ -49,6 +52,8 @@ test('real Chromium PDF, query parameters, upstream errors and readiness timeout
     await assert.rejects(pending, { code: 'RENDER_TIMEOUT' });
   } finally {
     await pdf.close();
+    assert.equal(pdf.stats.disconnects, 1);
+    assert.equal(pdf.stats.state, 'disconnected');
     await new Promise((resolve) => server.close(resolve));
   }
 });

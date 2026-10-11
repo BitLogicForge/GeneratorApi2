@@ -22,10 +22,35 @@ const templatePresentations = new PowerPointTemplateService({
     new URL('../templates/business.pptx', import.meta.url),
   ),
 });
+const templateReportDemo = new DaaPocPresentationService(
+  fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
+);
+let stopping = false;
+let templates = 'validating';
+Promise.all([
+  templatePresentations.validate(),
+  templateReportDemo.validate(),
+]).then(
+  () => {
+    templates = 'ready';
+  },
+  () => {
+    templates = 'failed';
+    console.error({ event: 'template_validation_failed' });
+  },
+);
+// Warm Chromium once; probes only inspect state. Failed launches can retry on a PDF request.
+void pdf
+  .browser()
+  .catch(() => console.error({ event: 'browser_warmup_failed' }));
 const server = createApp({
-  templateReportDemo: new DaaPocPresentationService(
-    fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
-  ),
+  templateReportDemo,
+  readiness: () => ({
+    ready: !stopping && templates === 'ready' && pdf.stats.state === 'ready',
+    shuttingDown: stopping,
+    templates,
+    renderer: pdf.stats.state,
+  }),
   config,
   templatePresentations,
   queues,
@@ -34,7 +59,6 @@ const server = createApp({
 }).listen(config.port, config.host, () =>
   console.log(`Generator API listening on ${config.host}:${config.port}`),
 );
-let stopping = false;
 /** Stops admission and drains active requests before closing Chromium, with a fixed exit deadline. */
 function shutdown() {
   if (stopping) return;

@@ -91,6 +91,11 @@ workbook headers. Defaults: `sheetName: 'Sheet1'`, `firstColumn: 'B'`, `firstRow
 categories use the previous column. Quoted worksheet names and columns beyond Z
 are supported. Existing series count and styling are retained.
 
+After resizing a chart, existing worksheet dimensions are recomputed from every
+retained cell, including formatted empty cells. Unrelated worksheet data remains
+inside the used range even when the chart shrinks. Worksheets without a dimension
+retain that valid optional omission.
+
 Combination, scatter, bubble, 3D, external-workbook and genuinely multilevel-category
 charts are unsupported. A single category level encoded as `multiLvlStrCache` is
 supported. Create/change chart types in PowerPoint. Merged tables cannot be resized.

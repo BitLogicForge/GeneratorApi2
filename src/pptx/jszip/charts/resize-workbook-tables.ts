@@ -18,11 +18,58 @@ export async function resizeWorkbookTables(
   seriesNames?: string[],
 ) {
   const dimension = sheet.getElementsByTagNameNS(spreadsheet, 'dimension')[0];
-  if (dimension)
-    dimension.setAttribute(
-      'ref',
-      dimension.getAttribute('ref')!.replace(/\d+$/, String(lastRow)),
-    );
+  if (dimension) {
+    let firstUsedColumn = Infinity;
+    let lastUsedColumn = 0;
+    let firstUsedRow = Infinity;
+    let lastUsedRow = 0;
+    let rowNumber = 0;
+    for (const rowElement of Array.from(
+      sheet.getElementsByTagNameNS(spreadsheet, 'row'),
+    )) {
+      rowNumber = Number(rowElement.getAttribute('r') || rowNumber + 1);
+      if (!Number.isInteger(rowNumber) || rowNumber < 1 || rowNumber > 1048576)
+        throw invalidTemplate();
+      let column = 0;
+      for (const cell of Array.from(
+        rowElement.getElementsByTagNameNS(spreadsheet, 'c'),
+      )) {
+        const reference = cell.getAttribute('r');
+        const address = reference
+          ? /^([A-Z]+)([1-9]\d*)$/.exec(reference)
+          : null;
+        if (reference && !address) throw invalidTemplate();
+        column = address
+          ? Array.from(address[1]).reduce(
+              (number, letter) => number * 26 + letter.charCodeAt(0) - 64,
+              0,
+            )
+          : column + 1;
+        const row = address ? Number(address[2]) : rowNumber;
+        if (column > 16384 || row > 1048576) throw invalidTemplate();
+        firstUsedColumn = Math.min(firstUsedColumn, column);
+        lastUsedColumn = Math.max(lastUsedColumn, column);
+        firstUsedRow = Math.min(firstUsedRow, row);
+        lastUsedRow = Math.max(lastUsedRow, row);
+      }
+    }
+    const columnName = (value: number) => {
+      let name = '';
+      while (value) {
+        value--;
+        name = String.fromCharCode(65 + (value % 26)) + name;
+        value = Math.floor(value / 26);
+      }
+      return name;
+    };
+    const start = lastUsedColumn
+      ? `${columnName(firstUsedColumn)}${firstUsedRow}`
+      : 'A1';
+    const end = lastUsedColumn
+      ? `${columnName(lastUsedColumn)}${lastUsedRow}`
+      : 'A1';
+    dimension.setAttribute('ref', start === end ? start : `${start}:${end}`);
+  }
   for (const tablePart of Array.from(
     sheet.getElementsByTagNameNS(spreadsheet, 'tablePart'),
   )) {

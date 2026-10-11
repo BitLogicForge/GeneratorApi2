@@ -143,9 +143,17 @@ const summary = await api.get(
 );
 ```
 
-The demo API also serves `GET /api/customers/:id` (customer name, industry, and contact email; no query parameters) and `GET /api/reports/:id/summary` (revenue and growth; optional `language` and `year`, defaulting to `en` and `2026`). Their response schemas live beside the endpoint registry in `src/data-api/`.
+The demo API also serves `GET /api/customers/:id` (customer name, industry, and contact email; no query parameters) and `GET /api/reports/:id/summary` (customer ID, revenue, and growth; optional `language` and `year`, defaulting to `en` and `2026`). Their response schemas live beside the endpoint registry in `src/data-api/`.
 
 See `examples/fetch-report-data.ts` for imports and complete usage. Query values can be strings, numbers, booleans, or `undefined` (omitted); they are URL-encoded automatically. Adapt `src/data-api/report-data-schema.ts` to your API's response. The example returns three table rows, twenty chart rows, and category labels, ready for the existing template helpers. Current demo exports continue using random numbers; fetching is available as a separate example for the future integration.
+
+For dependent requests, see [examples/report-data-chain.ts](examples/report-data-chain.ts): fetch the summary, use its `customerId` to fetch the customer, then use its report ID, language, and year to fetch the full report. Each call is awaited and validated before proceeding. A failed request stops the chain and no combined file is written. With the demo API running, execute:
+
+```bash
+DATA_API_BASE_URL=http://localhost:3002/api npm run example:fetch-chain -- id2222 en 2026
+```
+
+The result is saved to `output/data-api/id2222-chain.json`, containing `summary`, `customer`, and `report`. The timeout applies separately to each request.
 
 The client preserves the configured URL prefix, rejects paths outside it, and does not follow redirects. HTTP failures, connection failures, invalid JSON, and invalid response data become 502 errors; timeouts become 504 errors.
 

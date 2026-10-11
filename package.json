@@ -20,6 +20,7 @@
     "deps:update": "ncu --target semver --upgrade --doctor --doctorTest \"npm run deps:verify\"",
     "demo": "tsx examples/webapp.ts",
     "demo:data-api": "tsx --env-file-if-exists=.env examples/data-api.ts",
+    "example:fetch-chain": "tsx --env-file-if-exists=.env examples/fetch-report-chain.ts",
     "example:fetch-data": "tsx --env-file-if-exists=.env examples/fetch-report-data.ts",
     "deps:check": "ncu --target semver"
   },

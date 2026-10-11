@@ -5,6 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { z } from 'zod';
 import { loadConfig } from '../src/config.js';
 import request from 'supertest';
+import { fetchReportDataChain } from '../examples/report-data-chain.js';
 import { createCustomerRoute } from '../examples/data-api/customer.js';
 import { createReportSummaryRoute } from '../examples/data-api/report-summary.js';
 import { DataApiClient } from '../src/services/data-api-client.js';
@@ -200,6 +201,7 @@ test('configured customer and report summary endpoints fetch typed demo response
   assert.equal(revenue, 1250000);
   assert.deepEqual(summary, {
     id: 'id2222',
+    customerId: 'customer100',
     language: 'pl',
     year: 2025,
     totalRevenue: 1250000,
@@ -216,4 +218,65 @@ test('configured customer and report summary endpoints fetch typed demo response
   await request(app)
     .get('/api/reports/id2222/summary?unknown=true')
     .expect(400);
+});
+
+test('API chain uses response values and stops when a response is invalid', async (t) => {
+  const app = express();
+  const calls: string[] = [];
+  app.use((req, res, next) => {
+    calls.push(req.originalUrl);
+    next();
+  });
+  app.get('/api/reports/:id/summary', (req, res) => {
+    if (req.params.id === 'invalid') {
+      res.json({ id: 'invalid' });
+      return;
+    }
+    res.json({
+      id: 'resolved2222',
+      customerId: 'customer200',
+      language: 'pl',
+      year: 2025,
+      totalRevenue: 100,
+      growthPercent: 5,
+    });
+  });
+  app.use('/api', createCustomerRoute());
+  app.get('/api/reports/:id', (req, res) =>
+    res.json({
+      id: req.params.id,
+      language: req.query.language,
+      year: Number(req.query.year),
+      tableData: Array.from({ length: 3 }, () => [1, 2, 3, 4]),
+      chartData: Array.from({ length: 20 }, () => [1, 2, 3]),
+      categories: Array.from({ length: 20 }, (_, i) => `A${i + 1}`),
+    }),
+  );
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>((resolve) => server.once('listening', resolve));
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+  const config = loadConfig({
+    DATA_API_BASE_URL: `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`,
+  });
+  const api = new DataApiClient(config.dataApi);
+  const result = await fetchReportDataChain(api, 'requested1111', {
+    language: 'en',
+    year: 2026,
+  });
+  assert.deepEqual(calls, [
+    '/api/reports/requested1111/summary?language=en&year=2026',
+    '/api/customers/customer200',
+    '/api/reports/resolved2222?language=pl&year=2025',
+  ]);
+  assert.equal(result.customer.id, 'customer200');
+  assert.equal(result.report.id, 'resolved2222');
+  assert.equal(result.report.language, 'pl');
+  calls.length = 0;
+  await assert.rejects(fetchReportDataChain(api, 'invalid', {}), {
+    code: 'DATA_API_INVALID_RESPONSE',
+  });
+  assert.deepEqual(calls, ['/api/reports/invalid/summary']);
 });

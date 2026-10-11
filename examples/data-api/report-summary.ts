@@ -20,6 +20,7 @@ export function createReportSummaryRoute() {
     }
     res.json({
       id: id.data,
+      customerId: 'customer100',
       ...query.data,
       totalRevenue: 1250000,
       growthPercent: 12.5,

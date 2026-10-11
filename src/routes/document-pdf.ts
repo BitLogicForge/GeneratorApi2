@@ -1,14 +1,14 @@
 import { Router } from 'express';
-import type { RouteDependencies } from '../http/types.ts';
-import { sendDownload } from '../http/download.ts';
+import type { RouteDependencies } from '@/http/types';
+import { sendDownload } from '@/http/download';
 import {
   documentIdSchema,
   pdfRoutePatternSchema,
   pdfUrlQuerySchema,
   resolvePdfRoute,
-} from '../pdf-route.ts';
-import { pdfSchema } from '../schemas.ts';
-import { AppError } from '../errors.ts';
+} from '@/pdf-route';
+import { pdfSchema } from '@/schemas';
+import { AppError } from '@/errors';
 
 /** Generates a PDF from a document link with server-controlled query values. */
 export function createDocumentPdfRoute({

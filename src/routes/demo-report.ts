@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import type { RouteDependencies } from '../http/types.ts';
+import type { RouteDependencies } from '@/http/types';
 import { z } from 'zod';
-import { sendDownload } from '../http/download.ts';
-import { AppError } from '../errors.ts';
+import { sendDownload } from '@/http/download';
+import { AppError } from '@/errors';
 
 const demoQuerySchema = z
   .object({ TEXT_ME: z.string().max(5000).default('Generated report') })

@@ -5,11 +5,11 @@ import { fileURLToPath } from 'node:url';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import JSZip from 'jszip';
-import { createApp } from '../src/app.ts';
-import { TemplateReportDemoService } from '../src/pptx/jszip/template-report-demo.ts';
-import { WebPagePdfService } from '../src/services/web-page-pdf.ts';
-import { GeneratedPresentationService } from '../src/pptx/pptxgenjs/generated-presentation.ts';
-import { PowerPointTemplateService } from '../src/pptx/jszip/powerpoint-template.ts';
+import { createApp } from '@/app';
+import { TemplateReportDemoService } from '@/pptx/jszip/template-report-demo';
+import { WebPagePdfService } from '@/services/web-page-pdf';
+import { GeneratedPresentationService } from '@/pptx/pptxgenjs/generated-presentation';
+import { PowerPointTemplateService } from '@/pptx/jszip/powerpoint-template';
 
 const outputDir = new URL('../output/routes/', import.meta.url);
 

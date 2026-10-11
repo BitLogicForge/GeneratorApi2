@@ -236,7 +236,7 @@ Give optional parameters defaults so the URL also works without a query string. 
 Create `src/pptx/jszip/sales-report.ts`:
 
 ```ts
-import type { SalesReportInput } from '../../schemas.ts';
+import type { SalesReportInput } from '@/schemas';
 import { TemplateReportDemoService } from './template-report-demo.ts';
 
 export class SalesReportService {
@@ -269,7 +269,7 @@ salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
 Import the service in `src/index.ts`:
 
 ```ts
-import { SalesReportService } from './pptx/jszip/sales-report.ts';
+import { SalesReportService } from '@/pptx/jszip/sales-report';
 ```
 
 Add this property to the existing `createApp({ ... })` call:
@@ -362,6 +362,8 @@ npm run test:azure
 Run `npm run precommit` manually to perform the same actions, or `npm run prepare` to reinstall the hook. CI, production installs, and folders without Git metadata skip hook installation. Full formatting checks remain available through `npm run lint`; only staged files are autoformatted by the hook.
 
 ## Verification and production build
+
+Distant source imports use `@/` for `src/`, for example `import { loadConfig } from '@/config'`. Tests can use `@examples/` for example workflows. Aliases omit file extensions and work in `tsx` through TypeScript path mappings; `scripts/rewrite-imports.mjs` rewrites them to relative `.js` imports during normal and Azure builds.
 
 Local TypeScript imports use `.ts` extensions. `rewriteRelativeImportExtensions` rewrites them to `.js` in compiled output. `npm run typecheck` also runs `npm run check:imports`, which rejects relative `.js` imports in TypeScript files. JavaScript build outputs and actual `.mjs` tooling scripts retain their extensions.
 

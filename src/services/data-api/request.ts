@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { Config } from '../../config.ts';
-import { AppError } from '../../errors.ts';
+import type { Config } from '@/config';
+import { AppError } from '@/errors';
 
 /** Applies one timeout to fetching and reading JSON, then validates the response. */
 export async function requestDataApi<T>(

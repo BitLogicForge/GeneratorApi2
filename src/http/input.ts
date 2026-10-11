@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import { AppError } from '../errors.ts';
+import { AppError } from '@/errors';
 
 /** Gives GET exports the same structured input as POST by decoding JSON query fields. */
 export function generationInput(req: Request) {

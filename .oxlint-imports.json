@@ -14,6 +14,10 @@
               {
                 "regex": "^\\.{1,2}/.*\\.js$",
                 "message": "Import TypeScript source with .ts; the compiler rewrites extensions to .js in dist."
+              },
+              {
+                "regex": "^@(?:/|examples/).*\\.(?:js|ts)$",
+                "message": "Use extensionless aliases, for example @/config. Build tooling resolves them to JavaScript."
               }
             ]
           }

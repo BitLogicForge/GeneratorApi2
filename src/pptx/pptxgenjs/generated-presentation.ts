@@ -1,6 +1,6 @@
 import pptxgen from 'pptxgenjs';
-import type { PresentationInput } from '../../schemas.ts';
-import { AppError } from '../../errors.ts';
+import type { PresentationInput } from '@/schemas';
+import { AppError } from '@/errors';
 import { briefTemplate } from './templates/brief.ts';
 import type { PresentationTemplate } from './types.ts';
 

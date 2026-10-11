@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pdfSchema } from '../src/schemas.ts';
-import { pdfRoutePatternSchema } from '../src/pdf-route.ts';
-import { buildDataApiUrl } from '../src/services/data-api/url.ts';
+import { pdfSchema } from '@/schemas';
+import { pdfRoutePatternSchema } from '@/pdf-route';
+import { buildDataApiUrl } from '@/services/data-api/url';
 
 test('PDF routes, route patterns, and data API paths reject every ASCII control character', () => {
   for (let code = 0; code <= 0x1f; code++) {

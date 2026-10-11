@@ -1,10 +1,7 @@
 import type { z } from 'zod';
-import type { Config } from '../../../src/config.ts';
-import type { reportDataSchema } from '../../../src/data-api/report-data-schema.ts';
-import type {
-  DataApiClient,
-  DataApiQuery,
-} from '../../../src/services/data-api-client.ts';
+import type { Config } from '@/config';
+import type { reportDataSchema } from '@/data-api/report-data-schema';
+import type { DataApiClient, DataApiQuery } from '@/services/data-api-client';
 
 type Api = DataApiClient<Config['dataApi']['endpoints']>;
 type ReportData = z.output<typeof reportDataSchema>;

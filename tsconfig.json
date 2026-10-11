@@ -10,7 +10,11 @@
     "rootDir": "src",
     "outDir": "dist",
     "sourceMap": true,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@examples/*": ["./examples/*"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

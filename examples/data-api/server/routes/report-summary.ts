@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { documentIdSchema } from '../../../../src/pdf-route.ts';
+import { documentIdSchema } from '@/pdf-route';
 
 const querySchema = z
   .object({

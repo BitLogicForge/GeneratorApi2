@@ -14,6 +14,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
+import { rewriteSourceAliases } from './rewrite-imports.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'output', 'azure', 'generator-api.zip');
@@ -52,6 +53,7 @@ try {
     '--sourceMap',
     'false',
   ]);
+  await rewriteSourceAliases(join(staging, 'dist'));
   for (const name of ['package.json', 'package-lock.json'])
     await cp(join(root, name), join(staging, name));
   await mkdir(join(staging, 'templates'));

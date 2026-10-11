@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import express from 'express';
 import type { AddressInfo } from 'node:net';
 import { z } from 'zod';
-import { loadConfig } from '../src/config.ts';
+import { loadConfig } from '@/config';
 import request from 'supertest';
-import { fetchReportDataChain } from '../examples/data-api/chain/collect.ts';
-import { createCustomerRoute } from '../examples/data-api/server/routes/customer.ts';
-import { createReportSummaryRoute } from '../examples/data-api/server/routes/report-summary.ts';
-import { DataApiClient } from '../src/services/data-api-client.ts';
+import { fetchReportDataChain } from '@examples/data-api/chain/collect';
+import { createCustomerRoute } from '@examples/data-api/server/routes/customer';
+import { createReportSummaryRoute } from '@examples/data-api/server/routes/report-summary';
+import { DataApiClient } from '@/services/data-api-client';
 
 test('data API config validates URLs and supports an unconfigured API', () => {
   const config = loadConfig({});

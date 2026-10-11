@@ -28,6 +28,8 @@ test('import check rejects JavaScript extensions in TypeScript source imports an
     "import { value } from './module.js';\n",
     "import type { Value } from '../module.js';\n",
     "export { value } from './module.js';\n",
+    "import { value } from '@/module.js';\n",
+    "import { value } from '@/module.ts';\n",
   ]) {
     await writeFile(file, source);
     const result = lint();
@@ -36,7 +38,7 @@ test('import check rejects JavaScript extensions in TypeScript source imports an
   }
   await writeFile(
     file,
-    "import { value } from './module.ts';\nimport 'node:fs';\nimport './tool.mjs';\n",
+    "import { value } from './module.ts';\nimport 'node:fs';\nimport './tool.mjs';\nimport { loadConfig } from '@/config';\nimport { fetchReportDataChain } from '@examples/data-api/chain/collect';\n",
   );
   const result = lint();
   assert.equal(result.status, 0, result.stdout + result.stderr);

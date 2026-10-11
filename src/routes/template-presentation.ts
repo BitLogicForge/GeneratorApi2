@@ -1,9 +1,9 @@
 import { Router, type RequestHandler } from 'express';
-import type { RouteDependencies } from '../http/types.ts';
-import { generationInput } from '../http/input.ts';
-import { sendDownload } from '../http/download.ts';
-import { templatePresentationSchema } from '../schemas.ts';
-import { AppError } from '../errors.ts';
+import type { RouteDependencies } from '@/http/types';
+import { generationInput } from '@/http/input';
+import { sendDownload } from '@/http/download';
+import { templatePresentationSchema } from '@/schemas';
+import { AppError } from '@/errors';
 
 export function createTemplatePresentationRoute({
   templatePresentations,

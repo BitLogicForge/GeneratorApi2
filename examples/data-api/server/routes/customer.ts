@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { documentIdSchema } from '../../../../src/pdf-route.ts';
+import { documentIdSchema } from '@/pdf-route';
 
 export function createCustomerRoute() {
   const router = Router();

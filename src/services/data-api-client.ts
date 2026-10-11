@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { Config } from '../config.ts';
-import { AppError } from '../errors.ts';
+import type { Config } from '@/config';
+import { AppError } from '@/errors';
 import { buildDataApiUrl } from './data-api/url.ts';
 import { requestDataApi } from './data-api/request.ts';
 

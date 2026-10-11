@@ -1,8 +1,8 @@
 import { Router, type RequestHandler } from 'express';
-import type { RouteDependencies } from '../http/types.ts';
-import { generationInput } from '../http/input.ts';
-import { sendDownload } from '../http/download.ts';
-import { presentationSchema } from '../schemas.ts';
+import type { RouteDependencies } from '@/http/types';
+import { generationInput } from '@/http/input';
+import { sendDownload } from '@/http/download';
+import { presentationSchema } from '@/schemas';
 
 export function createGeneratedPresentationRoute({
   presentations,

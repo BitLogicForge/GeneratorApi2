@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
-import { documentIdSchema } from '../../../src/pdf-route.ts';
-import { loadConfig } from '../../../src/config.ts';
+import { documentIdSchema } from '@/pdf-route';
+import { loadConfig } from '@/config';
 
 import { createCustomerRoute } from './routes/customer.ts';
 import { createReportSummaryRoute } from './routes/report-summary.ts';

@@ -32,6 +32,7 @@ const server = createApp({
   console.log(`Generator API listening on ${config.host}:${config.port}`),
 );
 let stopping = false;
+/** Stops admission and drains active requests before closing Chromium, with a fixed exit deadline. */
 function shutdown() {
   if (stopping) return;
   stopping = true;

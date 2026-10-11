@@ -15,6 +15,7 @@ export class PowerPointTemplateService {
     this.templates = new Map(Object.entries(templates));
   }
 
+  /** Replaces paragraph tokens across formatting runs and rejects missing or unused replacement keys. */
   async generate(
     template: string,
     input: TemplatePresentationInput,

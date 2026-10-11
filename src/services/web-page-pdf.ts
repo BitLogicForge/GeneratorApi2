@@ -16,6 +16,7 @@ export class WebPagePdfService {
       'baseUrl' | 'concurrency' | 'timeout' | 'port'
     >,
   ) {}
+  /** Shares one Chromium launch across requests and permits relaunch after failure or disconnect. */
   async browser() {
     if (!this.#browserPromise) {
       this.#browserPromise = chromium
@@ -33,6 +34,7 @@ export class WebPagePdfService {
     }
     return this.#browserPromise;
   }
+  /** Prints in an isolated context, restricts navigation to the webapp, and always releases rendering resources. */
   async generate(input: PdfInput) {
     const url = new URL(input.route, this.config.baseUrl);
     if (url.origin !== this.config.baseUrl)

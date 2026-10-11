@@ -13,6 +13,7 @@ export class GeneratedPresentationService {
   ) {
     this.templates = new Map(Object.entries(templates));
   }
+  /** Runs a registered design on a fresh deck to keep request content and metadata isolated. */
   async generate(template: string, input: PresentationInput) {
     const render = this.templates.get(template);
     if (!render)

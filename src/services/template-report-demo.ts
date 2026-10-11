@@ -12,6 +12,7 @@ export class TemplateReportDemoService {
     private readonly nextNumber: () => number = () => randomInt(1, 101),
   ) {}
 
+  /** Populates named template objects with demo data while retaining native editable tables and charts. */
   async generate(text = 'Generated report'): Promise<Buffer> {
     const zip = await JSZip.loadAsync(await readFile(this.path));
     const { slides, objects } = await findNamedObjects(zip, [

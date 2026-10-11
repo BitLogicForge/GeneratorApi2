@@ -9,6 +9,7 @@ import type { AppOptions } from './http/types.js';
 import { createPdfRoutes } from './routes/pdf.js';
 import { createPresentationRoutes } from './routes/presentations.js';
 
+/** Assembles HTTP handling around injected services so routes can be tested independently. */
 export function createApp(options: AppOptions) {
   const {
     config = loadConfig({}),

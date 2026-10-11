@@ -11,6 +11,7 @@ import {
 import { pdfSchema } from '../schemas.js';
 import { AppError } from '../errors.js';
 
+/** Shares PDF generation between document links and explicit exports; server query values take precedence. */
 export function createPdfRoutes({ pdf, config, queues }: RouteDependencies) {
   const router = Router();
   const routePattern = pdfRoutePatternSchema.parse(config.pdfRoutePattern);

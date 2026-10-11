@@ -29,6 +29,7 @@ export const readXml = async (archive: JSZip, path: string) => {
   );
 };
 
+/** Follows a typed internal package relationship so callers need no hardcoded chart or workbook paths. */
 export const resolveRelationship = async (
   archive: JSZip,
   owner: string,

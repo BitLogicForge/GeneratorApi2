@@ -7,6 +7,7 @@ export interface NamedObject {
   element: Element;
 }
 
+/** Finds objects by their PowerPoint Selection Pane names and rejects missing or ambiguous matches. */
 export async function findNamedObjects(zip: JSZip, names: string[]) {
   const slides = new Map<string, Awaited<ReturnType<typeof readXml>>>();
   const objects = new Map<string, { path: string; element: Element }>();

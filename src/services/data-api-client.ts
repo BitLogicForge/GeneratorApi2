@@ -11,6 +11,7 @@ export type DataApiQuery = Record<
 export class DataApiClient {
   constructor(private readonly config: Config['dataApi']) {}
 
+  /** Keeps requests within the configured API prefix and validates responses under one fetch/read timeout. */
   async get<T>(
     path: string,
     query: DataApiQuery,

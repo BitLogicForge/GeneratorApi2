@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../errors.js';
 
+/** Maps failures to the public error contract while keeping unexpected error details in server logs. */
 export function createErrorHandler(
   logger: Pick<Console, 'error'>,
 ): ErrorRequestHandler {

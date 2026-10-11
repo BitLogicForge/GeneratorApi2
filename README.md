@@ -2,6 +2,44 @@
 
 A TypeScript + Express proof of concept for exporting a webapp route to PDF and generating editable PowerPoint presentations. Node.js 22+ required.
 
+## Where to look
+
+Start with `src/index.ts` for service wiring, then `src/app.ts` for the HTTP flow. Use this guide to find the code for a specific change.
+
+| File                                                                                                                             | Purpose / when to look here                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [src/index.ts](src/index.ts)                                                                                                     | Starts the server, registers template files, wires services and queues, and handles shutdown.                  |
+| [src/app.ts](src/app.ts)                                                                                                         | Sets up middleware, request IDs, routers, and error handling.                                                  |
+| [src/config.ts](src/config.ts)                                                                                                   | Defines document route/language defaults and validates environment settings and runtime limits.                |
+| [src/schemas.ts](src/schemas.ts)                                                                                                 | Defines accepted export inputs, validation rules, and inferred TypeScript types.                               |
+| [src/pdf-route.ts](src/pdf-route.ts)                                                                                             | Validates document IDs and route patterns; expands `{id}` for direct PDF links.                                |
+| [src/routes/pdf.ts](src/routes/pdf.ts)                                                                                           | Handles PDF links and exports, including language defaults and reserved query parameters.                      |
+| [src/routes/presentations.ts](src/routes/presentations.ts)                                                                       | Registers generated decks, file-template exports, and the report demo. Add presentation endpoints here.        |
+| [src/http/types.ts](src/http/types.ts)                                                                                           | Declares injectable service contracts. Update these when wiring a new service into routes.                     |
+| [src/http/input.ts](src/http/input.ts)                                                                                           | Converts GET query fields into export inputs. Add decoding here for new structured query fields.               |
+| [src/http/download.ts](src/http/download.ts)                                                                                     | Queues generation, cancels waiting work on disconnect, and sends file attachments.                             |
+| [src/http/error-handler.ts](src/http/error-handler.ts), [src/errors.ts](src/errors.ts)                                           | Define application errors and translate failures into HTTP responses and logs.                                 |
+| [src/queue/generation-queue.ts](src/queue/generation-queue.ts)                                                                   | Controls concurrency, pending capacity, wait timeouts, cancellation, and shutdown admission.                   |
+| [src/services/web-page-pdf.ts](src/services/web-page-pdf.ts)                                                                     | Manages Chromium, navigation restrictions, page readiness, printing, and browser context cleanup.              |
+| [src/services/generated-presentation.ts](src/services/generated-presentation.ts)                                                 | Registers code-based presentation designs and creates a fresh deck for each export.                            |
+| [src/templates/brief.ts](src/templates/brief.ts)                                                                                 | Defines the brief deck's slide layout, typography, colors, and speaker notes. Change its visual design here.   |
+| [src/services/powerpoint-template.ts](src/services/powerpoint-template.ts)                                                       | Replaces `{{tokens}}` in existing slide and note text, including tokens split across formatting runs.          |
+| [src/services/template-report-demo.ts](src/services/template-report-demo.ts)                                                     | Populates `TAB100`, `GGO`, and `TEXT_ME` with demo data. Start here to adapt the report template to real data. |
+| [src/services/data-api-client.ts](src/services/data-api-client.ts)                                                               | Fetches and validates upstream JSON; handles API prefixes, bearer tokens, and timeouts.                        |
+| [src/pptx/objects.ts](src/pptx/objects.ts)                                                                                       | Locates template objects by Selection Pane name. Check here for missing or duplicate objects.                  |
+| [src/pptx/text-table.ts](src/pptx/text-table.ts)                                                                                 | Fills text shapes and fixed-size tables while retaining formatting.                                            |
+| [src/pptx/charts.ts](src/pptx/charts.ts)                                                                                         | Updates line-chart caches, formulas, and embedded workbook data together so charts remain editable.            |
+| [src/pptx/spreadsheet.ts](src/pptx/spreadsheet.ts)                                                                               | Writes embedded workbook cells, creating rows/cells and retaining styles.                                      |
+| [src/pptx/package.ts](src/pptx/package.ts)                                                                                       | Reads/writes package XML and follows internal relationships between slides, charts, and workbooks.             |
+| [templates/business.pptx](templates/business.pptx), [templates/daa.pptx](templates/daa.pptx)                                     | Source decks for placeholder replacement and the report demo. Edit named objects and styling in PowerPoint.    |
+| [examples/fetch-report-data.ts](examples/fetch-report-data.ts), [examples/report-data-schema.ts](examples/report-data-schema.ts) | Show upstream data fetching and the expected report data shape.                                                |
+| [examples/webapp.ts](examples/webapp.ts), [examples/data-api.ts](examples/data-api.ts)                                           | Provide local demo pages and synthetic report data.                                                            |
+| [test/](test/)                                                                                                                   | Covers HTTP behavior, queues, PDF rendering, upstream data, and generated PowerPoint contents.                 |
+| [test/output-routes.ts](test/output-routes.ts)                                                                                   | Produces downloadable sample artifacts for manual inspection via `npm run test:outputs`.                       |
+| [scripts/build-azure.mjs](scripts/build-azure.mjs), [scripts/start-azure.sh](scripts/start-azure.sh)                             | Package the app for Azure and start it with its browser runtime.                                               |
+| [README-ENDPOINTS.md](README-ENDPOINTS.md)                                                                                       | Lists endpoint parameters and copyable GET requests.                                                           |
+| [AZURE.md](AZURE.md)                                                                                                             | Explains Azure deployment and runtime configuration.                                                           |
+
 ## Run
 
 ```bash

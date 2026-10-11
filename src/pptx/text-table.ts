@@ -1,6 +1,7 @@
 import type { Element } from '@xmldom/xmldom';
 import { drawing, invalidTemplate } from './package.js';
 
+/** Uses the first text run for replacement content, retaining its formatting and clearing remaining runs. */
 export function setText(element: Element, value: string) {
   const document = element.ownerDocument!;
   let texts = Array.from(element.getElementsByTagNameNS(drawing, 't'));
@@ -35,6 +36,7 @@ export interface FillTableOptions {
   startRow?: number;
 }
 
+/** Fills an existing table without resizing it; startRow preserves header rows. */
 export function fillTable(
   element: Element,
   data: (string | number)[][],

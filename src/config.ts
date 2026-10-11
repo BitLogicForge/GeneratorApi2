@@ -7,6 +7,7 @@ export const documentSettings = {
   pdfRoutePattern: '/documents/{id}',
 };
 
+/** Validates settings before startup and exposes the webapp origin as the PDF navigation boundary. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const documents = z
     .object({

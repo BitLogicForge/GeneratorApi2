@@ -38,6 +38,7 @@ export class GenerationQueue {
     };
   }
 
+  /** Bounds execution and waiting; cancellation and wait timeouts remove only pending jobs. */
   run<T>(task: () => Promise<T>, signal?: AbortSignal): Promise<T> {
     if (!this.accepting)
       return Promise.reject(

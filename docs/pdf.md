@@ -49,3 +49,8 @@ Shared appearance lives in `src/config/defaults.ts`. A `definePdfReport` definit
 Both document routes use the shared PDF queue and renderer, return `application/pdf` attachments with `Cache-Control: no-store`, and include a request ID. They do not cache files or forward caller cookies/credentials.
 
 Every document navigation, including redirect hops and frame navigations, must stay on the configured origin. Same-origin redirects retain their final URL and relative asset resolution. Popups are blocked. A disallowed navigation fails with `502 NAVIGATION_BLOCKED` before that destination is requested. External assets and data requests remain permitted.
+
+PDF report orientation is defined only in `print.landscape` on the report
+definition. `prepareInput` returns the external route, query, filename, and
+readiness options; it cannot return `landscape` or `print`. Both TypeScript and
+runtime validation enforce this rule. Omitted orientation uses shared print defaults.

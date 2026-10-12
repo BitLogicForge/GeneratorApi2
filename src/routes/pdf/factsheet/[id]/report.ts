@@ -18,8 +18,7 @@ export default definePdfReport({
     ...mapPdfRoute(
       resolvePdfRoute(externalRoute, id),
       query,
-      { language: 'language', year: 'year' },
-      { language: defaultLanguage },
+      {},
     ),
     filename: id,
   }),

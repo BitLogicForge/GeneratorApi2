@@ -171,3 +171,8 @@ Use `mapPdfRoute` from `src/reports/pdf-route.ts` inside a route's `prepareInput
 The mapping stays in the route folder. The shared helper forwards only mapped,
 defined values, rejects conflicts with fixed external query keys, and accepts
 an optional fourth argument of defaults keyed by external parameter name.
+
+PDF report orientation is defined only in `print.landscape` on the report
+definition. `prepareInput` returns the external route, query, filename, and
+readiness options; it cannot return `landscape` or `print`. Both TypeScript and
+runtime validation enforce this rule. Omitted orientation uses shared print defaults.

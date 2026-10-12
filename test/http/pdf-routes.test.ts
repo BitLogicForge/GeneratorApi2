@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import request from 'supertest';
+import { z } from 'zod';
 
 import { createApp } from '@/app';
+import { definePdfReport } from '@/reports/pdf';
 
 import type { PdfRenderInput } from '@/services/pdf/contracts';
 
@@ -94,6 +96,8 @@ test('quarterly owns its schema and maps direct query parameters', async () => {
     language: 'pl',
   });
   assert.equal(inputs[0]?.filename, 'quarterly-2027-q2-pl');
+  assert.equal(inputs[0]?.landscape, false);
+  assert.equal(inputs[0]?.print?.landscape, false);
   await request(app).get('/pdf/quarterly?unexpected=1').expect(400);
   assert.equal(inputs.length, 1);
 });
@@ -137,4 +141,28 @@ test('onepager rejects removed language/year, invalid dates, benchmark values an
     await request(app).head(`/pdf/onepager/id2222?${query}`).expect(400);
   }
   assert.equal(inputs.length, 0);
+});
+
+test('report definitions reject orientation supplied through prepareInput', async () => {
+  let renders = 0;
+  const factory = definePdfReport({
+    schema: z.object({}).strict(),
+    // @ts-expect-error Orientation must be defined through print.landscape.
+    prepareInput: () => ({ route: '/report', landscape: false }),
+    print: { landscape: true },
+  });
+  const app = createApp(
+    {
+      pdf: {
+        generate: async () => {
+          renders++;
+          return Buffer.from('%PDF-test');
+        },
+      },
+      logger: { error() {} },
+    },
+    [{ method: 'get', path: '/report', file: 'report/get.ts', factory }],
+  );
+  await request(app).get('/report').expect(400);
+  assert.equal(renders, 0);
 });

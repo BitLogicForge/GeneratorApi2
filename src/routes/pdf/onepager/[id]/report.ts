@@ -10,6 +10,14 @@ import { requestSchema } from './schema.ts';
 // External page on WEBAPP_BASE_URL; {id} may appear in the path or query.
 const externalRoute = pdfRoutePatternSchema.parse('/onepager/{id}');
 
+const date = new Date().toISOString().split('T')[0];
+const time = new Date()
+  .toISOString()
+  .split('T')[1]
+  .split(':')
+  .slice(0, 2)
+  .join(':');
+
 export default definePdfReport({
   schema: requestSchema,
   readRequestInput: (req) => ({ id: req.params.id, query: req.query }),
@@ -19,7 +27,7 @@ export default definePdfReport({
       END: 'END',
       BENCHMARK: 'BENCHMARK',
     }),
-    filename: id,
+    filename: `onepager-${date}-${time}-${id}`,
   }),
   print: { landscape: true },
 });

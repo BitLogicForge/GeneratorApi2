@@ -11,12 +11,23 @@ import type { RouteFactory } from '@/http/file-routes/types';
 import type { RouteDependencies } from '@/http/types';
 import type { PdfPrintOverrides } from '@/services/pdf/contracts';
 
+// Report print settings have one owner: definition.print.
+const preparedInputSchema = pdfRenderSchema.omit({
+  landscape: true,
+  print: true,
+});
+
+type PreparedPdfInput = z.input<typeof preparedInputSchema> & {
+  landscape?: never;
+  print?: never;
+};
+
 export interface PdfReport<Input> {
   schema: ZodType<Input>;
   prepareInput: (
     input: Input,
     config: RouteDependencies['config'],
-  ) => z.input<typeof pdfRenderSchema>;
+  ) => PreparedPdfInput;
   readRequestInput?: (request: Request<Record<string, string>>) => unknown;
   jsonFields?: readonly string[];
   print?: PdfPrintOverrides;
@@ -35,10 +46,13 @@ export function definePdfReport<Input>(
         ? definition.readRequestInput(req)
         : decodeExportInput(req, definition.jsonFields ?? []);
       const parsed = definition.schema.parse(raw);
+      const prepared = preparedInputSchema.parse(
+        definition.prepareInput(parsed, dependencies.config),
+      );
       const input = pdfRenderSchema.parse({
+        ...prepared,
         ...(print?.format !== undefined && { format: print.format }),
         ...(print?.landscape !== undefined && { landscape: print.landscape }),
-        ...definition.prepareInput(parsed, dependencies.config),
         ...(print !== undefined && { print }),
       });
       await sendDownload(

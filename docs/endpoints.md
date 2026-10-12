@@ -170,7 +170,7 @@ Both routes support HEAD without rendering. IDs accept 1–80 letters, numbers, 
 Onepager forwards `START`, `END`, and `BENCHMARK` under those exact uppercase
 names. Each is independently optional; `language` and `year` are rejected on onepager.
 
-Unknown parameters, duplicate values, unsafe IDs, and invalid values return 400. Caller-supplied `landscape`, `route`, and `waitForSelector` are rejected. These routes use the shared renderer and queue; configured appearance applies with the endpoint's fixed orientation.
+Unknown parameters, duplicate values, unsafe IDs, and invalid values return 400. Caller-supplied `landscape`, `route`, and `waitForSelector` are rejected. These routes use the shared renderer and queue; configured appearance applies with the endpoint's fixed orientation, defined only through `print.landscape` in its `report.ts`.
 
 Each endpoint folder defines the complete PDF route:
 

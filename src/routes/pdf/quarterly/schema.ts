@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Only these parameters are forwarded to the fixed quarterly webapp page.
-const webappQuerySchema = z
+const querySchema = z
   .object({
     year: z
       .string()
@@ -14,4 +14,4 @@ const webappQuerySchema = z
   .strict();
 
 // API request: direct URL parameters become the webapp query.
-export const requestSchema = z.object({ query: webappQuerySchema }).strict();
+export const requestSchema = z.object({ query: querySchema }).strict();

@@ -40,7 +40,22 @@ IDs accept 1–80 letters, numbers, underscores, and hyphens. Factsheet accepts 
 
 Every render waits for page load and fonts. Factsheet and onepager have no additional readiness selector. Their route-local `schema.ts` and `report.ts` own validation and target resolution. The quarterly report sets `[data-report-ready]` in its route-local `report.ts`; the generic test export can accept a caller-supplied `waitForSelector`.
 
-A missing readiness marker produces `504 RENDER_TIMEOUT`. HEAD validates input and returns attachment metadata without loading the webapp or entering the render queue.
+To wait for network activity to settle as well, set `waitForNetworkIdle: true`
+in the route's `prepareInput` result. It defaults to disabled and works alongside
+`waitForSelector`: after the selector becomes visible, rendering waits for no
+active network connections for at least 500 ms. Both waits share `RENDER_TIMEOUT_MS`.
+Pages with continuing network activity can time out.
+
+```ts
+prepareInput: ({ query }) => ({
+  ...mapPdfRoute(externalRoute, query, mapping),
+  filename: 'report',
+  waitForSelector: '[data-report-ready]',
+  waitForNetworkIdle: true,
+}),
+```
+
+A missing readiness marker or network-idle timeout produces `504 RENDER_TIMEOUT`. HEAD validates input and returns attachment metadata without loading the webapp or entering the render queue.
 
 Shared appearance lives in `src/config/defaults.ts`. A `definePdfReport` definition can specify server-owned `print` overrides, including individual margin sides. Factsheet always selects portrait and onepager always selects landscape. The generic test export accepts its declared per-request print options. See [adding a PDF endpoint](development.md#add-a-pdf-endpoint).
 

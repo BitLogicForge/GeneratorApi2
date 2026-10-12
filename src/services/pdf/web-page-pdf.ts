@@ -101,6 +101,8 @@ export class WebPagePdfService {
             await page
               .locator(input.waitForSelector)
               .waitFor({ state: 'visible' });
+          if (input.waitForNetworkIdle)
+            await page.waitForLoadState('networkidle');
           const settings = resolvePdfPrintSettings(
             this.config.pdfPrint,
             input.print,

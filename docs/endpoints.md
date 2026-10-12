@@ -191,6 +191,13 @@ cannot be overridden by callers. Configure the shared webapp origin through
 
 The former `/pdf/portrait/:id.pdf` and `/pdf/landscape/:id.pdf` document routes are removed.
 
+PDF report definitions may set `waitForNetworkIdle: true` alongside
+`waitForSelector` in `prepareInput`. After the readiness selector is visible,
+the renderer waits for 500 ms without active network connections before printing.
+The option is disabled when omitted or false; both waits share the configured
+render timeout. It is a server-owned setting, not a public query parameter on
+these fixed PDF routes.
+
 ## GET /pdf/onet
 
 Test route that prints `https://example.com/` as a portrait PDF named `onet.pdf`.

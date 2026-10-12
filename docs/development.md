@@ -38,6 +38,7 @@ export default definePdfReport({
     query: input,
     filename: `sales-${input.year}-${input.language}`,
     waitForSelector: '[data-report-ready]',
+    waitForNetworkIdle: true,
   }),
   print: {
     landscape: false,

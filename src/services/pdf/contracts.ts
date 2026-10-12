@@ -111,6 +111,7 @@ export const pdfRenderSchema = z
       .default({}),
     filename: filenameSchema.default('document'),
     waitForSelector: z.string().min(1).max(300).optional(),
+    waitForNetworkIdle: z.boolean().optional(),
     format: z
       .enum(['A3', 'A4', 'A5', 'A6', 'Letter', 'Legal', 'Tabloid', 'Ledger'])
       .default(() => resolvePdfPrintSettings().format),

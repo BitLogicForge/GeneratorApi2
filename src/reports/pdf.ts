@@ -1,6 +1,7 @@
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
 import {
+  pdfOriginSchema,
   pdfPrintOverridesSchema,
   pdfRenderSchema,
 } from '@/services/pdf/contracts';
@@ -31,12 +32,17 @@ export interface PdfReport<Input> {
   readRequestInput?: (request: Request<Record<string, string>>) => unknown;
   jsonFields?: readonly string[];
   print?: PdfPrintOverrides;
+  externalOrigin?: string;
 }
 
 export function definePdfReport<Input>(
   definition: PdfReport<Input>,
 ): RouteFactory {
   return (dependencies) => {
+    const externalOrigin =
+      definition.externalOrigin === undefined
+        ? undefined
+        : pdfOriginSchema.parse(definition.externalOrigin);
     const print =
       definition.print === undefined
         ? undefined
@@ -58,7 +64,7 @@ export function definePdfReport<Input>(
       await sendDownload(
         res,
         dependencies.queues.pdf,
-        () => dependencies.pdf.generate(input),
+        () => dependencies.pdf.generate(input, externalOrigin),
         input.filename,
         'pdf',
       );

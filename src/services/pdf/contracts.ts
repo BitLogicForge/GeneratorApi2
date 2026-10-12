@@ -73,6 +73,22 @@ export function resolvePdfRoute(pattern: string, id: string) {
   return pattern.replaceAll('{id}', encodeURIComponent(id));
 }
 
+/** Trusted report-owned origin; this is never decoded from request parameters. */
+export const pdfOriginSchema = z
+  .url()
+  .refine((value) => {
+    const url = new URL(value);
+    return (
+      ['http:', 'https:'].includes(url.protocol) &&
+      !url.username &&
+      !url.password &&
+      url.pathname === '/' &&
+      !url.search &&
+      !url.hash
+    );
+  }, 'Use an HTTP(S) origin without credentials, path, query, or fragment')
+  .transform((value) => new URL(value).origin);
+
 /** Shared PDF renderer contract, used by every PDF endpoint. */
 export const pdfRenderSchema = z
   .object({

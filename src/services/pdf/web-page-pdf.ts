@@ -3,7 +3,7 @@ import { chromium, errors } from 'playwright';
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
 
-import { resolvePdfPrintSettings } from './contracts.ts';
+import { pdfOriginSchema, resolvePdfPrintSettings } from './contracts.ts';
 import { navigationBoundary } from './navigation-boundary.ts';
 
 import type { Browser, BrowserContext } from 'playwright';
@@ -58,9 +58,13 @@ export class WebPagePdfService {
     return this.#browserPromise;
   }
   /** Prints in an isolated context, restricts navigation to the webapp, and always releases rendering resources. */
-  async generate(input: PdfRenderInput) {
-    const url = new URL(input.route, this.config.baseUrl);
-    if (url.origin !== this.config.baseUrl)
+  async generate(input: PdfRenderInput, externalOrigin?: string) {
+    const origin =
+      externalOrigin === undefined
+        ? this.config.baseUrl
+        : pdfOriginSchema.parse(externalOrigin);
+    const url = new URL(input.route, origin);
+    if (url.origin !== origin)
       throw new AppError(
         400,
         'INVALID_ROUTE',
@@ -81,7 +85,7 @@ export class WebPagePdfService {
       const { failure: navigationFailure } = await navigationBoundary(
         context,
         page,
-        this.config.baseUrl,
+        origin,
       );
       page.setDefaultTimeout(this.config.timeout);
       return await Promise.race([

@@ -191,6 +191,18 @@ cannot be overridden by callers. Configure the shared webapp origin through
 
 The former `/pdf/portrait/:id.pdf` and `/pdf/landscape/:id.pdf` document routes are removed.
 
+## GET /pdf/onet
+
+Test route that prints `https://example.com/` as a portrait PDF named `onet.pdf`.
+It accepts no query parameters. Its origin is fixed in `src/routes/pdf/onet/report.ts`
+and does not change `WEBAPP_BASE_URL` for the other PDF routes. HEAD returns
+attachment metadata without visiting the site. Shared queue limits, timeouts,
+credential isolation, and same-origin navigation restrictions still apply.
+
+```bash
+curl --fail-with-body http://localhost:3000/pdf/onet --output onet.pdf
+```
+
 ## GET /pdf/quarterly
 
 Prints the fixed `/reports/quarterly` endpoint on `WEBAPP_BASE_URL`, always in

@@ -11,7 +11,7 @@ export interface AppOptions {
   reports?: ReportServices;
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
   pdf: {
-    generate(input: PdfRenderInput): Promise<Buffer>;
+    generate(input: PdfRenderInput, externalOrigin?: string): Promise<Buffer>;
     readonly stats?: {
       state: RendererState;
       launches: number;

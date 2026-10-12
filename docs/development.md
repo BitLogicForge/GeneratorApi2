@@ -158,11 +158,13 @@ curl --fail-with-body 'http://localhost:3000/sales-report.pptx?title=Quarterly%2
   --output sales-report.pptx
 ```
 
-For Azure, rebuild and test the deployment package after adding the endpoint:
+For Azure, compile the endpoint before building the deployment image from your prebuilt Chromium base:
 
 ```bash
-npm run build:azure
-npm run test:azure
+npm run build
+docker build --platform linux/amd64 \
+  --build-arg RUNTIME_IMAGE=YOUR_PREBUILT_CHROMIUM_IMAGE \
+  --tag generator-api:local .
 ```
 
 ## Pre-commit checks
@@ -183,7 +185,7 @@ Use `npm run deps:check` to preview dependency updates within the declared versi
 
 Run `npm run knip` to find unused files, exports, and dependencies. Knip analyzes source code, tests, examples, and build scripts; its configuration lives in `knip.json`. The GitLab build runs this check before packaging the app.
 
-For Linux Azure App Service, run `npm run build:azure` to create `output/azure/generator-api.zip`, then `npm run test:azure` to smoke-test the package. See [Azure deployment](azure.md) for startup and deployment settings.
+For Linux Azure App Service, use the root Dockerfile with your prebuilt Node.js/Chromium image. GitLab compiles the API and passes `dist/` as an artifact to the ACR build job. The image includes compiled code, production dependencies, and templates; `npm run smoke:container` verifies readiness and real document downloads during the image build. See [Azure deployment](azure.md) for settings and the legacy ZIP packaging option.
 
 Format all supported project files with `npm run format`. Use `npm run format:check` to check formatting without modifying files. Dependencies, builds, generated output, and PowerPoint template files are excluded.
 

@@ -41,7 +41,7 @@ curl -X POST http://localhost:3000/api/exports/pdf/test \
 | [Data API](docs/data-api.md)                      | Upstream configuration, typed responses, single requests, chains, and batches |
 | [PDF](docs/pdf.md)                                | Document URLs, IDs, language, and query forwarding                            |
 | [PowerPoint](docs/powerpoint.md)                  | File templates, placeholders, the DAA demo, and JSZip utilities               |
-| [Azure deployment](docs/azure.md)                 | Packaging, App Service configuration, deployment, and smoke tests             |
+| [Azure deployment](docs/azure.md)                 | Docker, ACR, GitLab CI, App Service configuration, and smoke tests            |
 
 All commands in the documentation run from the repository root.
 

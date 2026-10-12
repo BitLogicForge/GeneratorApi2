@@ -16,6 +16,7 @@
     "build:azure": "node scripts/build-azure.mjs",
     "start:azure": "bash scripts/start-azure.sh",
     "test:azure": "tsx --test test/deployment/azure-package.ts",
+    "smoke:container": "node scripts/smoke-container.mjs",
     "lint:code": "oxlint --type-aware --deny-warnings src test examples scripts",
     "lint": "npm run lint:code && npm run typecheck && npm run knip && npm run format:check",
     "verify:ci": "bash scripts/verify-ci.sh",

@@ -6,13 +6,15 @@ variables:
   AZURE_RESOURCE_GROUP: 'YOUR_RESOURCE_GROUP'
   AZURE_WEBAPP_NAME: 'YOUR_WEBAPP_NAME'
   AZURE_DEV_SLOT: 'dev'
+  AZURE_ACR_NAME: 'YOUR_ACR_NAME'
+  AZURE_ACR_RESOURCE_GROUP: 'YOUR_ACR_RESOURCE_GROUP'
+  ACR_REPOSITORY: 'generator-api'
   PRODUCTION_BRANCH: 'main'
   DEV_BRANCH: 'dev'
-  NODE_IMAGE: 'node:22-bookworm'
+  # Replace this with your image containing Node.js and Playwright's Chromium.
+  RUNTIME_IMAGE: 'your-registry.example.com/node-chromium:replace-me'
+  RUNTIME_USER: 'node'
   AZURE_CLI_IMAGE: 'mcr.microsoft.com/azure-cli:latest'
-  # Must match the output path in scripts/build-azure.mjs.
-  AZURE_ZIP_PATH: 'output/azure/generator-api.zip'
-  PLAYWRIGHT_BROWSERS_PATH: '$CI_PROJECT_DIR/.cache/ms-playwright'
 
 stages:
   - verify
@@ -26,50 +28,65 @@ workflow:
     - when: never
 
 .node_job:
-  image: '$NODE_IMAGE'
-  cache:
-    key:
-      files:
-        - package-lock.json
-    paths:
-      - .cache/ms-playwright/
+  image:
+    name: '$RUNTIME_IMAGE'
+    entrypoint: ['']
 
 verify:
   extends: .node_job
   stage: verify
   script:
     - npm ci --no-audit --no-fund
-    - npm run verify:ci
-
-build_zip:
-  extends: .node_job
-  stage: build
-  needs:
-    - job: verify
-      artifacts: false
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && ($CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH)'
-  script:
-    - npm ci --no-audit --no-fund
-    - npm run browser:install
-    - npm run build:azure
-    - npm run test:azure
+    - npm run lint
+    - npm test
+    - npm run build
   artifacts:
     paths:
-      - '$AZURE_ZIP_PATH'
+      - dist/
     expire_in: 1 week
 
-.azure_deploy:
-  stage: deploy
+.azure_job:
   image:
     name: '$AZURE_CLI_IMAGE'
     entrypoint: ['']
-  needs:
-    - job: build_zip
-      artifacts: true
   before_script:
     - az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID" --output none
     - az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+
+build_image:
+  extends: .azure_job
+  stage: build
+  needs:
+    - job: verify
+      artifacts: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && ($CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH)'
+  script:
+    # ACR builds and pushes remotely; the GitLab runner needs no Docker daemon.
+    - ACR_LOGIN_SERVER=$(az acr show --resource-group "$AZURE_ACR_RESOURCE_GROUP" --name "$AZURE_ACR_NAME" --query loginServer --output tsv)
+    - IMAGE_TAG="$CI_COMMIT_SHA-$CI_PIPELINE_ID"
+    - >-
+      az acr build
+      --resource-group "$AZURE_ACR_RESOURCE_GROUP"
+      --registry "$AZURE_ACR_NAME"
+      --image "$ACR_REPOSITORY:$IMAGE_TAG"
+      --file Dockerfile
+      --platform linux/amd64
+      --build-arg "RUNTIME_IMAGE=$RUNTIME_IMAGE"
+      --build-arg "RUNTIME_USER=$RUNTIME_USER"
+      .
+    - printf 'CONTAINER_IMAGE=%s/%s:%s\nACR_LOGIN_SERVER=%s\n' "$ACR_LOGIN_SERVER" "$ACR_REPOSITORY" "$IMAGE_TAG" "$ACR_LOGIN_SERVER" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+    expire_in: 1 week
+
+.azure_deploy:
+  extends: .azure_job
+  stage: deploy
+  needs:
+    - job: build_image
+      artifacts: true
 
 deploy_main:
   extends: .azure_deploy
@@ -80,11 +97,28 @@ deploy_main:
   resource_group: azure-production
   script:
     - >-
-      az webapp deploy
+      az webapp config set
       --resource-group "$AZURE_RESOURCE_GROUP"
       --name "$AZURE_WEBAPP_NAME"
-      --src-path "$AZURE_ZIP_PATH"
-      --type zip
+      --startup-file ''
+      --generic-configurations '{"acrUseManagedIdentityCreds":true}'
+      --output none
+    - >-
+      az webapp config appsettings set
+      --resource-group "$AZURE_RESOURCE_GROUP"
+      --name "$AZURE_WEBAPP_NAME"
+      --settings NODE_ENV=production HOST=0.0.0.0 PORT=3000 WEBSITES_PORT=3000
+      WEBSITES_ENABLE_APP_SERVICE_STORAGE=false
+      WEBSITE_WARMUP_PATH=/internal/ready WEBSITE_WARMUP_STATUSES=200
+      --output none
+    - >-
+      az webapp config container set
+      --resource-group "$AZURE_RESOURCE_GROUP"
+      --name "$AZURE_WEBAPP_NAME"
+      --container-image-name "$CONTAINER_IMAGE"
+      --container-registry-url "https://$ACR_LOGIN_SERVER"
+      --output none
+    - az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME"
 
 deploy_dev:
   extends: .azure_deploy
@@ -95,9 +129,28 @@ deploy_dev:
   resource_group: azure-dev
   script:
     - >-
-      az webapp deploy
+      az webapp config set
       --resource-group "$AZURE_RESOURCE_GROUP"
       --name "$AZURE_WEBAPP_NAME"
       --slot "$AZURE_DEV_SLOT"
-      --src-path "$AZURE_ZIP_PATH"
-      --type zip
+      --startup-file ''
+      --generic-configurations '{"acrUseManagedIdentityCreds":true}'
+      --output none
+    - >-
+      az webapp config appsettings set
+      --resource-group "$AZURE_RESOURCE_GROUP"
+      --name "$AZURE_WEBAPP_NAME"
+      --slot "$AZURE_DEV_SLOT"
+      --settings NODE_ENV=production HOST=0.0.0.0 PORT=3000 WEBSITES_PORT=3000
+      WEBSITES_ENABLE_APP_SERVICE_STORAGE=false
+      WEBSITE_WARMUP_PATH=/internal/ready WEBSITE_WARMUP_STATUSES=200
+      --output none
+    - >-
+      az webapp config container set
+      --resource-group "$AZURE_RESOURCE_GROUP"
+      --name "$AZURE_WEBAPP_NAME"
+      --slot "$AZURE_DEV_SLOT"
+      --container-image-name "$CONTAINER_IMAGE"
+      --container-registry-url "https://$ACR_LOGIN_SERVER"
+      --output none
+    - az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --slot "$AZURE_DEV_SLOT"

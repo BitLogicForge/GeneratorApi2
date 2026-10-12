@@ -1,0 +1,13 @@
+# Allow only build inputs, including for the context uploaded by az acr build.
+**
+!Dockerfile
+!.dockerignore
+!package.json
+!package-lock.json
+!dist/
+!dist/**
+!scripts/
+!scripts/install-hooks.mjs
+!scripts/smoke-container.mjs
+!templates/
+!templates/*.pptx

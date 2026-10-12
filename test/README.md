@@ -27,4 +27,8 @@ and removal. Existing contract and formatting checks remain in the individual fi
 
 `npm run test:outputs` generates documents in `output/routes/` for inspection.
 `npm run test:azure` requires the package created by `npm run build:azure`.
+`npm run smoke:container` checks the compiled API's readiness, health, editable
+PowerPoint content, and real PDF download. It requires `npm run build` and a
+Playwright-compatible Chromium installation; the Dockerfile runs it during each
+image build as the runtime user.
 Real PDF tests require Chromium and its system libraries.

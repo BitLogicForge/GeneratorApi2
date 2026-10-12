@@ -26,7 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     },
     defaultLanguage: documents.defaultLanguage,
     port: c.PORT,
-    pdfRoutePattern: documents.pdfRoutePattern,
+    documentRoutes: documents.routes,
     baseUrl: c.baseUrl,
     concurrency: c.PDF_CONCURRENCY,
     timeout: c.RENDER_TIMEOUT_MS,

@@ -31,13 +31,13 @@ const requestSchema = z
   })
   .strict();
 
-/** Shares document validation and target resolution across both orientations. */
-export function defineDocumentPdfReport(print: {
-  landscape: boolean;
-}): RouteFactory {
+/** Shares validation while selecting each report's external page and orientation. */
+export function defineDocumentPdfReport(
+  kind: 'factsheet' | 'onepager',
+): RouteFactory {
   return (dependencies) => {
     const routePattern = pdfRoutePatternSchema.parse(
-      dependencies.config.pdfRoutePattern,
+      dependencies.config.documentRoutes[kind],
     );
     return definePdfReport({
       schema: requestSchema,
@@ -66,7 +66,7 @@ export function defineDocumentPdfReport(print: {
           !Object.hasOwn(query, 'language')
         )
           query.language = config.defaultLanguage;
-        return { route, query, filename: id, landscape: print.landscape };
+        return { route, query, filename: id, landscape: kind === 'onepager' };
       },
     })(dependencies);
   };

@@ -56,7 +56,7 @@ This exposes `GET/POST /api/exports/pdf/sales`. GET uses flat URL parameters; PO
 
 Report `print` overrides merge with shared defaults, including individual margin sides. They affect only that report's requests. The public request accepts only its schema's fields; print overrides in the definition are server-owned. Use `jsonFields` when specific GET fields contain JSON, or `readRequestInput` for path parameters or a custom transport shape. Keep unknown fields rejected with `.strict()`.
 
-The existing quarterly report is a complete example at `src/routes/api/exports/pdf/portrait/quarterly/report.ts`. The portrait and landscape document routes share `src/reports/document/report.ts` instead of duplicating validation and URL resolution.
+The existing quarterly report is a complete example at `src/routes/api/exports/pdf/portrait/quarterly/report.ts`. The factsheet and onepager routes share `src/reports/document/report.ts` instead of duplicating validation and URL resolution.
 
 ## Add a placeholder PowerPoint endpoint
 
@@ -119,11 +119,9 @@ Import `createReportServices` from `@/reports/services` and `report` from the re
 
 Adding a report requires its definition, method re-exports, optional service/template, tests, and documentation. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
 
-## Pre-commit checks
+## Manual checks
 
-`npm ci` installs Husky's local Git hook. Before each commit, `lint-staged` formats supported staged files with Prettier and updates those files in the commit. It preserves unstaged edits, including partially staged files. Then Oxlint, TypeScript, and Knip check the working tree; a failed check blocks the commit. The hook does not run document rendering tests.
-
-Run `npm run precommit` manually to perform the same actions, or `npm run prepare` to reinstall the hook. CI, production installs, and folders without Git metadata skip hook installation. Full formatting checks remain available through `npm run lint`; only staged files are autoformatted by the hook.
+Run `npm run format` to format files and `npm run lint` for code lint, type checking, Knip, and formatting checks. These commands are explicit; installing dependencies and committing do not run Git hooks.
 
 ## Verification and production build
 

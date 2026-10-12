@@ -55,15 +55,12 @@ export const pdfPrintOverridesSchema = pdfPrintSettingsSchema.partial().extend({
 });
 export type PdfPrintOverrides = z.infer<typeof pdfPrintOverridesSchema>;
 
-// Supports both path parameters (/documents/{id}) and query parameters (/document?id={id}).
+// Supports path parameters (/factsheet/{id}) and query parameters (/document?id={id}).
 export const pdfRoutePatternSchema = z
   .string()
   .max(2000)
   .startsWith('/')
-  .refine(
-    (value) => value.includes('{id}'),
-    'pdfRoutePattern must contain {id}',
-  )
+  .refine((value) => value.includes('{id}'), 'Route pattern must contain {id}')
   .refine(
     (value) =>
       !value.startsWith('//') &&
@@ -79,7 +76,12 @@ export function resolvePdfRoute(pattern: string, id: string) {
 export const documentSettingsSchema = z
   .object({
     defaultLanguage: z.string().trim().min(1).max(100),
-    pdfRoutePattern: pdfRoutePatternSchema,
+    routes: z
+      .object({
+        factsheet: pdfRoutePatternSchema,
+        onepager: pdfRoutePatternSchema,
+      })
+      .strict(),
   })
   .strict();
 

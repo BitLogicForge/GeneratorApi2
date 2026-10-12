@@ -149,7 +149,7 @@ Verify the deployed application:
 curl --fail-with-body https://YOUR_WEB_APP.azurewebsites.net/internal/ready
 curl --fail-with-body https://YOUR_WEB_APP.azurewebsites.net/health
 curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/api/exports/pptx/jszip/daa?TEXT_ME=Azure%20demo' --output demo-report.pptx
-curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/api/exports/pdf/portrait/id2222.pdf?language=en' --output id2222.pdf
+curl --fail-with-body 'https://YOUR_WEB_APP.azurewebsites.net/api/exports/pdf/factsheet/id2222?language=en' --output id2222.pdf
 ```
 
 Use the slot's hostname for development checks. The PDF request requires a matching document page on `WEBAPP_BASE_URL`. For startup problems, enable container logging with `az webapp log config --resource-group YOUR_RESOURCE_GROUP --name YOUR_WEB_APP --docker-container-logging filesystem`, then inspect `az webapp log tail`.

@@ -70,10 +70,6 @@ try {
     join(root, 'scripts', 'start-azure.sh'),
     join(staging, 'scripts', 'start-azure.sh'),
   );
-  await cp(
-    join(root, 'scripts', 'install-hooks.mjs'),
-    join(staging, 'scripts', 'install-hooks.mjs'),
-  );
   await run(npm, ['ci', '--omit=dev', '--no-audit', '--no-fund'], staging);
 
   const zip = new JSZip();

@@ -80,7 +80,7 @@ The pipeline runs dependency installation, Knip, and Azure packaging. Packaging 
 
 ### R4. Choose an explicit HEAD policy for generation routes
 
-**Locations:** [input.ts:7](../src/http/input.ts#L7), [register.ts](../src/http/file-routes/register.ts), and [the document-link route](../src/routes/api/exports/pdf/portrait/[id].pdf/get.ts).
+**Locations:** [input.ts:7](../src/http/input.ts#L7), [register.ts](../src/http/file-routes/register.ts), and [the document-link route](../src/routes/api/exports/pdf/factsheet/[id].pdf/get.ts).
 
 Express invokes a GET handler for HEAD when no earlier HEAD handler exists. The file router already supports explicit HEAD handlers, but the actual generation routes do not define them. [Express routing methods](https://expressjs.com/en/5x/api/application/#app.METHOD).
 

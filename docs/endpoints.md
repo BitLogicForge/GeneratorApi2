@@ -9,8 +9,8 @@ PDF route exports and the brief, business, and summary PowerPoint exports suppor
 | Endpoint                                 | Input                                                                                              | Result                           |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
 | `POST /api/exports/pdf/test`             | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
-| `GET /api/exports/pdf/portrait/:id.pdf`  | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
-| `GET /api/exports/pdf/landscape/:id.pdf` | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
+| `GET /api/exports/pdf/factsheet/:id`     | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
+| `GET /api/exports/pdf/onepager/:id`      | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
 | `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment         |
 | `GET /health`                            | None                                                                                               | Process health                   |
 
@@ -35,10 +35,10 @@ npm run test:outputs
 
 The test starts local HTTP servers, downloads real files from the routes, validates PDF/PPTX contents, and saves them in `output/routes/`:
 
-- `document-portrait.pdf` — portrait, default language, from `/api/exports/pdf/portrait/id2222.pdf`.
-- `document-portrait-de.pdf` — portrait, language override, from `/api/exports/pdf/portrait/id2222.pdf?language=de`.
+- `document-portrait.pdf` — portrait, default language, from `/api/exports/pdf/factsheet/id2222`.
+- `document-portrait-de.pdf` — portrait, language override, from `/api/exports/pdf/factsheet/id2222?language=de`.
 - `quarterly-2027-q2-pl.pdf` — fixed portrait page with forwarded GET parameters.
-- `document-landscape.pdf` — landscape, from `/api/exports/pdf/landscape/id2222.pdf`.
+- `document-landscape.pdf` — landscape, from `/api/exports/pdf/onepager/id2222`.
 - `quarterly-report-portrait.pdf` and `quarterly-report-landscape.pdf` — POST payload examples from `examples/pdf/`.
 - `custom-report.pdf` — readiness selector and print options, from GET `/api/exports/pdf/test`.
 - `quarterly-review.pptx` — editable presentation, from GET `/api/exports/pptx/pptxgenjs/brief`.
@@ -53,15 +53,15 @@ The tests provide their own local webapp and need no running demo server. Output
 Open this URL in your browser outside Docker:
 
 ```text
-http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en
+http://localhost:3000/api/exports/pdf/factsheet/id2222?language=en
 ```
 
 The document ID is the filename. The document-ID routes accept only `language` and `year`:
 
-Query parameters are optional: `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/reports/document/settings.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
+Query parameters are optional: `http://localhost:3000/api/exports/pdf/factsheet/id2222` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/reports/document/settings.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
 
 ```text
-http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en&year=2026
+http://localhost:3000/api/exports/pdf/factsheet/id2222?language=en&year=2026
 ```
 
 The API forwards those parameters to the configured webapp document route. No JSON is needed for this download URL.
@@ -85,7 +85,7 @@ In a second terminal, start the included webapp for the PDF examples:
 npm run demo
 ```
 
-The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and `documentSettings.pdfRoutePattern = "/documents/{id}"` in `src/reports/document/settings.ts`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
+The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and the default `documentSettings.routes` in `src/reports/document/settings.ts`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
 
 ## Query parameter format
 
@@ -113,9 +113,9 @@ No parameters are required. The objects are found by their Selection Pane names:
 | --------------- | ------------------------------------- | ---------------------------------------------------------- |
 | GET, HEAD       | `/health`                             | JSON process health (HEAD omits the body)                  |
 | GET, HEAD       | `/api/exports/pptx/jszip/daa`         | Native table and line chart with random data               |
-| GET, HEAD       | `/api/exports/pdf/portrait/:id.pdf`   | PDF attachment for a document ID                           |
+| GET, HEAD       | `/api/exports/pdf/factsheet/:id`      | PDF attachment for a document ID                           |
 | GET, HEAD       | `/api/exports/pdf/portrait/quarterly` | Fixed portrait quarterly report with direct GET parameters |
-| GET, HEAD       | `/api/exports/pdf/landscape/:id.pdf`  | PDF attachment for a document ID, always landscape         |
+| GET, HEAD       | `/api/exports/pdf/onepager/:id`       | PDF attachment for a document ID, always landscape         |
 | GET, HEAD, POST | `/api/exports/pdf/test`               | PDF attachment for a webapp route                          |
 | GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief`   | Generated editable PowerPoint attachment                   |
 | GET, HEAD, POST | `/api/exports/pptx/jszip/summary`     | PowerPoint attachment with summary template text replaced  |
@@ -137,73 +137,50 @@ Response (200):
 
 This checks process availability; it does not check Chromium or the upstream webapp.
 
-## GET /api/exports/pdf/portrait/:id.pdf
+## GET /api/exports/pdf/factsheet/:id
 
-Download a PDF using a document ID:
-
-```bash
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf' \
-  --output id2222.pdf
-```
-
-Forward additional query parameters to the webapp:
+Renders `/factsheet/{id}` on `WEBAPP_BASE_URL`, always in portrait orientation:
 
 ```bash
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en' \
-  --output id2222-en.pdf
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/factsheet/id2222?language=en' --output factsheet.pdf
 ```
 
-With the default configuration, these render `/documents/id2222` and `/documents/id2222?language=en` on the configured webapp host. The demo supports the document route, though it does not use the language parameter.
+The API URL has no `.pdf` suffix; its attachment filename is `id2222.pdf`.
 
-The ID must contain 1–80 letters, numbers, underscores, or hyphens.
-Only these direct GET parameters are accepted:
+## GET /api/exports/pdf/onepager/:id
+
+Renders `/onepager/{id}` on `WEBAPP_BASE_URL`, always in landscape orientation:
+
+```bash
+curl --fail-with-body 'http://localhost:3000/api/exports/pdf/onepager/id2222?language=de&year=2027' --output onepager.pdf
+```
+
+This selects its own external page rather than reprinting the factsheet page. Both endpoints return `Content-Type: application/pdf`, attachment downloads, `Cache-Control: no-store`, and request IDs. The filename remains `id2222.pdf`.
+
+Both routes support HEAD without rendering. IDs accept 1–80 letters, numbers, underscores, and hyphens. Only these query parameters are accepted:
 
 | Parameter  | Accepted values                     | Default                                                       |
 | ---------- | ----------------------------------- | ------------------------------------------------------------- |
-| `language` | Nonempty text, up to 100 characters | Configured default language unless fixed by the route pattern |
+| `language` | Nonempty text, up to 100 characters | Configured default unless fixed by the selected route pattern |
 | `year`     | Four digits, 2000–2100              | Omitted                                                       |
 
-Unknown parameters, repeated values and invalid values return 400. These rules
-also apply to HEAD and the landscape document route. Parameters already fixed
-in `documentSettings.pdfRoutePattern` cannot be overridden. To add a new allowed
-parameter, declare and forward it in the shared `src/reports/document/report.ts` definition.
+Unknown parameters, duplicate values, unsafe IDs, and invalid values return 400. Caller-supplied `landscape`, `route`, and `waitForSelector` are rejected. These routes use the shared renderer and queue; configured appearance applies with the endpoint's fixed orientation.
 
-For a webapp that expects the document ID in a query parameter, configure the host in `.env` and the route in `src/reports/document/settings.ts`:
-
-```dotenv
-WEBAPP_BASE_URL=https://other-host.example
-```
-
-In `src/reports/document/settings.ts`:
+Edit `src/reports/document/settings.ts` to configure external paths independently:
 
 ```ts
-const documentSettings = {
+export const documentSettings = {
   defaultLanguage: 'en',
-  pdfRoutePattern: '/document?id={id}',
+  routes: {
+    factsheet: '/factsheet/{id}',
+    onepager: '/onepager/{id}',
+  },
 };
 ```
 
-Then `/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en`. That route must exist on your webapp; it is not provided by the demo.
+For a different webapp origin, configure `WEBAPP_BASE_URL` in Azure or locally. A query-based ID can be configured as `factsheet: '/factsheet?id={id}'`. Each trusted pattern must contain `{id}`; query keys fixed in the pattern cannot be overridden by callers. The configured paths must exist on the external webapp. The demo serves both default pages. To add an allowed parameter, validate and forward it in `src/reports/document/report.ts`.
 
-Success returns 200 with `Content-Type: application/pdf` and attachment filename `id2222.pdf`. This endpoint uses the configured paper format (initially A4) and always forces portrait orientation and has no per-request readiness selector; use GET /api/exports/pdf/test for those options.
-
-## GET /api/exports/pdf/landscape/:id.pdf
-
-Generates the same document as `/api/exports/pdf/portrait/:id.pdf`, with landscape orientation always
-forced regardless of `pdfPrintSettings.landscape`. Uses the same route pattern,
-query forwarding, default language, validation, queue and download headers.
-Only validated `language` and `year` parameters are forwarded to the webapp;
-`landscape` and all other undeclared parameters return 400. HEAD validates the request without generating a PDF.
-
-Compare the fixed portrait output with the fixed landscape endpoint:
-
-```bash
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en' -o portrait.pdf
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/landscape/id2222.pdf?language=en' -o landscape.pdf
-```
-
-Both responses use attachment filename `id2222.pdf`. The existing `/api/exports/pdf/portrait/:id.pdf`
-always forces portrait orientation.
+The former `/api/exports/pdf/portrait/:id.pdf` and `/api/exports/pdf/landscape/:id.pdf` document routes are removed.
 
 ## GET /api/exports/pdf/portrait/quarterly
 
@@ -421,7 +398,7 @@ These run on the separate demo server at port 3001 and return HTML for PDF rende
 | Method | URL                                                           | Purpose                                                              |
 | ------ | ------------------------------------------------------------- | -------------------------------------------------------------------- |
 | GET    | `http://localhost:3001/reports/quarterly?year=2026&quarter=3` | Quarterly report; supports numeric `year` and `quarter` query values |
-| GET    | `http://localhost:3001/documents/id2222`                      | Document page used by the default GET PDF route                      |
+| GET    | `http://localhost:3001/factsheet/id2222`                      | Factsheet page used by the portrait PDF route                        |
 
 See [README.md](../README.md) for configuration, deployment, and template registration instructions.
 
@@ -463,7 +440,7 @@ PDF and PPTX capacity already have separate concurrency settings.
 ## PDF print configuration
 
 Edit `pdfPrintSettings` in `src/reports/document/settings.ts` and rebuild/restart the application.
-These settings apply to all PDF endpoints. The document-ID endpoints always force their named orientation: `portrait` or `landscape`. GET/POST `/api/exports/pdf/test` can
+These settings apply to all PDF endpoints. The factsheet endpoint always forces portrait and the onepager endpoint always forces landscape. GET/POST `/api/exports/pdf/test` can
 still override `format` and `landscape` per request; omitted values use the
 configured defaults.
 

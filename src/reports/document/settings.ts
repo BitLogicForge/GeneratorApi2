@@ -1,5 +1,8 @@
-// Shared by the portrait and landscape document endpoints.
+// External webapp pages used by the factsheet and onepager PDF endpoints.
 export const documentSettings = {
   defaultLanguage: 'en',
-  pdfRoutePattern: '/documents/{id}',
+  routes: {
+    factsheet: '/factsheet/{id}',
+    onepager: '/onepager/{id}',
+  },
 };

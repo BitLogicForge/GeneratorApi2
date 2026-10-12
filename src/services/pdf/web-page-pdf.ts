@@ -1,14 +1,14 @@
 import { chromium, errors } from 'playwright';
 
-import { resolvePdfPrintSettings } from '@/config';
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
 
+import { resolvePdfPrintSettings } from './contracts.ts';
 import { navigationBoundary } from './navigation-boundary.ts';
 
 import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
-import type { PdfRenderInput } from '@/routes/api/exports/pdf/schema';
+import type { PdfRenderInput } from './contracts.ts';
 
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;
@@ -97,7 +97,10 @@ export class WebPagePdfService {
             await page
               .locator(input.waitForSelector)
               .waitFor({ state: 'visible' });
-          const settings = this.config.pdfPrint ?? resolvePdfPrintSettings();
+          const settings = resolvePdfPrintSettings(
+            this.config.pdfPrint,
+            input.print,
+          );
           await page.emulateMedia({ media: settings.media });
           const styles = [settings.css];
           if (!settings.printImages)

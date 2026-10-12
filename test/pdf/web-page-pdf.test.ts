@@ -142,7 +142,7 @@ test('navigation stays within the configured origin across redirects, frames, an
   }
 });
 
-test('configured PDF appearance controls images, page size and hidden elements', async () => {
+test('configured and report-local PDF appearance control images without leaking between requests', async () => {
   const webapp = express();
   webapp.get('/print', (req, res) =>
     res.send(`
@@ -189,6 +189,20 @@ test('configured PDF appearance controls images, page size and hidden elements',
     assert.ok(box);
     assert.ok(Number(box[1]) > Number(box[2]), 'landscape page');
     assert.ok(Math.abs(Number(box[1]) - 595) < 2, 'A5 landscape width');
+    const report = (
+      await normal.generate({
+        ...input,
+        print: {
+          printImages: false,
+          margin: { top: 0 },
+          hideSelectors: ['.hide-me'],
+        },
+      })
+    ).toString('latin1');
+    assert.doesNotMatch(report, /\/Subtype \/Image/);
+    const restored = (await normal.generate(input)).toString('latin1');
+    assert.match(restored, /\/Subtype \/Image/);
+    assert.equal(normal.stats.launches, 1, 'Reports share the same browser');
   } finally {
     await Promise.all([normal.close(), custom.close()]);
     await new Promise<void>((resolve) => server.close(() => resolve()));

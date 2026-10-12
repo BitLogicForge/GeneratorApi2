@@ -2,170 +2,122 @@
 
 [Back to overview](../README.md)
 
-## Add a new endpoint: step-by-step
+## Configuration: where to edit
 
-The example below adds `GET /sales-report.pptx?title=Quarterly%20sales`. It reuses the current report-demo template so you can start with a working download, then replace the service's data generation with your own API calls. These are instructions for adding a future endpoint; `/sales-report.pptx` is not registered yet.
+| Change                                                                 | File                                              |
+| ---------------------------------------------------------------------- | ------------------------------------------------- |
+| Shared PDF appearance and Data API cache defaults                      | `src/config/defaults.ts`                          |
+| Environment validation and limits                                      | `src/config/environment.ts`                       |
+| Document URL pattern and default language                              | `src/reports/document/settings.ts`                |
+| A report's inputs, page, filename, print overrides, or service factory | Its `report.ts`                                   |
+| Renderer validation contracts                                          | `src/services/{pdf,jszip,pptxgenjs}/contracts.ts` |
 
-### 1. Define the request schema
+`src/config.ts` keeps the public `loadConfig` imports stable. `src/config/index.ts` assembles validated settings. Neither file needs changes when adding a report. Secrets and deployment hosts remain environment variables.
 
-Create `src/routes/sales-report.pptx/schema.ts`:
+## Add a PDF endpoint
+
+Create `src/routes/api/exports/pdf/sales/report.ts`:
 
 ```ts
 import { z } from 'zod';
 
-import type { Request } from 'express';
+import { definePdfReport } from '@/reports/pdf';
 
-export const requestSchema = z
-  .object({ title: z.string().min(1).max(5000).default('Sales report') })
-  .strict();
-
-export type RequestInput = z.infer<typeof requestSchema>;
-
-export function readRequestInput(req: Request) {
-  return req.query;
-}
+export default definePdfReport({
+  schema: z
+    .object({
+      year: z
+        .string()
+        .regex(/^\\d{4}$/)
+        .default('2026'),
+      language: z.enum(['en', 'de', 'pl']).default('en'),
+    })
+    .strict(),
+  prepareInput: (input) => ({
+    route: '/reports/sales',
+    query: input,
+    filename: `sales-${input.year}-${input.language}`,
+    waitForSelector: '[data-report-ready]',
+  }),
+  print: {
+    landscape: false,
+    margin: { top: 8 },
+  },
+});
 ```
 
-Give optional parameters defaults so the URL also works without a query string. `.strict()` rejects misspelled or unknown parameters. Keep application defaults in `src/config.ts`; use environment settings for hosts, credentials, and runtime limits.
-
-### 2. Add the generation service
-
-Create `src/services/jszip/sales-report-service.ts`:
+Add `get.ts` and, if POST is needed, `post.ts`. Both contain:
 
 ```ts
-import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
-
-import type { RequestInput as SalesReportInput } from '@/routes/sales-report.pptx/schema';
-
-export class SalesReportService {
-  private readonly template: DaaPocPresentationService;
-
-  constructor(templatePath: string) {
-    this.template = new DaaPocPresentationService(templatePath);
-  }
-
-  generate(input: SalesReportInput): Promise<Buffer> {
-    return this.template.generate(input.title);
-  }
-}
+export { default } from './report.ts';
 ```
 
-This starting implementation puts `title` into `TEXT_ME` and uses the existing random table/chart data. For your real report, fetch data with `DataApiClient` and use the `src/pptx/jszip` helpers to populate named objects. Keep Express requests and responses out of the service; return the finished file as a `Buffer`.
+This exposes `GET/POST /api/exports/pdf/sales`. GET uses flat URL parameters; POST uses the same fields in a JSON object. The helper decodes transport, rejects duplicate parameters, validates requests and renderer input, and uses the shared PDF queue/download handling. HEAD validates input and returns attachment metadata without rendering.
 
-### 3. Declare the dependency
+Report `print` overrides merge with shared defaults, including individual margin sides. They affect only that report's requests. The public request accepts only its schema's fields; print overrides in the definition are server-owned. Use `jsonFields` when specific GET fields contain JSON, or `readRequestInput` for path parameters or a custom transport shape. Keep unknown fields rejected with `.strict()`.
 
-In `src/http/types.ts`, import `RequestInput as SalesReportInput` from
-`@/routes/sales-report.pptx/schema`, then add this property inside `AppOptions`:
+The existing quarterly report is a complete example at `src/routes/api/exports/pdf/portrait/quarterly/report.ts`. The portrait and landscape document routes share `src/reports/document/report.ts` instead of duplicating validation and URL resolution.
+
+## Add a placeholder PowerPoint endpoint
+
+Place `sales.pptx` in `templates/`, using text placeholders such as `{{title}}`. Create `src/routes/api/exports/pptx/jszip/sales/report.ts`:
 
 ```ts
-salesReport?: { generate(input: SalesReportInput): Promise<Buffer> };
+import { definePptxReport } from '@/reports/pptx';
+import { templateReport } from '@/reports/template';
+
+export const report = templateReport('sales');
+export default definePptxReport(report);
 ```
 
-`RouteDependencies` inherits it automatically. Making the dependency optional lets unrelated route tests continue using their existing fixtures; the route below returns 404 when it is not configured.
+Add the same `get.ts`/`post.ts` re-exports as above. This registers the trusted template path locally and accepts the existing `filename`/`replacements` contract. For a differently named source file, use `templateReport('sales', 'sales-template.pptx')`. No service class, startup edit, or dependency-interface edit is needed. See the business and summary report folders for working examples.
 
-### 4. Wire the service at startup
+## Add a custom PowerPoint service
 
-Import the service in `src/index.ts`:
+Create your service beside the report or in `src/services/`. It must return a `Buffer` from `generate(input)`. Define its schema and factory in the report module:
 
 ```ts
-import { SalesReportService } from '@/services/jszip/sales-report-service';
+import { z } from 'zod';
+
+import { definePptxReport } from '@/reports/pptx';
+
+import { SalesReportService } from './service.ts';
+
+export const report = {
+  schema: z.object({ id: z.string().min(1).max(80) }).strict(),
+  filename: (input: { id: string }) => `sales-${input.id}`,
+  createService: ({ dataApi }) => new SalesReportService(dataApi),
+} satisfies import('@/reports/pptx').PptxReport<{ id: string }>;
+
+export default definePptxReport(report);
 ```
 
-Add this property to the existing `createApp({ ... })` call:
+The example assumes you implement `SalesReportService` with that constructor and input. The factory receives validated application configuration and the shared typed Data API client. It runs once per report per application, including when GET and POST share the definition. Keep business logic in the service.
+
+Optional `validate()` runs during startup and contributes to readiness; use it to validate source presentations. Optional `close()` runs after active HTTP requests drain. Every owned service is offered cleanup even when another cleanup fails. Injected test services are externally managed.
+
+The DAA report demonstrates adapting an existing service to a route-specific input. The brief report demonstrates a generated design. A new generated design can construct `PowerPointGenerationService` with its own trusted design registry inside `createService`; a different input structure can use its own service without changing central contracts.
+
+## Test, document, and deploy
+
+1. Add HTTP tests under `test/http/` covering downloads, defaults, invalid/unknown/duplicate parameters, errors, and HEAD. Cover both methods when exposing GET and POST.
+2. Verify PDF forwarding/appearance or relevant PPTX ZIP/XML content. For chart changes, check the embedded workbook and editability too.
+3. Update `docs/endpoints.md` and add an output example when useful.
+4. Run `npm run lint`, `npm test`, and `npm run build`. Run `npm run test:outputs` when document appearance changes.
+5. Restart after adding/moving method files. GitLab compiles `dist/` before ACR packages the image; template `.pptx` files are included automatically.
+
+For report tests, use the generic service container rather than adding a property to `AppOptions`:
 
 ```ts
-salesReport: new SalesReportService(
-  fileURLToPath(new URL('../templates/daa.pptx', import.meta.url)),
-),
+const reports = createReportServices();
+reports.override(report, { generate: async () => Buffer.from('test output') });
+const app = createApp({ reports, pdf: fakePdf });
+await reports.initialize();
 ```
 
-For a different template, place its `.pptx` in the root `templates/` directory and use that path. The Azure build includes those files. Match its object names and chart/table structure to your service.
+Import `createReportServices` from `@/reports/services` and `report` from the report module. The PDF service remains directly injectable. Existing `presentations`, `templatePresentations`, and `templateReportDemo` injections remain supported for compatibility. New reports should use `reports.override`. A test can pass discovered routes as the second argument to `createApp` to exercise a new report in isolation.
 
-### 5. Add the route file
-
-Create `src/routes/sales-report.pptx/get.ts`. The folder defines `/sales-report.pptx`
-and the filename defines GET; the loader registers it automatically:
-
-```ts
-import { AppError } from '@/errors';
-import { sendDownload } from '@/http/download';
-
-import { readRequestInput, requestSchema } from './schema.ts';
-
-import type { RequestHandler } from 'express';
-import type { RouteDependencies } from '@/http/types';
-
-export default function createHandler({
-  salesReport,
-  queues,
-}: RouteDependencies): RequestHandler {
-  return async (req, res) => {
-    const input = requestSchema.parse(readRequestInput(req));
-    if (!salesReport) {
-      throw new AppError(
-        404,
-        'REPORT_NOT_CONFIGURED',
-        'Sales report not configured',
-      );
-    }
-    await sendDownload(
-      res,
-      queues.presentations,
-      () => salesReport.generate(input),
-      'sales-report',
-      'pptx',
-    );
-  };
-}
-```
-
-The download helper handles queuing, disconnected clients, filename extensions,
-content type, and attachment headers. Use `queues.pdf` and format `'pdf'` for PDF
-files, or validate input and call `res.json(data)` for JSON endpoints.
-
-For GET and POST sharing an operation, put the factory in `handler.ts` and create
-`get.ts` and `post.ts` that each contain `export { default } from './handler.ts';`.
-Define the endpoint's `requestSchema` and `readRequestInput(req)` in its local `schema.ts`.
-The reader calls `decodeExportInput(req, ['slides'])` (with that endpoint's own
-JSON field list) before validation. This helper reads POST bodies directly and
-decodes only the named GET/HEAD fields; it has no global parameter registry.
-Keep accepted fields and transport decoding next to the route.
-
-There is no manual route registration in `src/app.ts`. See
-[src/routes/README.md](../src/routes/README.md) for folder conventions. Restart the
-server after adding or moving route files; production changes need a fresh build.
-
-### 6. Test and document it
-
-Add a `test/http/sales-report.test.ts` using `createApp` and Supertest, following `test/pptx/jszip/daa-poc-presentation-service.test.ts`. Cover a successful download, the default title, a custom title, invalid parameters, and generation failures. Check that the PPTX contains the supplied text, rather than only checking HTTP 200.
-
-Add a file-producing case to `test/integration/output-routes.ts`: configure `salesReport` in its `createApp` fixture and call `save('/sales-report.pptx?title=Sales%20demo', 'sales-report.pptx', 'Sales demo')` inside a subtest. Add the endpoint, accepted parameters, and a request example to `docs/endpoints.md`.
-
-### 7. Verify and rebuild
-
-```bash
-npm run format
-npm run typecheck
-npm test
-npm run test:outputs
-npm run build
-```
-
-Start the API, then download the new report:
-
-```bash
-curl --fail-with-body 'http://localhost:3000/sales-report.pptx?title=Quarterly%20sales' \
-  --output sales-report.pptx
-```
-
-For Azure, compile the endpoint before building the deployment image from your prebuilt Chromium base:
-
-```bash
-npm run build
-docker build --platform linux/amd64 \
-  --build-arg RUNTIME_IMAGE=YOUR_PREBUILT_CHROMIUM_IMAGE \
-  --tag generator-api:local .
-```
+Adding a report requires its definition, method re-exports, optional service/template, tests, and documentation. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
 
 ## Pre-commit checks
 

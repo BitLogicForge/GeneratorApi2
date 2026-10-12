@@ -29,31 +29,26 @@ There is no global `waitForSelector` setting.
 | Endpoint                              | Where the selector comes from                                                                                                    | Current behavior                                                          |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | GET/POST `/api/exports/pdf/test`      | Caller supplies `waitForSelector` in the GET query or POST JSON; `src/routes/api/exports/pdf/schema.ts` validates it as optional | Waits for the supplied selector, or just page load and fonts when omitted |
-| `/api/exports/pdf/portrait/:id.pdf`   | Renderer input assembled in `src/routes/api/exports/pdf/portrait/[id].pdf/document-pdf.ts`                                       | No selector is set; waits for page load and fonts                         |
-| `/api/exports/pdf/landscape/:id.pdf`  | Renderer input assembled in `src/routes/api/exports/pdf/landscape/[id].pdf/document-pdf.ts`                                      | No selector is set; waits for page load and fonts                         |
-| `/api/exports/pdf/portrait/quarterly` | `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`                                                          | Always waits for visible `[data-report-ready]`                            |
+| `/api/exports/pdf/portrait/:id.pdf`   | Renderer input assembled in `src/reports/document/report.ts`                                                                     | No selector is set; waits for page load and fonts                         |
+| `/api/exports/pdf/landscape/:id.pdf`  | Renderer input assembled in `src/reports/document/report.ts`                                                                     | No selector is set; waits for page load and fonts                         |
+| `/api/exports/pdf/portrait/quarterly` | `src/routes/api/exports/pdf/portrait/quarterly/report.ts`                                                                        | Always waits for visible `[data-report-ready]`                            |
 
-The quarterly query schema validates year, quarter and language; the selector
-is set by its input resolver, not by the schema. For document-ID routes, add
-`waitForSelector: '[data-report-ready]'` to the `pdfRenderSchema.parse({...})` object
-in the chosen document route's `document-pdf.ts` to make that orientation wait for the marker.
-Set it in both files if both orientations should wait. These routes reject
-`waitForSelector` in the URL; readiness is configured only in their input files.
+The quarterly report module owns its query schema, page, filename, and readiness marker. For document-ID routes, add `waitForSelector: '[data-report-ready]'` to the renderer input returned by `src/reports/document/report.ts` to configure both orientations. These routes reject `waitForSelector` in the URL; the setting remains server-owned.
 
 If a configured marker never becomes visible, the render times out with
 `504 RENDER_TIMEOUT`. HEAD returns metadata without loading the webapp or waiting.
 
 ## PDF download URLs
 
-Query parameters are optional. `/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default), configured in `src/config.ts`; `/api/exports/pdf/portrait/id2222.pdf?language=de` overrides it. A language already set in `documentSettings.pdfRoutePattern` stays authoritative. Other omitted query parameters use your webapp's defaults.
+Query parameters are optional. `/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default), configured in `src/reports/document/settings.ts`; `/api/exports/pdf/portrait/id2222.pdf?language=de` overrides it. A language already set in `documentSettings.pdfRoutePattern` stays authoritative. Other omitted query parameters use your webapp's defaults.
 
-`GET /api/exports/pdf/portrait/:id.pdf` provides a direct download link such as `https://generator-host/api/exports/pdf/portrait/id2222.pdf`. Configure the webapp host in Azure application settings (or `.env` locally) and the document route in `src/config.ts`:
+`GET /api/exports/pdf/portrait/:id.pdf` provides a direct download link such as `https://generator-host/api/exports/pdf/portrait/id2222.pdf`. Configure the webapp host in Azure application settings (or `.env` locally) and the document route in `src/reports/document/settings.ts`:
 
 ```dotenv
 WEBAPP_BASE_URL=https://other-host.example
 ```
 
-In `src/config.ts`:
+In `src/reports/document/settings.ts`:
 
 ```ts
 const documentSettings = {
@@ -62,8 +57,12 @@ const documentSettings = {
 };
 ```
 
-With these settings, `https://generator-host/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en` and returns an `id2222.pdf` attachment. For path-based webapps, use `pdfRoutePattern: '/documents/{id}'` in `src/config.ts` (the default). Only `language` (nonempty text, up to 100 characters) and `year` (four digits, 2000–2100) are accepted and forwarded as strings. Unknown parameters return 400. Query keys already configured in the pattern cannot be overridden by the caller. Duplicate query keys are rejected. IDs accept up to 80 letters, numbers, underscores, and hyphens.
+With these settings, `https://generator-host/api/exports/pdf/portrait/id2222.pdf?language=en` renders `https://other-host.example/document?id=id2222&language=en` and returns an `id2222.pdf` attachment. For path-based webapps, use `pdfRoutePattern: '/documents/{id}'` in `src/reports/document/settings.ts` (the default). Only `language` (nonempty text, up to 100 characters) and `year` (four digits, 2000–2100) are accepted and forwarded as strings. Unknown parameters return 400. Query keys already configured in the pattern cannot be overridden by the caller. Duplicate query keys are rejected. IDs accept up to 80 letters, numbers, underscores, and hyphens.
 
 The GET endpoint uses the same PDF queue and rendering settings as `POST /api/exports/pdf/test`. It does not cache documents or forward client cookies. The POST endpoint remains available for per-request readiness selectors and print options. For the included demo, start both servers and open `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf`.
 
 Every navigation, including HTTP redirect hops and frame navigations, must stay on the configured webapp origin. Same-origin redirects retain their final URL and relative asset resolution. Popups are blocked. A blocked navigation fails the export with 502 `NAVIGATION_BLOCKED` before the disallowed destination is requested. External assets and data requests remain permitted; this is a document-navigation boundary, not an egress firewall.
+
+## Shared and report-specific appearance
+
+Edit `pdfPrintSettings` in `src/config/defaults.ts` for shared appearance. Set `print` on a `definePdfReport` definition for report-specific overrides; individual margin sides merge with the defaults. Inputs and print settings are validated separately from the editable defaults. See [adding a PDF report](development.md#add-a-pdf-endpoint).

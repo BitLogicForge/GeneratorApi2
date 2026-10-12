@@ -1,12 +1,14 @@
 import type { Config } from '@/config';
 import type { ReadinessState, RendererState } from '@/observability/constants';
 import type { GenerationQueues } from '@/queue/generation-queue';
-import type { PdfRenderInput } from '@/routes/api/exports/pdf/schema';
-import type { PptxRenderInput } from '@/routes/api/exports/pptx/jszip/schema';
-import type { BriefInput } from '@/routes/api/exports/pptx/pptxgenjs/brief/schema';
+import type { ReportServices } from '@/reports/services';
+import type { PptxRenderInput } from '@/services/jszip/contracts';
+import type { PdfRenderInput } from '@/services/pdf/contracts';
+import type { BriefInput } from '@/services/pptxgenjs/contracts';
 import type { createObservability } from './observability.ts';
 
 export interface AppOptions {
+  reports?: ReportServices;
   templateReportDemo?: { generate(text?: string): Promise<Buffer> };
   pdf: {
     generate(input: PdfRenderInput): Promise<Buffer>;
@@ -18,7 +20,7 @@ export interface AppOptions {
       active: number;
     };
   };
-  presentations: {
+  presentations?: {
     generate(template: string, input: BriefInput): Promise<Buffer>;
   };
   templatePresentations?: {

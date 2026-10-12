@@ -47,7 +47,7 @@ All commands in the documentation run from the repository root.
 
 ## Where to look
 
-Start with [src/index.ts](src/index.ts) for service wiring and [src/app.ts](src/app.ts) for the HTTP flow. Route handlers live in [src/routes/](src/routes/), generation services in [src/services/](src/services/), and reusable PowerPoint helpers in [src/pptx/](src/pptx/). See the [full code map](docs/architecture.md#where-to-look) for individual files.
+Start with [src/runtime.ts](src/runtime.ts) for shared infrastructure and [src/app.ts](src/app.ts) for the HTTP flow. Route handlers live in [src/routes/](src/routes/), report definitions and helpers in [src/reports/](src/reports/) and route-local `report.ts` files, generation services in [src/services/](src/services/), and reusable PowerPoint helpers in [src/pptx/](src/pptx/). See the [full code map](docs/architecture.md#where-to-look) for individual files.
 
 Examples live in [examples/](examples/README.md), source presentations in [templates/](templates/), and tests in [test/](test/README.md).
 

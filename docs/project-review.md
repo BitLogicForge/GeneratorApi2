@@ -184,7 +184,7 @@ Once jobs exist, a batch export returning a ZIP of several PDFs/PPTXs becomes us
 
 **Separate liveness from readiness.** Keep `/health` as the inexpensive process check. Add internal readiness that reflects shutdown state, validated templates, and initialized renderer state, with a deliberate lazy-start or warmup policy. Avoid a fresh document render for every probe.
 
-**Align shutdown with work budgets.** [index.ts:44](../src/index.ts#L44) has a fixed 15-second exit deadline, while normal PDF rendering defaults to 30 seconds and can be configured longer. An active request may therefore be cut off on termination. Make the drain budget explicit, fit it to the hosting environment, and test termination during active generation. Any cancellation must retain queue slots until actual cleanup completes.
+**Align shutdown with work budgets.** [runtime.ts](../src/runtime.ts) has a fixed 15-second exit deadline, while normal PDF rendering defaults to 30 seconds and can be configured longer. An active request may therefore be cut off on termination. Make the drain budget explicit, fit it to the hosting environment, and test termination during active generation. Any cancellation must retain queue slots until actual cleanup completes.
 
 **Verify browser recovery and disconnect behavior.** Existing PDF tests cover output, HTTP failures, readiness timeouts, and renderer capacity. Add focused tests for launch failure, browser disconnection/relaunch, timeout cleanup, and actual HTTP client disconnection while queued. Queue-unit cancellation tests do not exercise the response-close wiring in `sendDownload()`.
 

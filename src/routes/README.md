@@ -9,13 +9,18 @@ and `landscape/[id].pdf` resolve a document ID and force the named orientation;
 `portrait/quarterly` prints the configured quarterly webapp page.
 The generic GET/POST test export lives in `api/exports/pdf/test/`. It uses the common
 PDF renderer schema from `api/exports/pdf/schema.ts`.
-All PDF method factories call `createPdfHandler` from `api/exports/pdf/handler.ts`
-with `schema`, `readRequestInput` and `prepareInput`. Document and quarterly endpoints
-have local URL-parameter schemas next to `get.ts`; target resolution also lives
-alongside each route.
-`src/services/pdf/` owns Chromium rendering and navigation restrictions.
-The test POST route reuses its GET factory; the shared input reader distinguishes
-query JSON from the POST body.
+PDF reports use `definePdfReport` from `src/reports/pdf.ts`. A local `report.ts`
+keeps request validation, target resolution, filenames, and print settings together.
+The document-ID routes share `src/reports/document/report.ts` and select orientation
+in their method files. Chromium rendering and contracts live in `src/services/pdf/`.
+
+PowerPoint reports use `definePptxReport` with a locally declared `createService`
+factory. `templateReport` handles standard placeholder templates. The runtime
+constructs and validates these generators once and closes owned services after
+HTTP requests drain. Adding a service requires no startup or dependency-type edits.
+
+See [the complete endpoint checklist](../../docs/development.md) for PDF, template
+PPTX, custom service, and testing examples.
 
 Folders define the URL. Lowercase method files define the HTTP method:
 
@@ -64,11 +69,11 @@ call and return Express handlers; injected services keep tests independent of
 Chromium. Express 5 forwards rejected handler promises to the existing error
 middleware. Continue validating inputs and using `sendDownload` for queued files.
 
-For shared GET/POST logic, define the factory in `handler.ts` and re-export it
+For shared GET/POST reports, define the factory in `report.ts` and re-export it
 from both method files:
 
 ```ts
-export { default } from './handler.ts';
+export { default } from './report.ts';
 ```
 
 Helper files such as `handler.ts` are not endpoints. Directories beginning with
@@ -96,8 +101,4 @@ covers new routes. Add HTTP behavior tests under `test/http/` and update
 `docs/endpoints.md` when adding an endpoint. Run `npm run typecheck`,
 `npm run knip`, and `npm test`.
 
-For GET/POST exports, declare accepted fields and a `readRequestInput` function in the
-endpoint's `schema.ts`. Call `decodeExportInput(req, jsonFields)` with only the
-JSON fields used by that endpoint. PDF test uses `['query', 'landscape']`, brief
-uses `['slides']`, and each template export uses `['replacements']`. The helper
-returns POST JSON directly; schemas validate the decoded data.
+For GET/POST exports, declare the request schema in the report definition or a local schema file. The report helpers decode GET/HEAD fields named by `jsonFields` and read POST JSON directly. Supply `readRequestInput` when path parameters or a custom request shape are needed. PDF test decodes `query` and `landscape`, brief decodes `slides`, and placeholder templates decode `replacements`. Keep each endpoint's accepted fields local.

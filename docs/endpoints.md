@@ -16,7 +16,7 @@ PDF route exports and the brief, business, and summary PowerPoint exports suppor
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
-The PDF endpoint combines the route with the configured origin. The base PDF endpoint accepts only declared webapp query fields: `language`, `year`, `quarter`, and `print`. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`; server defaults are configured in `pdfPrintSettings` in `src/config.ts`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
+The PDF endpoint combines the route with the configured origin. The base PDF endpoint accepts only declared webapp query fields: `language`, `year`, `quarter`, and `print`. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`; server defaults are configured in `pdfPrintSettings` in `src/config/defaults.ts`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
 
 Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, unsupported JSON charsets/content encodings 415, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
 
@@ -58,7 +58,7 @@ http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en
 
 The document ID is the filename. The document-ID routes accept only `language` and `year`:
 
-Query parameters are optional: `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/config.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
+Query parameters are optional: `http://localhost:3000/api/exports/pdf/portrait/id2222.pdf` uses `documentSettings.defaultLanguage` (`en` by default). Change it in `src/reports/document/settings.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
 
 ```text
 http://localhost:3000/api/exports/pdf/portrait/id2222.pdf?language=en&year=2026
@@ -85,7 +85,7 @@ In a second terminal, start the included webapp for the PDF examples:
 npm run demo
 ```
 
-The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and `documentSettings.pdfRoutePattern = "/documents/{id}"` in `src/config.ts`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
+The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and `documentSettings.pdfRoutePattern = "/documents/{id}"` in `src/reports/document/settings.ts`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
 
 ## Query parameter format
 
@@ -166,16 +166,15 @@ Only these direct GET parameters are accepted:
 Unknown parameters, repeated values and invalid values return 400. These rules
 also apply to HEAD and the landscape document route. Parameters already fixed
 in `documentSettings.pdfRoutePattern` cannot be overridden. To add a new allowed
-parameter, declare it in the selected route's `schema.ts` and explicitly forward
-it in its `document-pdf.ts`.
+parameter, declare and forward it in the shared `src/reports/document/report.ts` definition.
 
-For a webapp that expects the document ID in a query parameter, configure the host in `.env` and the route in `src/config.ts`:
+For a webapp that expects the document ID in a query parameter, configure the host in `.env` and the route in `src/reports/document/settings.ts`:
 
 ```dotenv
 WEBAPP_BASE_URL=https://other-host.example
 ```
 
-In `src/config.ts`:
+In `src/reports/document/settings.ts`:
 
 ```ts
 const documentSettings = {
@@ -229,7 +228,7 @@ The attachment filename is `quarterly-2027-q2-pl.pdf`.
 
 Unknown keys, repeated values and invalid values return 400. The caller cannot
 change the target route or print orientation. This example's target is defined
-in `src/routes/api/exports/pdf/portrait/quarterly/quarterly-report-pdf.ts`; other print defaults remain shared.
+in `src/routes/api/exports/pdf/portrait/quarterly/report.ts`; other print defaults remain shared.
 
 ## GET /api/exports/pdf/test
 
@@ -463,7 +462,7 @@ PDF and PPTX capacity already have separate concurrency settings.
 
 ## PDF print configuration
 
-Edit `pdfPrintSettings` in `src/config.ts` and rebuild/restart the application.
+Edit `pdfPrintSettings` in `src/reports/document/settings.ts` and rebuild/restart the application.
 These settings apply to all PDF endpoints. The document-ID endpoints always force their named orientation: `portrait` or `landscape`. GET/POST `/api/exports/pdf/test` can
 still override `format` and `landscape` per request; omitted values use the
 configured defaults.

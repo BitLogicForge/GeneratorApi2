@@ -5,7 +5,7 @@ import { replacePlaceholders } from '@/pptx/jszip/placeholders';
 
 import { TemplateSource } from './template-source.ts';
 
-import type { PptxRenderInput } from '@/routes/api/exports/pptx/jszip/schema';
+import type { PptxRenderInput } from './contracts.ts';
 
 /** Mutates only text in slides and speaker notes; preserves all other ZIP parts. */
 export class PowerPointTemplateService {

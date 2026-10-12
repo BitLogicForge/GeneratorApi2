@@ -1,40 +1,10 @@
-import { z } from 'zod';
-
 import { decodeExportInput } from '@/http/input';
-import { documentTextSchema } from '@/validation/document-text';
-import { filenameSchema } from '@/validation/filename';
+import { briefInputSchema } from '@/services/pptxgenjs/contracts';
 
 import type { Request } from 'express';
 
-// API request fields for the brief presentation.
-export const requestSchema = z
-  .object({
-    filename: filenameSchema.default('presentation'),
-    title: documentTextSchema.min(1).max(100),
-    subtitle: documentTextSchema.max(180).default(''),
-    author: documentTextSchema.max(100).default('Generator API'),
-    accent: z
-      .string()
-      .regex(/^[0-9a-fA-F]{6}$/)
-      .default('2563EB'),
-    slides: z
-      .array(
-        z
-          .object({
-            title: documentTextSchema.min(1).max(100),
-            bullets: z.array(documentTextSchema.min(1).max(220)).min(1).max(6),
-            notes: documentTextSchema.max(3000).optional(),
-          })
-          .strict(),
-      )
-      .min(1)
-      .max(30),
-  })
-  .strict();
+export const requestSchema = briefInputSchema;
 
-export type BriefInput = z.infer<typeof requestSchema>;
-
-/** Reads GET/HEAD query parameters or POST JSON for this endpoint only. */
 export function readRequestInput(req: Request) {
   return decodeExportInput(req, ['slides']);
 }

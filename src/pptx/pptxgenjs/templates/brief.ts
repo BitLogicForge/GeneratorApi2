@@ -1,5 +1,5 @@
 import type pptxgen from 'pptxgenjs';
-import type { BriefInput } from '@/routes/api/exports/pptx/pptxgenjs/brief/schema';
+import type { BriefInput } from '@/services/pptxgenjs/contracts';
 export function briefTemplate(deck: pptxgen, input: BriefInput) {
   const cover = deck.addSlide();
   cover.background = { color: '0F172A' };

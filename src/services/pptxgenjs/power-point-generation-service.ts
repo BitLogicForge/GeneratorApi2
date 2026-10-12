@@ -4,7 +4,7 @@ import { AppError } from '@/errors';
 import { briefTemplate } from '@/pptx/pptxgenjs/templates/brief';
 
 import type { PresentationTemplate } from '@/pptx/pptxgenjs/types';
-import type { BriefInput } from '@/routes/api/exports/pptx/pptxgenjs/brief/schema';
+import type { BriefInput } from './contracts.ts';
 
 export class PowerPointGenerationService {
   private readonly templates: Map<string, PresentationTemplate>;

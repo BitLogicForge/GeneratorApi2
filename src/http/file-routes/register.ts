@@ -4,7 +4,7 @@ import type { FileRoute } from './types.ts';
 
 export function registerRoutes(
   app: Express,
-  routes: FileRoute[],
+  routes: readonly FileRoute[],
   dependencies: RouteDependencies,
 ): void {
   for (const route of routes) {

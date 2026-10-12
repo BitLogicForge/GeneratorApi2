@@ -60,43 +60,97 @@ The quarterly report is a complete example at `src/routes/pdf/quarterly/`, with 
 
 ## Add a placeholder PowerPoint endpoint
 
-Place `sales.pptx` in `templates/`, using text placeholders such as `{{title}}`. Create `src/routes/api/exports/pptx/jszip/sales/report.ts`:
+Each PPTX route folder owns its public contract, target, mapping, and output filename:
+
+- `schema.ts` declares allowed fields, validation, defaults, and GET/POST decoding.
+- `report.ts` selects the trusted template or generated design, maps validated fields in `prepareInput`, and configures its service.
+- `get.ts` and `post.ts` re-export the same report definition directly.
+
+Place `sales.pptx` in `templates/`, using placeholders such as `{{title}}`.
+Create `src/routes/pptx/jszip/sales/schema.ts`:
+
+```ts
+import { decodeExportInput } from '@/http/input';
+import { pptxRenderSchema } from '@/services/jszip/contracts';
+
+import type { Request } from 'express';
+
+export const requestSchema = pptxRenderSchema
+  .pick({
+    filename: true,
+    replacements: true,
+  })
+  .strict();
+
+export function readRequestInput(req: Request) {
+  return decodeExportInput(req, ['replacements']);
+}
+```
+
+Then create `report.ts`:
 
 ```ts
 import { definePptxReport } from '@/reports/pptx';
-import { templateReport } from '@/reports/template';
+import { templateService } from '@/reports/template';
+import { pptxRenderSchema } from '@/services/jszip/contracts';
 
-export const report = templateReport('sales');
+import { readRequestInput, requestSchema } from './schema.ts';
+
+import type { z } from 'zod';
+import type { PptxReport } from '@/reports/pptx';
+import type { PptxRenderInput } from '@/services/jszip/contracts';
+
+const template = 'sales';
+const sourceFile = 'sales.pptx';
+
+export const report = {
+  schema: requestSchema,
+  readRequestInput,
+  notConfiguredMessage: 'PowerPoint file template not found',
+  prepareInput: ({ filename, replacements }) => ({
+    filename,
+    input: pptxRenderSchema.parse({ filename, replacements }),
+  }),
+  ...templateService(template, sourceFile),
+} satisfies PptxReport<z.infer<typeof requestSchema>, PptxRenderInput>;
+
 export default definePptxReport(report);
 ```
 
-Add the same `get.ts`/`post.ts` re-exports as above. This registers the trusted template path locally and accepts the existing `filename`/`replacements` contract. For a differently named source file, use `templateReport('sales', 'sales-template.pptx')`. No service class, startup edit, or dependency-interface edit is needed. See the business and summary report folders for working examples.
+Both method files contain `export { default } from './report.ts';`.
+This exposes `GET/POST /pptx/jszip/sales`; HEAD validates without generating.
+`templateService` handles only trusted template loading, generation, and lifecycle.
+It does not choose the public schema, parameter mapping, or output filename.
+The route owns those choices. No startup or central registry edit is needed.
+See business and summary for working examples.
 
 ## Add a custom PowerPoint service
 
-Create your service beside the report or in `src/services/`. It must return a `Buffer` from `generate(input)`. Define its schema and factory in the report module:
+Create your service beside the report or in `src/services/`. It must return a `Buffer` from `generate(input)`. Define its public schema in `schema.ts` and its target, mapping, and factory in `report.ts`:
 
 ```ts
-import { z } from 'zod';
-
 import { definePptxReport } from '@/reports/pptx';
 
+import { requestSchema } from './schema.ts';
 import { SalesReportService } from './service.ts';
 
 export const report = {
-  schema: z.object({ id: z.string().min(1).max(80) }).strict(),
-  filename: (input: { id: string }) => `sales-${input.id}`,
+  schema: requestSchema,
+  prepareInput: ({ id }: { id: string }) => ({
+    filename: `sales-${id}`,
+    input: { id },
+  }),
   createService: ({ dataApi }) => new SalesReportService(dataApi),
 } satisfies import('@/reports/pptx').PptxReport<{ id: string }>;
 
 export default definePptxReport(report);
 ```
 
-The example assumes you implement `SalesReportService` with that constructor and input. The factory receives validated application configuration and the shared typed Data API client. It runs once per report per application, including when GET and POST share the definition. Keep business logic in the service.
+The example assumes `schema.ts` validates `{ id: string }` and you implement `SalesReportService` with that constructor and input. The factory receives validated application configuration and the shared typed Data API client. It runs once per report per application, including when GET and POST share the definition. Keep business logic in the service.
 
 Optional `validate()` runs during startup and contributes to readiness; use it to validate source presentations. Optional `close()` runs after active HTTP requests drain. Every owned service is offered cleanup even when another cleanup fails. Injected test services are externally managed.
 
-The DAA report demonstrates adapting an existing service to a route-specific input. The brief report demonstrates a generated design. A new generated design can construct `PowerPointGenerationService` with its own trusted design registry inside `createService`; a different input structure can use its own service without changing central contracts.
+The DAA report maps the public `TEXT_ME` field to the string consumed by its service in `prepareInput`. The brief report demonstrates a generated design. A new generated design can construct `PowerPointGenerationService` with its own trusted design registry inside `createService`; a different input structure can use its own service without changing central contracts.
 
 ## Test, document, and deploy
 

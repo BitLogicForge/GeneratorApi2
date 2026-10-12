@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 
-import { pptxRenderSchema } from '@/services/jszip/contracts';
 import { PowerPointTemplateService } from '@/services/jszip/power-point-template-service';
 
 import type { PptxRenderInput } from '@/services/jszip/contracts';
@@ -13,15 +12,15 @@ export function templateFile(filename: string) {
   return fileURLToPath(new URL(`../../templates/${filename}`, import.meta.url));
 }
 
-export function templateReport(
+/** Template loading and generation only; each route owns its public contract. */
+export function templateService(
   name: string,
-  filename = `${name}.pptx`,
-): PptxReport<PptxRenderInput> {
+  filename: string,
+): Pick<
+  PptxReport<unknown, PptxRenderInput>,
+  'createService' | 'injectedService'
+> {
   return {
-    schema: pptxRenderSchema,
-    notConfiguredMessage: 'PowerPoint file template not found',
-    jsonFields: ['replacements'],
-    filename: (input) => input.filename,
     createService: () => {
       const service = new PowerPointTemplateService({
         [name]: templateFile(filename),

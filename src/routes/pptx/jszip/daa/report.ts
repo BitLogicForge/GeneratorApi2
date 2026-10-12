@@ -7,22 +7,18 @@ import { readRequestInput, requestSchema } from './schema.ts';
 import type { z } from 'zod';
 import type { PptxReport } from '@/reports/pptx';
 
+const sourceFile = 'daa.pptx';
+
 export const report = {
   schema: requestSchema,
   notConfiguredMessage: 'Template report demo not configured',
   readRequestInput,
-  filename: 'demo-report',
-  createService: () => {
-    const service = new DaaPocPresentationService(templateFile('daa.pptx'));
-    return {
-      generate: (input) => service.generate(input.TEXT_ME),
-      validate: () => service.validate(),
-    };
-  },
-  injectedService: ({ templateReportDemo }) =>
-    templateReportDemo && {
-      generate: (input) => templateReportDemo.generate(input.TEXT_ME),
-    },
-} satisfies PptxReport<z.infer<typeof requestSchema>>;
+  prepareInput: ({ TEXT_ME }) => ({
+    filename: 'demo-report',
+    input: TEXT_ME,
+  }),
+  createService: () => new DaaPocPresentationService(templateFile(sourceFile)),
+  injectedService: ({ templateReportDemo }) => templateReportDemo,
+} satisfies PptxReport<z.infer<typeof requestSchema>, string>;
 
 export default definePptxReport(report);

@@ -3,7 +3,17 @@ import { briefInputSchema } from '@/services/pptxgenjs/contracts';
 
 import type { Request } from 'express';
 
-export const requestSchema = briefInputSchema;
+// Route-owned public fields; reusable renderer constraints stay in the service contract.
+export const requestSchema = briefInputSchema
+  .pick({
+    filename: true,
+    title: true,
+    subtitle: true,
+    author: true,
+    accent: true,
+    slides: true,
+  })
+  .strict();
 
 export function readRequestInput(req: Request) {
   return decodeExportInput(req, ['slides']);

@@ -6,13 +6,13 @@
 
 PDF route exports and the brief, business, and summary PowerPoint exports support GET and POST. The document-ID PDF link and DAA demo support GET. All GET exports also accept HEAD with the same query schemas: successful HEAD responses return download headers without generating a document or entering a queue, and omit the unknown `Content-Length`. HEAD checks request syntax and configured services; it does not fetch upstream data or confirm that generation will succeed. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
 
-| Endpoint                                 | Input                                                                                              | Result                           |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
-| `POST /pdf/test`                         | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
-| `GET /pdf/factsheet/:id`                 | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
-| `GET /pdf/onepager/:id`                  | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
-| `POST /api/exports/pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment         |
-| `GET /health`                            | None                                                                                               | Process health                   |
+| Endpoint                     | Input                                                                                              | Result                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `POST /pdf/test`             | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
+| `GET /pdf/factsheet/:id`     | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
+| `GET /pdf/onepager/:id`      | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
+| `POST /pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment         |
+| `GET /health`                | None                                                                                               | Process health                   |
 
 PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
 
@@ -41,9 +41,9 @@ The test starts local HTTP servers, downloads real files from the routes, valida
 - `document-landscape.pdf` — landscape, from `/pdf/onepager/id2222`.
 - `quarterly-report-portrait.pdf` and `quarterly-report-landscape.pdf` — POST payload examples from `examples/pdf/`.
 - `custom-report.pdf` — readiness selector and print options, from GET `/pdf/test`.
-- `quarterly-review.pptx` — editable presentation, from GET `/api/exports/pptx/pptxgenjs/brief`.
-- `customer-proposal.pptx` — edited template, from GET `/api/exports/pptx/jszip/business`.
-- `demo-report.pptx` — native table and line chart with random data, from GET `/api/exports/pptx/jszip/daa`.
+- `quarterly-review.pptx` — editable presentation, from GET `/pptx/pptxgenjs/brief`.
+- `customer-proposal.pptx` — edited template, from GET `/pptx/jszip/business`.
+- `demo-report.pptx` — native table and line chart with random data, from GET `/pptx/jszip/daa`.
 - `manifest.json` — exact request URLs, output paths, and file sizes.
 
 The tests provide their own local webapp and need no running demo server. Output files are ignored by Git. The short `/id2222.pptx` route is not implemented yet; these tests cover the existing PowerPoint routes.
@@ -99,27 +99,27 @@ For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The i
 
 ### Random table and chart download
 
-Open `http://localhost:3000/api/exports/pptx/jszip/daa` or download it:
+Open `http://localhost:3000/pptx/jszip/daa` or download it:
 
 ```bash
-curl --fail-with-body http://localhost:3000/api/exports/pptx/jszip/daa --output demo-report.pptx
+curl --fail-with-body http://localhost:3000/pptx/jszip/daa --output demo-report.pptx
 ```
 
-No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/api/exports/pptx/jszip/daa?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. Every request preserves the first row of `templates/daa.pptx`'s 4×4 table and fills only the last three rows (12 cells) with random integers from 1–100. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and styles are preserved; category labels and ranges expand to 20 rows. The chart cache and embedded Excel workbook are both updated so the chart remains native and editable using PowerPoint's **Edit Data**. This route uses the PowerPoint queue and leaves the source template unchanged.
+No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/pptx/jszip/daa?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. Every request preserves the first row of `templates/daa.pptx`'s 4×4 table and fills only the last three rows (12 cells) with random integers from 1–100. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and styles are preserved; category labels and ranges expand to 20 rows. The chart cache and embedded Excel workbook are both updated so the chart remains native and editable using PowerPoint's **Edit Data**. This route uses the PowerPoint queue and leaves the source template unchanged.
 
 ### All routes
 
-| Method          | Endpoint                            | Successful GET/POST response                               |
-| --------------- | ----------------------------------- | ---------------------------------------------------------- |
-| GET, HEAD       | `/health`                           | JSON process health (HEAD omits the body)                  |
-| GET, HEAD       | `/api/exports/pptx/jszip/daa`       | Native table and line chart with random data               |
-| GET, HEAD       | `/pdf/factsheet/:id`                | PDF attachment for a document ID                           |
-| GET, HEAD       | `/pdf/quarterly`                    | Fixed portrait quarterly report with direct GET parameters |
-| GET, HEAD       | `/pdf/onepager/:id`                 | PDF attachment for a document ID, always landscape         |
-| GET, HEAD, POST | `/pdf/test`                         | PDF attachment for a webapp route                          |
-| GET, HEAD, POST | `/api/exports/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment                   |
-| GET, HEAD, POST | `/api/exports/pptx/jszip/summary`   | PowerPoint attachment with summary template text replaced  |
-| GET, HEAD, POST | `/api/exports/pptx/jszip/business`  | PowerPoint attachment with business template text replaced |
+| Method          | Endpoint                | Successful GET/POST response                               |
+| --------------- | ----------------------- | ---------------------------------------------------------- |
+| GET, HEAD       | `/health`               | JSON process health (HEAD omits the body)                  |
+| GET, HEAD       | `/pptx/jszip/daa`       | Native table and line chart with random data               |
+| GET, HEAD       | `/pdf/factsheet/:id`    | PDF attachment for a document ID                           |
+| GET, HEAD       | `/pdf/quarterly`        | Fixed portrait quarterly report with direct GET parameters |
+| GET, HEAD       | `/pdf/onepager/:id`     | PDF attachment for a document ID, always landscape         |
+| GET, HEAD, POST | `/pdf/test`             | PDF attachment for a webapp route                          |
+| GET, HEAD, POST | `/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment                   |
+| GET, HEAD, POST | `/pptx/jszip/summary`   | PowerPoint attachment with summary template text replaced  |
+| GET, HEAD, POST | `/pptx/jszip/business`  | PowerPoint attachment with business template text replaced |
 
 PowerPoint template names are fixed route segments: `brief` uses PptxGenJS; `business`, `summary`, and `daa` use JSZip. Exposing another template requires a dedicated route. Unknown paths return 404 `NOT_FOUND`.
 
@@ -268,7 +268,22 @@ are rejected. The route must exist on `WEBAPP_BASE_URL`. Caller cookies and auth
 
 Success returns 200 with `Content-Type: application/pdf` and the requested attachment filename plus `.pdf`.
 
-## GET /api/exports/pptx/pptxgenjs/brief
+## PPTX route definitions
+
+Each folder under `src/routes/pptx/` is a complete endpoint definition.
+`schema.ts` lists its public parameters, defaults, validation, and transport decoding.
+`report.ts` defines the trusted source template or generated design, service,
+`prepareInput` mapping, and output filename. Method files re-export that report.
+
+`prepareInput` returns `{ filename, input }`: `filename` is the attachment name
+without `.pptx`, and `input` contains the mapped values passed to the generator.
+Business and summary map `filename` and `replacements` to their fixed template;
+brief maps its fields to the fixed generated design; DAA maps `TEXT_ME` to text
+and fixes the filename to `demo-report`. Shared helpers perform validation,
+service lifecycle handling, queueing, and downloads. Request parameters cannot
+select a template file or generated design.
+
+## GET /pptx/pptxgenjs/brief
 
 `brief` is a fixed route segment selecting the existing brief design. Both GET
 and POST use this template; other names return 404 `NOT_FOUND`.
@@ -276,7 +291,7 @@ and POST use this template; other names return 404 `NOT_FOUND`.
 Generate a new editable presentation:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pptx/pptxgenjs/brief \
+curl --fail-with-body --get http://localhost:3000/pptx/pptxgenjs/brief \
   --data-urlencode 'filename=quarterly-review' \
   --data-urlencode 'title=Quarterly review' \
   --data-urlencode 'subtitle=Strategy and delivery' \
@@ -289,7 +304,7 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pptx/pptxgenjs/bri
 Equivalent GET request using the existing example file values:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pptx/pptxgenjs/brief \
+curl --fail-with-body --get http://localhost:3000/pptx/pptxgenjs/brief \
   --data-urlencode 'filename=quarterly-review' \
   --data-urlencode 'title=A clearer path forward' \
   --data-urlencode 'subtitle=Quarterly review · Strategy and delivery' \
@@ -315,13 +330,13 @@ Unknown query and slide fields are rejected. The `brief` template adds a cover f
 
 Success returns 200 with `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` and the attachment filename plus `.pptx`.
 
-## GET/POST /api/exports/pptx/jszip/summary
+## GET/POST /pptx/jszip/summary
 
 This fixed route fills `templates/summary.pptx` using the same replacement
 contract as business. Supply `title`, `subtitle`, and `customer`.
 
 ```bash
-curl --fail-with-body http://localhost:3000/api/exports/pptx/jszip/summary \
+curl --fail-with-body http://localhost:3000/pptx/jszip/summary \
   -H 'Content-Type: application/json' \
   --data '{"filename":"summary","replacements":{"title":"Quarterly summary","subtitle":"Results and outlook","customer":"Acme"}}' \
   --output summary.pptx
@@ -330,7 +345,7 @@ curl --fail-with-body http://localhost:3000/api/exports/pptx/jszip/summary \
 GET accepts `replacements` as a JSON query string and an optional `filename`.
 The source template remains unchanged. Missing replacements return 400.
 
-## GET /api/exports/pptx/jszip/business
+## GET /pptx/jszip/business
 
 `business` is a fixed route segment selecting the existing business template.
 Both GET and POST use this template; other names return 404 `NOT_FOUND`.
@@ -338,7 +353,7 @@ Both GET and POST use this template; other names return 404 `NOT_FOUND`.
 Replace text placeholders in the included `templates/business.pptx`:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pptx/jszip/business \
+curl --fail-with-body --get http://localhost:3000/pptx/jszip/business \
   --data-urlencode 'filename=customer-proposal' \
   --data-urlencode 'replacements={"title":"A clearer path forward","subtitle":"A proposal built from our existing PowerPoint template","customer":"Acme Corporation"}' \
   --output customer-proposal.pptx
@@ -347,7 +362,7 @@ curl --fail-with-body --get http://localhost:3000/api/exports/pptx/jszip/busines
 Equivalent GET request using the existing example file values:
 
 ```bash
-curl --fail-with-body --get http://localhost:3000/api/exports/pptx/jszip/business \
+curl --fail-with-body --get http://localhost:3000/pptx/jszip/business \
   --data-urlencode 'filename=customer-proposal' \
   --data-urlencode 'replacements={"title":"A clearer path forward","subtitle":"A proposal built from our existing PowerPoint template","customer":"Acme Corporation"}' \
   --output customer-proposal.pptx

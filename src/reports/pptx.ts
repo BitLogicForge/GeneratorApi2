@@ -9,21 +9,27 @@ import type { RouteFactory } from '@/http/file-routes/types';
 import type { RouteDependencies } from '@/http/types';
 import type { ReportService, ServiceDefinition } from './services.ts';
 
-export interface PptxReport<Input> extends ServiceDefinition<Input> {
+export interface PptxReport<
+  Input,
+  RenderInput = Input,
+> extends ServiceDefinition<RenderInput> {
   schema: ZodType<Input>;
-  filename: string | ((input: Input) => string);
+  prepareInput: (
+    input: Input,
+    config: RouteDependencies['config'],
+  ) => { filename: string; input: RenderInput };
   jsonFields?: readonly string[];
   readRequestInput?: (request: Request<Record<string, string>>) => unknown;
   notConfiguredMessage?: string;
   // Compatibility with existing createApp service injections.
   injectedService?: (
     dependencies: RouteDependencies,
-  ) => ReportService<Input> | undefined;
+  ) => ReportService<RenderInput> | undefined;
 }
 
 /** Defines request validation, generation, and lifecycle together with the report. */
-export function definePptxReport<Input>(
-  definition: PptxReport<Input>,
+export function definePptxReport<Input, RenderInput>(
+  definition: PptxReport<Input, RenderInput>,
 ): RouteFactory {
   return (dependencies) => {
     const service =
@@ -40,15 +46,12 @@ export function definePptxReport<Input>(
           'UNKNOWN_TEMPLATE',
           definition.notConfiguredMessage ?? 'PowerPoint report not configured',
         );
-      const filename = filenameSchema.parse(
-        typeof definition.filename === 'function'
-          ? definition.filename(input)
-          : definition.filename,
-      );
+      const prepared = definition.prepareInput(input, dependencies.config);
+      const filename = filenameSchema.parse(prepared.filename);
       await sendDownload(
         res,
         dependencies.queues.presentations,
-        () => service.generate(input),
+        () => service.generate(prepared.input),
         filename,
         'pptx',
       );

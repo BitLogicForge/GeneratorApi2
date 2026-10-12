@@ -1,23 +1,38 @@
 import { definePptxReport } from '@/reports/pptx';
+import { briefInputSchema } from '@/services/pptxgenjs/contracts';
 import { PowerPointGenerationService } from '@/services/pptxgenjs/power-point-generation-service';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
+import type { z } from 'zod';
 import type { PptxReport } from '@/reports/pptx';
 import type { BriefInput } from '@/services/pptxgenjs/contracts';
+
+// Server-owned generated design.
+const template = 'brief';
 
 export const report = {
   schema: requestSchema,
   readRequestInput,
-  filename: (input) => input.filename,
+  prepareInput: ({ filename, title, subtitle, author, accent, slides }) => ({
+    filename,
+    input: briefInputSchema.parse({
+      filename,
+      title,
+      subtitle,
+      author,
+      accent,
+      slides,
+    }),
+  }),
   createService: () => {
     const service = new PowerPointGenerationService();
-    return { generate: (input) => service.generate('brief', input) };
+    return { generate: (input) => service.generate(template, input) };
   },
   injectedService: ({ presentations }) =>
     presentations && {
-      generate: (input) => presentations.generate('brief', input),
+      generate: (input) => presentations.generate(template, input),
     },
-} satisfies PptxReport<BriefInput>;
+} satisfies PptxReport<z.infer<typeof requestSchema>, BriefInput>;
 
 export default definePptxReport(report);

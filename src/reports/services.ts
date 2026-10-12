@@ -76,17 +76,21 @@ export class ReportServices {
   }
 
   initialize(): Promise<void> {
-    this.initialization ??= Promise.all(
+    this.initialization ??= Promise.allSettled(
       [...this.entries.values()].map((entry) => entry.validate()),
-    ).then(
-      () => {
-        this.state = TemplateState.Ready;
-      },
-      (error: unknown) => {
+    ).then((results) => {
+      const errors = results.flatMap((result) =>
+        result.status === 'rejected' ? [result.reason as unknown] : [],
+      );
+      if (errors.length) {
         this.state = TemplateState.Failed;
-        throw error;
-      },
-    );
+        throw new AggregateError(
+          errors,
+          `${errors.length} report service(s) failed template validation`,
+        );
+      }
+      this.state = TemplateState.Ready;
+    });
     return this.initialization;
   }
 

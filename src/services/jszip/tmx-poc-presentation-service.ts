@@ -17,9 +17,9 @@ const templateSettings = {
 
     chartA: 'X_CHART_A',
     chartB: 'X_CHART_B',
-    text0: 'XT0',
-    text1: 'XT1',
-    text2: 'XT2',
+    text0: 'X_T0',
+    text1: 'X_T1',
+    text2: 'X_T2',
     subtitile: "X_SUB"
   },
   chartA: { rows: 20, series: 1 },
@@ -63,7 +63,7 @@ export class TmxPocPresentationService {
     fillTextShape(text0.element, text);
     fillTextShape(text1.element, "CHART A");
     fillTextShape(text2.element, "CHART B");
-    fillTextShape(text2.element, text);
+
 
 
     const subtitile = objects.get(templateSettings.objects.subtitile)!;

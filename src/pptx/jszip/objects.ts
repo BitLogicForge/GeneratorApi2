@@ -20,23 +20,36 @@ export async function findNamedObjects(
   const slides = new Map<string, Awaited<ReturnType<typeof readXml>>>();
   const objects = new Map<string, { path: string; element: Element }>();
   const activeSlides = await listSlides(zip);
+  const availableNames = new Set<string>();
   for (const path of slidePaths ?? activeSlides) {
-    if (!activeSlides.includes(path)) throw invalidTemplate();
+    if (!activeSlides.includes(path))
+      throw invalidTemplate(`Slide is not part of the presentation: ${path}`);
     const document = await readXml(zip, path);
     slides.set(path, document);
     for (const properties of Array.from(
       document.getElementsByTagNameNS(presentationNs, 'cNvPr'),
     )) {
       const name = properties.getAttribute('name') ?? '';
+      if (name) availableNames.add(name);
       if (!names.includes(name)) continue;
-      if (objects.has(name)) throw invalidTemplate();
+      const previous = objects.get(name);
+      if (previous)
+        throw invalidTemplate(
+          `Duplicate object "${name}" in ${previous.path} and ${path}`,
+        );
       const element = properties.parentNode?.parentNode as Element | undefined;
       if (!element || !['graphicFrame', 'sp'].includes(element.localName ?? ''))
-        throw invalidTemplate();
+        throw invalidTemplate(
+          `Unsupported object "${name}" in ${path}: ${element?.localName ?? 'missing shape'}`,
+        );
       objects.set(name, { path, element });
     }
   }
 
-  for (const name of names) if (!objects.has(name)) throw invalidTemplate();
+  const missing = names.filter((name) => !objects.has(name));
+  if (missing.length)
+    throw invalidTemplate(
+      `Missing objects: ${missing.join(', ')}. Available objects: ${[...availableNames].join(', ') || '(none)'}`,
+    );
   return { slides, objects };
 }

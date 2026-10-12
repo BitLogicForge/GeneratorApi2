@@ -16,7 +16,14 @@ export class TemplateSource {
   load(): Promise<Buffer> {
     this.source ??= this.read().catch((error: unknown) => {
       this.source = undefined;
-      throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      const failure = new AppError(
+        error instanceof AppError ? error.status : 500,
+        error instanceof AppError ? error.code : 'INVALID_TEMPLATE',
+        `Template "${this.path}": ${message}`,
+      );
+      failure.cause = error;
+      throw failure;
     });
     return this.source;
   }

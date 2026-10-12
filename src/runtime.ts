@@ -5,6 +5,7 @@ import {
   RendererState,
   TemplateState,
 } from './observability/constants.ts';
+import { logTemplateValidationFailure } from './observability/template-validation.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 import { createReportServices } from './reports/services.ts';
 import { WebPagePdfService } from './services/pdf/web-page-pdf.ts';
@@ -44,7 +45,7 @@ export function startServer() {
   );
   void reports
     .initialize()
-    .catch(() => console.error({ event: LogEvent.TemplateValidationFailed }));
+    .catch((error: unknown) => logTemplateValidationFailure(error));
   /** Stops admission and drains active requests before closing Chromium, with a fixed exit deadline. */
   function shutdown() {
     if (stopping) return;

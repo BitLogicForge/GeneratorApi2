@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { chartNs } from '@/pptx/jszip/package/namespaces';
 import { setWorksheetCell } from '@/pptx/jszip/spreadsheet';
@@ -17,8 +19,9 @@ export function fillChartSeries(
     firstRow,
     categories,
     seriesNames,
+    date1904 = false,
   }: Required<Pick<CategoryChartOptions, 'sheetName' | 'firstRow'>> &
-    CategoryChartOptions,
+    CategoryChartOptions & { date1904?: boolean },
   {
     categoryColumn,
     columnNumber,
@@ -40,18 +43,47 @@ export function fillChartSeries(
     const category = item.getElementsByTagNameNS(chartNs, 'cat')[0];
     const categoryCache =
       category?.getElementsByTagNameNS(chartNs, 'strCache')[0] ??
-      category?.getElementsByTagNameNS(chartNs, 'multiLvlStrCache')[0];
+      category?.getElementsByTagNameNS(chartNs, 'multiLvlStrCache')[0] ??
+      category?.getElementsByTagNameNS(chartNs, 'numCache')[0];
     const categoryFormula = category?.getElementsByTagNameNS(chartNs, 'f')[0];
     if (
       !categoryCache ||
       categoryCache.getElementsByTagNameNS(chartNs, 'lvl').length > 1
     )
       throw invalidTemplate();
-    const labels =
+    const categoryValues =
       categories ??
       Array.from(categoryCache.getElementsByTagNameNS(chartNs, 'v')).map(
         (node) => node.textContent ?? '',
       );
+    const labels =
+      categoryCache.localName === 'numCache'
+        ? categoryValues.map((value) => {
+            if (typeof value === 'number' && Number.isFinite(value))
+              return value;
+            if (
+              typeof value === 'string' &&
+              z.iso.date().safeParse(value).success
+            ) {
+              const date = Date.parse(value);
+              const epoch = Date.parse(date1904 ? '1904-01-01' : '1899-12-31');
+              // Excel's 1900 calendar includes the fictitious 1900-02-29.
+              return (
+                (date - epoch) / 86400000 +
+                (!date1904 && date >= Date.parse('1900-03-01') ? 1 : 0)
+              );
+            }
+            if (
+              typeof value === 'string' &&
+              value.trim() &&
+              Number.isFinite(Number(value))
+            )
+              return Number(value);
+            throw invalidTemplate(
+              `Numeric chart categories require finite numbers or YYYY-MM-DD dates; received "${value}"`,
+            );
+          })
+        : categoryValues.map(String);
     if (labels.length !== data.length) throw invalidTemplate();
     resizeFormula(categoryFormula, categoryColumn);
     fillCache(categoryCache, labels);

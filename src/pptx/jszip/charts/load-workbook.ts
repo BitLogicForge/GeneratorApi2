@@ -38,5 +38,9 @@ export async function loadChartWorkbook(
     'worksheet',
   );
   const sheet = await readXml(workbook, sheetPath);
-  return { workbook, workbookPath, sheet, sheetPath };
+  const dateSystem = workbookDocument
+    .getElementsByTagNameNS(spreadsheet, 'workbookPr')[0]
+    ?.getAttribute('date1904');
+  const date1904 = dateSystem === '1' || dateSystem === 'true';
+  return { workbook, workbookPath, sheet, sheetPath, date1904 };
 }

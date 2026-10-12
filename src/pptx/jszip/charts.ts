@@ -69,12 +69,8 @@ export async function fillCategoryChart(
     throw invalidTemplate();
   const series = Array.from(plots[0].getElementsByTagNameNS(chartNs, 'ser'));
   if (series.length !== data[0].length) throw invalidTemplate();
-  const { workbook, workbookPath, sheet, sheetPath } = await loadChartWorkbook(
-    zip,
-    chart,
-    chartPath,
-    sheetName,
-  );
+  const { workbook, workbookPath, sheet, sheetPath, date1904 } =
+    await loadChartWorkbook(zip, chart, chartPath, sheetName);
   const range = createChartRange(
     sheet,
     sheetName,
@@ -86,7 +82,7 @@ export async function fillCategoryChart(
     sheet,
     series,
     data,
-    { sheetName, firstRow, categories, seriesNames },
+    { sheetName, firstRow, categories, seriesNames, date1904 },
     range,
   );
   await resizeWorkbookTables(

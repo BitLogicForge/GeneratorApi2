@@ -84,7 +84,7 @@ export class TmxPocPresentationService {
     });
 
     await fillCategoryChart(zip, chartA, chartDataA, {
-      categories: chartRowsNames, firstRow: 1,
+      categories: chartRowsNames, firstRow: 2,
 
 
     });
@@ -96,7 +96,7 @@ export class TmxPocPresentationService {
     );
 
 
-    await fillCategoryChart(zip, chartB, chartDataB, { firstColumn: "B", firstRow: 1 });
+    await fillCategoryChart(zip, chartB, chartDataB, { firstColumn: "B", firstRow: 2 });
 
     for (const path of new Set([chartA.path, chartB.path, text0.path, text1.path, text2.path, subtitile.path]))
       writeXml(zip, path, slides.get(path)!);

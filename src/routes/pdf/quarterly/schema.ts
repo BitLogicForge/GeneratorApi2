@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import { definePdfReport } from '@/reports/pdf';
-
 // Only these parameters are forwarded to the fixed quarterly webapp page.
 const webappQuerySchema = z
   .object({
@@ -16,16 +14,4 @@ const webappQuerySchema = z
   .strict();
 
 // API request: direct URL parameters become the webapp query.
-const requestSchema = z.object({ query: webappQuerySchema }).strict();
-
-export default definePdfReport({
-  schema: requestSchema,
-  readRequestInput: (req) => ({ query: req.query }),
-  prepareInput: ({ query }) => ({
-    route: '/reports/quarterly',
-    query,
-    filename: `quarterly-${query.year}-q${query.quarter}-${query.language}`,
-    waitForSelector: '[data-report-ready]',
-    landscape: false,
-  }),
-});
+export const requestSchema = z.object({ query: webappQuerySchema }).strict();

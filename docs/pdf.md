@@ -4,43 +4,41 @@
 
 ## PDF endpoints
 
-| Endpoint                                       | External webapp page      | Orientation                         |
-| ---------------------------------------------- | ------------------------- | ----------------------------------- |
-| GET/POST `/api/exports/pdf/test`               | Explicit relative `route` | Request options and shared defaults |
-| GET/HEAD `/api/exports/pdf/factsheet/:id`      | `/factsheet/{id}`         | Always portrait                     |
-| GET/HEAD `/api/exports/pdf/onepager/:id`       | `/onepager/{id}`          | Always landscape                    |
-| GET/HEAD `/api/exports/pdf/portrait/quarterly` | `/reports/quarterly`      | Always portrait                     |
+| Endpoint                      | External webapp page      | Orientation                         |
+| ----------------------------- | ------------------------- | ----------------------------------- |
+| GET/POST `/pdf/test`          | Explicit relative `route` | Request options and shared defaults |
+| GET/HEAD `/pdf/factsheet/:id` | `/factsheet/{id}`         | Always portrait                     |
+| GET/HEAD `/pdf/onepager/:id`  | `/onepager/{id}`          | Always landscape                    |
+| GET/HEAD `/pdf/quarterly`     | `/reports/quarterly`      | Always portrait                     |
 
 Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Both download an attachment named `{id}.pdf`. The previous portrait/landscape document download URLs are removed. See [PDF examples](../examples/pdf/README.md).
 
 ## External page configuration
 
-Configure the external origin with `WEBAPP_BASE_URL`. Set each document page independently in `src/reports/document/settings.ts`:
-
-```ts
-export const documentSettings = {
-  defaultLanguage: 'en',
-  routes: {
-    factsheet: '/factsheet/{id}',
-    onepager: '/onepager/{id}',
-  },
-};
-```
+Configure the external origin with `WEBAPP_BASE_URL`. Each endpoint folder owns
+its `schema.ts` (path and query validation), `report.ts` (external URL, parameter
+mapping, default language, filename, and print settings), and `get.ts` (registration).
+For example, edit `src/routes/pdf/onepager/[id]/report.ts` to change
+`externalRoute` or the mapping passed to `mapPdfRoute`. Mapping keys are public
+input names and values are external query names; absent values are omitted. The
+shared helper lives in `src/reports/pdf-route.ts` and also handles fixed-query
+conflicts and optional defaults.
+The factsheet folder has its own independent definition.
 
 For `WEBAPP_BASE_URL=https://other-host.example`:
 
-| API request                                              | External request                                                   |
-| -------------------------------------------------------- | ------------------------------------------------------------------ |
-| `/api/exports/pdf/factsheet/id2222?language=de`          | `https://other-host.example/factsheet/id2222?language=de`          |
-| `/api/exports/pdf/onepager/id2222?language=en&year=2027` | `https://other-host.example/onepager/id2222?language=en&year=2027` |
+| API request                                                 | External request                                                                  |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `/pdf/factsheet/id2222?language=de`                         | `https://other-host.example/factsheet/id2222?language=de`                         |
+| `/pdf/onepager/id2222?START=2027-01-01&BENCHMARK=REPORTING` | `https://other-host.example/onepager/id2222?START=2027-01-01&BENCHMARK=REPORTING` |
 
-The demo webapp serves both pages. Custom patterns can put the ID in a query parameter, such as `factsheet: '/factsheet?id={id}'`; each pattern must be a relative route containing `{id}`. Rebuild after changing these settings. Configured query keys remain authoritative and cannot be overridden by callers.
+The demo webapp serves both pages. Custom patterns can put the ID in a query parameter, such as `/factsheet?id={id}`; each pattern must be a relative route containing `{id}`. Rebuild after changing these settings. Configured query keys remain authoritative and cannot be overridden by callers.
 
-IDs accept 1–80 letters, numbers, underscores, and hyphens. Only `language` (nonempty text up to 100 characters) and `year` (four digits, 2000–2100) are accepted. Unknown, invalid, or duplicate parameters return 400 before rendering. Omitted language uses the configured default unless the selected page pattern already fixes it. Other omitted parameters use the webapp's defaults.
+IDs accept 1–80 letters, numbers, underscores, and hyphens. Factsheet accepts `language` (nonempty text up to 100 characters) and `year` (four digits, 2000–2100). Onepager instead accepts optional `START` and `END` (valid `YYYY-MM-DD` dates), and `BENCHMARK` (`SAA` or `REPORTING`); it rejects `language` and `year`. These onepager parameters are forwarded using their uppercase names. Unknown, invalid, or duplicate parameters return 400 before rendering. On factsheet, omitted language uses the configured default unless the selected page pattern already fixes it. Other omitted parameters use the webapp's defaults.
 
 ## Readiness and appearance
 
-Every render waits for page load and fonts. Factsheet and onepager have no additional readiness selector. The shared `src/reports/document/report.ts` owns their validation and target resolution. The quarterly report sets `[data-report-ready]` in its route-local `report.ts`; the generic test export can accept a caller-supplied `waitForSelector`.
+Every render waits for page load and fonts. Factsheet and onepager have no additional readiness selector. Their route-local `schema.ts` and `report.ts` own validation and target resolution. The quarterly report sets `[data-report-ready]` in its route-local `report.ts`; the generic test export can accept a caller-supplied `waitForSelector`.
 
 A missing readiness marker produces `504 RENDER_TIMEOUT`. HEAD validates input and returns attachment metadata without loading the webapp or entering the render queue.
 

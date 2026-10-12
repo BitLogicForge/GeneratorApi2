@@ -156,7 +156,7 @@ Use the slot's hostname for development checks. The PDF request requires a match
 
 Roll back by setting `--container-image-name` to a previous successful tag using `az webapp config container set`, then run `az webapp restart`. Include `--slot dev` for slot operations. Private ACRs require suitable VNet integration and image-pull routing; see [network-protected registry configuration](https://learn.microsoft.com/en-us/azure/app-service/configure-custom-container?pivots=container-linux#use-an-image-from-a-network-protected-registry).
 
-The document language and route live in `src/reports/document/settings.ts`; shared PDF appearance lives in `src/config/defaults.ts`, and other report settings live in their `report.ts`. Recompile and rebuild after changing code or presentation templates.
+The document language and external route live in each PDF route folder's `report.ts`; shared PDF appearance lives in `src/config/defaults.ts`, and other report settings live in their `report.ts`. Recompile and rebuild after changing code or presentation templates.
 
 ## Legacy ZIP packaging
 

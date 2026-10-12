@@ -6,24 +6,24 @@
 
 `src/index.ts` launches `src/runtime.ts`. Report-specific construction lives beside the route, so new reports do not change startup wiring.
 
-| Area                                                          | Files                                                         |
-| ------------------------------------------------------------- | ------------------------------------------------------------- |
-| Startup, shared infrastructure, readiness, shutdown           | `src/runtime.ts`                                              |
-| Middleware, request IDs, HTTP assembly                        | `src/app.ts`                                                  |
-| Human-editable shared defaults                                | `src/config/defaults.ts`                                      |
-| Environment validation and configuration assembly             | `src/config/environment.ts`, `src/config/index.ts`            |
-| Report helpers and owned service lifecycle                    | `src/reports/pdf.ts`, `pptx.ts`, `template.ts`, `services.ts` |
-| Document URL/language settings and shared document validation | `src/reports/document/`                                       |
-| URLs and endpoint-specific definitions                        | `src/routes/**/{get,post}.ts`, `report.ts`                    |
-| Discovery, ordering, duplicate detection                      | `src/http/file-routes/`                                       |
-| Injected contracts, decoding, downloads, errors               | `src/http/`, `src/errors.ts`                                  |
-| Queues, timeouts, cancellation                                | `src/queue/generation-queue.ts`                               |
-| Chromium and PDF contracts                                    | `src/services/pdf/`                                           |
-| PowerPoint generation and template services/contracts         | `src/services/pptxgenjs/`, `src/services/jszip/`              |
-| Designs and XML/workbook utilities                            | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                      |
-| Typed upstream API registry/client                            | `src/data-api/`, `src/services/data-api-client.ts`            |
-| Source decks, examples, tests                                 | `templates/`, `examples/`, `test/`                            |
-| Container and Azure deployment                                | `Dockerfile`, `.gitlab-ci.yml`, [Azure guide](azure.md)       |
+| Area                                                         | Files                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| Startup, shared infrastructure, readiness, shutdown          | `src/runtime.ts`                                              |
+| Middleware, request IDs, HTTP assembly                       | `src/app.ts`                                                  |
+| Human-editable shared defaults                               | `src/config/defaults.ts`                                      |
+| Environment validation and configuration assembly            | `src/config/environment.ts`, `src/config/index.ts`            |
+| Report helpers and owned service lifecycle                   | `src/reports/pdf.ts`, `pptx.ts`, `template.ts`, `services.ts` |
+| PDF URL/language settings, parameter mapping, and validation | `src/routes/pdf/**/{report,schema}.ts`                        |
+| URLs and endpoint-specific definitions                       | `src/routes/**/{get,post}.ts`, `report.ts`                    |
+| Discovery, ordering, duplicate detection                     | `src/http/file-routes/`                                       |
+| Injected contracts, decoding, downloads, errors              | `src/http/`, `src/errors.ts`                                  |
+| Queues, timeouts, cancellation                               | `src/queue/generation-queue.ts`                               |
+| Chromium and PDF contracts                                   | `src/services/pdf/`                                           |
+| PowerPoint generation and template services/contracts        | `src/services/pptxgenjs/`, `src/services/jszip/`              |
+| Designs and XML/workbook utilities                           | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                      |
+| Typed upstream API registry/client                           | `src/data-api/`, `src/services/data-api-client.ts`            |
+| Source decks, examples, tests                                | `templates/`, `examples/`, `test/`                            |
+| Container and Azure deployment                               | `Dockerfile`, `.gitlab-ci.yml`, [Azure guide](azure.md)       |
 
 ## Request and report flow
 
@@ -39,7 +39,7 @@ A PPTX definition declares its schema, filename, and `createService` factory. `R
 
 ## Configuration
 
-Shared editable defaults live in `config/defaults.ts`; environment parsing and Zod validation live in `config/environment.ts`. The short configuration assembly combines them with document-family settings from `reports/document/settings.ts`. The root `config.ts` is a compatibility export.
+Shared editable defaults live in `config/defaults.ts`; environment parsing and Zod validation live in `config/environment.ts`. The configuration assembly contains shared settings; each PDF route folder owns its external page, query schema, defaults, and mapping. The root `config.ts` is a compatibility export.
 
 Endpoint request schemas and business defaults stay with their report. The generic PDF test export independently lists its allowed webapp query fields. GET JSON decoding is declared by each report's `jsonFields` or input reader; the transport helper owns no global parameter registry.
 

@@ -8,7 +8,7 @@
 | ---------------------------------------------------------------------- | ------------------------------------------------- |
 | Shared PDF appearance and Data API cache defaults                      | `src/config/defaults.ts`                          |
 | Environment validation and limits                                      | `src/config/environment.ts`                       |
-| Document URL pattern and default language                              | `src/reports/document/settings.ts`                |
+| Document URL pattern and default language                              | Each PDF route folder's `report.ts`               |
 | A report's inputs, page, filename, print overrides, or service factory | Its `report.ts`                                   |
 | Renderer validation contracts                                          | `src/services/{pdf,jszip,pptxgenjs}/contracts.ts` |
 
@@ -16,7 +16,7 @@
 
 ## Add a PDF endpoint
 
-Create `src/routes/api/exports/pdf/sales/report.ts`:
+Create `src/routes/pdf/sales/report.ts`:
 
 ```ts
 import { z } from 'zod';
@@ -52,11 +52,11 @@ Add `get.ts` and, if POST is needed, `post.ts`. Both contain:
 export { default } from './report.ts';
 ```
 
-This exposes `GET/POST /api/exports/pdf/sales`. GET uses flat URL parameters; POST uses the same fields in a JSON object. The helper decodes transport, rejects duplicate parameters, validates requests and renderer input, and uses the shared PDF queue/download handling. HEAD validates input and returns attachment metadata without rendering.
+This exposes `GET/POST /pdf/sales`. GET uses flat URL parameters; POST uses the same fields in a JSON object. The helper decodes transport, rejects duplicate parameters, validates requests and renderer input, and uses the shared PDF queue/download handling. HEAD validates input and returns attachment metadata without rendering.
 
 Report `print` overrides merge with shared defaults, including individual margin sides. They affect only that report's requests. The public request accepts only its schema's fields; print overrides in the definition are server-owned. Use `jsonFields` when specific GET fields contain JSON, or `readRequestInput` for path parameters or a custom transport shape. Keep unknown fields rejected with `.strict()`.
 
-The existing quarterly report is a complete example at `src/routes/api/exports/pdf/portrait/quarterly/report.ts`. The factsheet and onepager routes share `src/reports/document/report.ts` instead of duplicating validation and URL resolution.
+The quarterly report is a complete example at `src/routes/pdf/quarterly/`, with validation in `schema.ts` and webapp mapping in `report.ts`. The factsheet and onepager folders each own their `schema.ts`, `report.ts`, and `get.ts`; external routes, supported query parameters, defaults, and parameter mapping are defined in those folders.
 
 ## Add a placeholder PowerPoint endpoint
 
@@ -155,3 +155,19 @@ This POC is intended for trusted webapps and internal use. Navigation is restric
 The `image-size` dependency is overridden to patched version 2.0.3 because PptxGenJS currently requests an older vulnerable range. The included template uses text and shapes; verify image behavior when introducing image templates.
 
 Library references: [Playwright page API](https://playwright.dev/docs/api/class-page#page-pdf), [PptxGenJS saving presentations](https://gitbrent.github.io/PptxGenJS/docs/usage-saving/).
+
+### Map PDF parameters to an external page
+
+Use `mapPdfRoute` from `src/reports/pdf-route.ts` inside a route's `prepareInput`:
+
+```ts
+...mapPdfRoute(resolvePdfRoute(externalRoute, id), query, {
+  START: 'from',
+  END: 'to',
+  BENCHMARK: 'benchmark',
+})
+```
+
+The mapping stays in the route folder. The shared helper forwards only mapped,
+defined values, rejects conflicts with fixed external query keys, and accepts
+an optional fourth argument of defaults keyed by external parameter name.

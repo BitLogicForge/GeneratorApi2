@@ -73,18 +73,6 @@ export function resolvePdfRoute(pattern: string, id: string) {
   return pattern.replaceAll('{id}', encodeURIComponent(id));
 }
 
-export const documentSettingsSchema = z
-  .object({
-    defaultLanguage: z.string().trim().min(1).max(100),
-    routes: z
-      .object({
-        factsheet: pdfRoutePatternSchema,
-        onepager: pdfRoutePatternSchema,
-      })
-      .strict(),
-  })
-  .strict();
-
 /** Shared PDF renderer contract, used by every PDF endpoint. */
 export const pdfRenderSchema = z
   .object({

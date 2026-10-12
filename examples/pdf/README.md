@@ -9,39 +9,39 @@ Run `npm run dev` and `npm run demo` in separate terminals. The default `WEBAPP_
 ## Factsheet and onepager
 
 ```bash
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/factsheet/id2222?language=en' --output factsheet.pdf
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/onepager/id2222?language=de&year=2027' --output onepager.pdf
+curl --fail-with-body 'http://localhost:3000/pdf/factsheet/id2222?language=en' --output factsheet.pdf
+curl --fail-with-body 'http://localhost:3000/pdf/onepager/id2222?START=2027-01-01&END=2027-12-31&BENCHMARK=SAA' --output onepager.pdf
 ```
 
 The factsheet endpoint renders `/factsheet/id2222` and forces portrait. Onepager renders `/onepager/id2222` and forces landscape. Their API paths have no `.pdf` suffix; attachment filenames are `id2222.pdf`.
 
-Both accept only validated `language` and `year`. Unknown or repeated parameters return 400. HEAD returns attachment metadata without rendering. The demo document pages show the ID; they demonstrate forwarding language/year without translating the text.
+Factsheet accepts validated `language` and `year`; onepager instead accepts optional `START` and `END` as valid `YYYY-MM-DD` dates, and `BENCHMARK` as `SAA` or `REPORTING`. Onepager forwards those uppercase names unchanged and rejects `language` and `year`. Unknown or repeated parameters return 400. HEAD returns attachment metadata without rendering. The demo document pages show the ID; they demonstrate query forwarding without translating the text.
 
-External page patterns and default language live in `src/reports/document/settings.ts`. The shared `src/reports/document/report.ts` validates input, selects the corresponding external path, and applies the endpoint's orientation.
+Each endpoint folder owns a `schema.ts` for path/query validation and a `report.ts` for the external page, default language, explicit parameter mapping, and orientation. See `src/routes/pdf/onepager/[id]/` and `src/routes/pdf/factsheet/[id]/`.
 
 ## Quarterly report
 
 [quarterly-portrait.json](quarterly-portrait.json) and [quarterly-landscape.json](quarterly-landscape.json) select the same quarterly page with different print orientations:
 
 ```bash
-curl --fail-with-body http://localhost:3000/api/exports/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json --output quarterly-report-portrait.pdf
-curl --fail-with-body http://localhost:3000/api/exports/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-landscape.json --output quarterly-report-landscape.pdf
-curl --fail-with-body 'http://localhost:3000/api/exports/pdf/portrait/quarterly?year=2027&quarter=2&language=pl' --output quarterly-2027-q2-pl.pdf
+curl --fail-with-body http://localhost:3000/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-portrait.json --output quarterly-report-portrait.pdf
+curl --fail-with-body http://localhost:3000/pdf/test -H 'Content-Type: application/json' --data-binary @examples/pdf/quarterly-landscape.json --output quarterly-report-landscape.pdf
+curl --fail-with-body 'http://localhost:3000/pdf/quarterly?year=2027&quarter=2&language=pl' --output quarterly-2027-q2-pl.pdf
 ```
 
-The fixed quarterly endpoint renders `/reports/quarterly`, accepts year 2000–2100, quarter 1–4, and language en/de/pl, and waits for `[data-report-ready]`. Its schema and page settings live together in `src/routes/api/exports/pdf/portrait/quarterly/report.ts`.
+The fixed quarterly endpoint renders `/reports/quarterly`, accepts year 2000–2100, quarter 1–4, and language en/de/pl, and waits for `[data-report-ready]`. Its schema and page settings live in `schema.ts` and `report.ts` under `src/routes/pdf/quarterly/`.
 
 ## Where to edit
 
-| Responsibility                                     | File                               |
-| -------------------------------------------------- | ---------------------------------- |
-| Demo HTML pages                                    | [webapp.ts](webapp.ts)             |
-| Document external paths and default language       | `src/reports/document/settings.ts` |
-| Document ID/query validation and page resolution   | `src/reports/document/report.ts`   |
-| Shared print defaults                              | `src/config/defaults.ts`           |
-| PDF input and print-setting validation             | `src/services/pdf/contracts.ts`    |
-| Shared report handler                              | `src/reports/pdf.ts`               |
-| Chromium, navigation boundary, readiness, printing | `src/services/pdf/web-page-pdf.ts` |
+| Responsibility                                     | File                                                     |
+| -------------------------------------------------- | -------------------------------------------------------- |
+| Demo HTML pages                                    | [webapp.ts](webapp.ts)                                   |
+| Document external paths and default language       | Each document route folder's `report.ts`                 |
+| Document ID/query validation and page resolution   | Each document route folder's `schema.ts` and `report.ts` |
+| Shared print defaults                              | `src/config/defaults.ts`                                 |
+| PDF input and print-setting validation             | `src/services/pdf/contracts.ts`                          |
+| Shared report handler                              | `src/reports/pdf.ts`                                     |
+| Chromium, navigation boundary, readiness, printing | `src/services/pdf/web-page-pdf.ts`                       |
 
 See [the PDF guide](../../docs/pdf.md) for readiness and [the endpoint workflow](../../docs/development.md#add-a-pdf-endpoint) for adding a report.
 

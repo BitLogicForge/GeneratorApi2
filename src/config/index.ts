@@ -1,15 +1,10 @@
 import { dataApiEndpoints } from '@/data-api/endpoints';
-import { documentSettings } from '@/reports/document/settings';
-import {
-  documentSettingsSchema,
-  resolvePdfPrintSettings,
-} from '@/services/pdf/contracts';
+import { resolvePdfPrintSettings } from '@/services/pdf/contracts';
 
 import { readEnvironment } from './environment.ts';
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const c = readEnvironment(env);
-  const documents = documentSettingsSchema.parse(documentSettings);
   return {
     pdfPrint: resolvePdfPrintSettings(),
     host: c.HOST,
@@ -24,9 +19,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
         maxBytes: c.DATA_API_CACHE_MAX_BYTES,
       },
     },
-    defaultLanguage: documents.defaultLanguage,
+    defaultLanguage: 'en',
     port: c.PORT,
-    documentRoutes: documents.routes,
     baseUrl: c.baseUrl,
     concurrency: c.PDF_CONCURRENCY,
     timeout: c.RENDER_TIMEOUT_MS,

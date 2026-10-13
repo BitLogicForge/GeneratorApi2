@@ -62,6 +62,13 @@ for (const [endpoint, filename] of [
       /2024-03-01 00:05/,
     );
     const { chart, sheet } = await chartWorkbook(zip);
+    const generatedValues = Array.from(
+      chart
+        .getElementsByTagNameNS(chartNs, 'val')[0]
+        .getElementsByTagNameNS(chartNs, 'v'),
+    );
+    assert.equal(generatedValues.length, 20);
+    assert.ok(generatedValues.every((value) => value.textContent === '42'));
     const categories = chart.getElementsByTagNameNS(chartNs, 'cat')[0];
     const cache = categories.getElementsByTagNameNS(chartNs, 'numCache')[0];
     assert.equal(

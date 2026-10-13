@@ -9,6 +9,7 @@ import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 
+import { createRandomDataGenerator } from './random-data.ts';
 import { TemplateSource } from './template-source.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
@@ -21,17 +22,17 @@ const templateSettings = {
     text2: 'X_T2',
     subtitile: 'X_SUB',
   },
-  chartA: { rows: 20, series: 1 },
-  chartB: { rows: 4, series: 1 },
+  chartA: { rows: 20 },
+  chartB: { rows: 4 },
 };
 const objectNames = Object.values(templateSettings.objects);
 
 export class TmxPocPresentationService {
   private readonly source: TemplateSource;
-  constructor(
-    path: string,
-    private readonly nextNumber: () => number = () => randomInt(1, 101),
-  ) {
+  private readonly generateData: (rows: number) => number[][];
+
+  constructor(path: string, nextNumber?: () => number) {
+    this.generateData = createRandomDataGenerator(1, nextNumber);
     this.source = new TemplateSource(path, async (zip) => {
       await findNamedObjects(zip, objectNames);
     });
@@ -60,15 +61,7 @@ export class TmxPocPresentationService {
     const subtitile = objects.get(templateSettings.objects.subtitile)!;
     replaceParagraphText(subtitile.element, '{{ASOF}}', formatDateTime(now));
 
-    /// Generate chart data for the category chart
-    ///  random values from 1 to 100
-    const chartDataA = Array.from(
-      { length: templateSettings.chartA.rows },
-      () =>
-        Array.from({ length: templateSettings.chartA.series }, () =>
-          this.nextNumber(),
-        ),
-    );
+    const chartDataA = this.generateData(templateSettings.chartA.rows);
     //dates YYYY-MM-DD from today backwards
     const chartRowsNames = Array.from(
       { length: templateSettings.chartA.rows },
@@ -84,13 +77,7 @@ export class TmxPocPresentationService {
       firstRow: 2,
     });
 
-    const chartDataB = Array.from(
-      { length: templateSettings.chartB.rows },
-      () =>
-        Array.from({ length: templateSettings.chartB.series }, () =>
-          this.nextNumber(),
-        ),
-    );
+    const chartDataB = this.generateData(templateSettings.chartB.rows);
 
     const colors = chartDataB.map(() =>
       randomInt(0x1000000).toString(16).padStart(6, '0'),

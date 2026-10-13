@@ -1,5 +1,3 @@
-import { randomInt } from 'node:crypto';
-
 import JSZip from 'jszip';
 
 import { fillCategoryChart } from '@/pptx/jszip/charts';
@@ -8,6 +6,7 @@ import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 
+import { createRandomDataGenerator } from './random-data.ts';
 import { TemplateSource } from './template-source.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
@@ -24,10 +23,18 @@ const objectNames = Object.values(templateSettings.objects);
 
 export class DaaPocPresentationService {
   private readonly source: TemplateSource;
-  constructor(
-    path: string,
-    private readonly nextNumber: () => number = () => randomInt(1, 101),
-  ) {
+  private readonly generateTableData: (rows: number) => number[][];
+  private readonly generateChartData: (rows: number) => number[][];
+
+  constructor(path: string, nextNumber?: () => number) {
+    this.generateTableData = createRandomDataGenerator(
+      templateSettings.table.columns,
+      nextNumber,
+    );
+    this.generateChartData = createRandomDataGenerator(
+      templateSettings.chart.series,
+      nextNumber,
+    );
     this.source = new TemplateSource(path, async (zip) => {
       await findNamedObjects(zip, objectNames);
     });
@@ -44,21 +51,13 @@ export class DaaPocPresentationService {
     const table = objects.get(templateSettings.objects.table)!;
     const chart = objects.get(templateSettings.objects.chart)!;
     const textShape = objects.get(templateSettings.objects.text)!;
-    const tableData = Array.from({ length: templateSettings.table.rows }, () =>
-      Array.from({ length: templateSettings.table.columns }, () =>
-        this.nextNumber(),
-      ),
-    );
+    const tableData = this.generateTableData(templateSettings.table.rows);
 
     fillTable(table.element, tableData, {
       startRow: templateSettings.table.startRow,
     });
     fillTextShape(textShape.element, text);
-    const chartData = Array.from({ length: templateSettings.chart.rows }, () =>
-      Array.from({ length: templateSettings.chart.series }, () =>
-        this.nextNumber(),
-      ),
-    );
+    const chartData = this.generateChartData(templateSettings.chart.rows);
     await fillCategoryChart(zip, chart, chartData, {
       categories: chartData.map(
         (_, index) => `${templateSettings.chart.categoryPrefix}${index + 1}`,

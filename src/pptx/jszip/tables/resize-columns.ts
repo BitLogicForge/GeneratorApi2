@@ -1,6 +1,8 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { drawing, presentationNs } from '@/pptx/jszip/package/namespaces';
 
+import { createTableIdentifierRefresher } from './refresh-identifiers.ts';
+
 import type { Element } from '@xmldom/xmldom';
 
 export function resizeTableColumns(
@@ -33,8 +35,10 @@ export function resizeTableColumns(
     0,
   );
   const targetCount = startColumn + columnCount;
+  const refreshIdentifiers = createTableIdentifierRefresher(table);
   while (columns.length < targetCount) {
     const clone = columns.at(-1)!.cloneNode(true) as Element;
+    refreshIdentifiers(clone);
     grid.appendChild(clone);
     columns.push(clone);
   }
@@ -42,7 +46,10 @@ export function resizeTableColumns(
   for (const [index, cells] of cellsByRow.entries()) {
     while (cells.length < targetCount) {
       const clone = cells.at(-1)!.cloneNode(true) as Element;
-      rows[index].appendChild(clone);
+      const extension = Array.from(rows[index].childNodes).find(
+        (node) => node.namespaceURI === drawing && node.localName === 'extLst',
+      );
+      rows[index].insertBefore(clone, extension ?? null);
       cells.push(clone);
     }
     while (cells.length > targetCount) rows[index].removeChild(cells.pop()!);

@@ -1,6 +1,8 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { drawing } from '@/pptx/jszip/package/namespaces';
 
+import { createTableIdentifierRefresher } from './refresh-identifiers.ts';
+
 import type { Element } from '@xmldom/xmldom';
 
 export function resizeTableRows(
@@ -29,8 +31,10 @@ export function resizeTableRows(
     (sum, row) => sum + Number(row.getAttribute('h')),
     0,
   );
+  const refreshIdentifiers = createTableIdentifierRefresher(table);
   while (rows.length < startRow + rowCount) {
     const clone = rows.at(-1)!.cloneNode(true) as Element;
+    refreshIdentifiers(clone);
     table.appendChild(clone);
     rows.push(clone);
   }

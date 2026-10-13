@@ -14,7 +14,10 @@ await fillCategoryChart(
     [10, 20, 30],
     [40, 50, 60],
   ],
-  { categories: ['January', 'February'] },
+  {
+    categories: ['January', 'February'],
+    colors: ['FF0000', '00AAFF'], // One color per row, across all series.
+  },
 );
 
 await mkdir('output/jszip', { recursive: true });

@@ -6,21 +6,19 @@ import { fillCategoryChart } from '@/pptx/jszip/charts';
 import { findNamedObjects } from '@/pptx/jszip/objects';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
-
-
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
+
 import { TemplateSource } from './template-source.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 const templateSettings = {
   objects: {
-
     chartA: 'X_CHART_A',
     chartB: 'X_CHART_B',
     text0: 'X_T0',
     text1: 'X_T1',
     text2: 'X_T2',
-    subtitile: "X_SUB"
+    subtitile: 'X_SUB',
   },
   chartA: { rows: 20, series: 1 },
   chartB: { rows: 4, series: 1 },
@@ -61,44 +59,61 @@ export class TmxPocPresentationService {
       .join(':');
 
     fillTextShape(text0.element, text);
-    fillTextShape(text1.element, "CHART A");
-    fillTextShape(text2.element, "CHART B");
-
-
+    fillTextShape(text1.element, 'CHART A');
+    fillTextShape(text2.element, 'CHART B');
 
     const subtitile = objects.get(templateSettings.objects.subtitile)!;
     replaceParagraphText(subtitile.element, '{{ASOF}}', date + ' ' + time);
 
     /// Generate chart data for the category chart
     ///  random values from 1 to 100
-    const chartDataA = Array.from({ length: templateSettings.chartA.rows }, () =>
-      Array.from({ length: templateSettings.chartA.series }, () =>
-        this.nextNumber(),
-      ),
+    const chartDataA = Array.from(
+      { length: templateSettings.chartA.rows },
+      () =>
+        Array.from({ length: templateSettings.chartA.series }, () =>
+          this.nextNumber(),
+        ),
     );
     //dates YYYY-MM-DD from today backwards
-    const chartRowsNames = Array.from({ length: templateSettings.chartA.rows }, (_, index) => {
-      const date = new Date();
-      date.setDate(date.getDate() - index);
-      return date.toISOString().split('T')[0];
-    });
-
-    await fillCategoryChart(zip, chartA, chartDataA, {
-      categories: chartRowsNames, firstRow: 2,
-
-
-    });
-
-    const chartDataB = Array.from({ length: templateSettings.chartB.rows }, () =>
-      Array.from({ length: templateSettings.chartB.series }, () =>
-        this.nextNumber(),
-      ),
+    const chartRowsNames = Array.from(
+      { length: templateSettings.chartA.rows },
+      (_, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - index);
+        return date.toISOString().split('T')[0];
+      },
     );
 
+    await fillCategoryChart(zip, chartA, chartDataA, {
+      categories: chartRowsNames,
+      firstRow: 2,
+    });
 
-    await fillCategoryChart(zip, chartB, chartDataB, { firstColumn: "B", firstRow: 2 });
+    const chartDataB = Array.from(
+      { length: templateSettings.chartB.rows },
+      () =>
+        Array.from({ length: templateSettings.chartB.series }, () =>
+          this.nextNumber(),
+        ),
+    );
 
-    for (const path of new Set([chartA.path, chartB.path, text0.path, text1.path, text2.path, subtitile.path]))
+    const colors = chartDataB.map(() =>
+      randomInt(0x1000000).toString(16).padStart(6, '0'),
+    );
+    await fillCategoryChart(zip, chartB, chartDataB, {
+      firstColumn: 'B',
+      firstRow: 2,
+      colors,
+    });
+
+    for (const path of new Set([
+      chartA.path,
+      chartB.path,
+      text0.path,
+      text1.path,
+      text2.path,
+      subtitile.path,
+    ]))
       writeXml(zip, path, slides.get(path)!);
 
     return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });

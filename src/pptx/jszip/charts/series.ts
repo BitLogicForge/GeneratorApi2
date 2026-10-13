@@ -5,6 +5,7 @@ import { chartNs } from '@/pptx/jszip/package/namespaces';
 import { setWorksheetCell } from '@/pptx/jszip/spreadsheet';
 
 import { fillCache } from './cache.ts';
+import { fillPointColors } from './point-colors.ts';
 
 import type { Document, Element } from '@xmldom/xmldom';
 import type { createChartRange } from './ranges.ts';
@@ -19,6 +20,7 @@ export function fillChartSeries(
     firstRow,
     categories,
     seriesNames,
+    colors,
     date1904 = false,
   }: Required<Pick<CategoryChartOptions, 'sheetName' | 'firstRow'>> &
     CategoryChartOptions & { date1904?: boolean },
@@ -30,6 +32,7 @@ export function fillChartSeries(
   }: ReturnType<typeof createChartRange>,
 ) {
   for (const [seriesIndex, item] of series.entries()) {
+    if (colors) fillPointColors(item, colors);
     const column = columnName(columnNumber + seriesIndex);
     const values = item.getElementsByTagNameNS(chartNs, 'val')[0];
     const formula = values?.getElementsByTagNameNS(chartNs, 'f')[0];

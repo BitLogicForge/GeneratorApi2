@@ -24,6 +24,7 @@ export async function fillCategoryChart(
     firstRow = 2,
     categories,
     seriesNames,
+    colors,
   }: CategoryChartOptions = {},
 ) {
   if (
@@ -39,6 +40,14 @@ export async function fillCategoryChart(
   if (categories && categories.length !== data.length) throw invalidTemplate();
   if (seriesNames && seriesNames.length !== data[0].length)
     throw invalidTemplate();
+  if (
+    colors &&
+    (colors.length !== data.length ||
+      colors.some((color) => !/^[0-9a-f]{6}$/i.test(color)))
+  )
+    throw invalidTemplate(
+      'Chart colors require one six-digit RGB hex color per data row',
+    );
   const chartReference = chartObject.element.getElementsByTagNameNS(
     chartNs,
     'chart',
@@ -82,7 +91,7 @@ export async function fillCategoryChart(
     sheet,
     series,
     data,
-    { sheetName, firstRow, categories, seriesNames, date1904 },
+    { sheetName, firstRow, categories, seriesNames, colors, date1904 },
     range,
   );
   await resizeWorkbookTables(

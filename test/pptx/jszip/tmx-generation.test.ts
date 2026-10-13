@@ -11,6 +11,7 @@ import { loadChartWorkbook } from '@/pptx/jszip/charts/load-workbook';
 import { findNamedObjects } from '@/pptx/jszip/objects';
 import {
   chartNs,
+  drawing,
   relationshipNs,
   spreadsheet,
 } from '@/pptx/jszip/package/namespaces';
@@ -21,9 +22,9 @@ import { createReportServices } from '@/reports/services';
 import { templateFile } from '@/reports/template';
 import { TmxPocPresentationService } from '@/services/jszip/tmx-poc-presentation-service';
 
-async function chartWorkbook(zip: JSZip) {
-  const { objects } = await findNamedObjects(zip, ['X_CHART_A']);
-  const object = objects.get('X_CHART_A')!;
+async function chartWorkbook(zip: JSZip, name = 'X_CHART_A') {
+  const { objects } = await findNamedObjects(zip, [name]);
+  const object = objects.get(name)!;
   const reference = object.element.getElementsByTagNameNS(chartNs, 'chart')[0];
   const path = await resolveRelationship(
     zip,
@@ -80,6 +81,21 @@ for (const [endpoint, filename] of [
       );
     }
     assert.deepEqual(await readFile(path), before);
+    const { chart: chartB } = await chartWorkbook(zip, 'X_CHART_B');
+    const points = Array.from(chartB.getElementsByTagNameNS(chartNs, 'dPt'));
+    assert.equal(points.length, 4);
+    for (const [index, point] of points.entries()) {
+      assert.equal(
+        point.getElementsByTagNameNS(chartNs, 'idx')[0].getAttribute('val'),
+        String(index),
+      );
+      assert.match(
+        point
+          .getElementsByTagNameNS(drawing, 'srgbClr')[0]
+          .getAttribute('val')!,
+        /^[0-9A-F]{6}$/,
+      );
+    }
   });
 
   test(`${endpoint} returns a PPTX through its actual route`, async () => {
@@ -146,6 +162,45 @@ test('numeric category dates respect Excel leap-year compatibility and the workb
         Number(item.textContent),
       ),
       expected,
+    );
+  }
+});
+
+test('row colors update editable chart points and replace stale overrides when shrinking', async () => {
+  const zip = await JSZip.loadAsync(await readFile(templateFile('Tmp1.pptx')));
+  const { object } = await chartWorkbook(zip, 'X_CHART_B');
+  await fillCategoryChart(zip, object, [[10], [20]], {
+    categories: ['First', 'Second'],
+    colors: ['ff0000', '00FF00'],
+  });
+  let { chart, sheet } = await chartWorkbook(zip, 'X_CHART_B');
+  assert.deepEqual(
+    Array.from(chart.getElementsByTagNameNS(chartNs, 'dPt')).map((point) =>
+      point.getElementsByTagNameNS(drawing, 'srgbClr')[0].getAttribute('val'),
+    ),
+    ['FF0000', '00FF00'],
+  );
+  assert.equal(
+    Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'c'))
+      .find((cell) => cell.getAttribute('r') === 'B2')!
+      .getElementsByTagNameNS(spreadsheet, 'v')[0].textContent,
+    '10',
+  );
+  await fillCategoryChart(zip, object, [[30]], {
+    categories: ['Only'],
+    colors: ['0000FF'],
+  });
+  ({ chart } = await chartWorkbook(zip, 'X_CHART_B'));
+  const points = Array.from(chart.getElementsByTagNameNS(chartNs, 'dPt'));
+  assert.equal(points.length, 1);
+  assert.equal(
+    points[0].getElementsByTagNameNS(drawing, 'srgbClr')[0].getAttribute('val'),
+    '0000FF',
+  );
+  for (const colors of [[], ['red'], ['#FF0000'], ['FFFFFF', '000000']]) {
+    await assert.rejects(
+      fillCategoryChart(zip, object, [[1]], { colors }),
+      /Chart colors require/,
     );
   }
 });

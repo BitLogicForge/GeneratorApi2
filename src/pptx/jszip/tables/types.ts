@@ -4,4 +4,6 @@ export interface FillTableOptions {
   startColumn?: number;
   resizeRows?: boolean;
   resizeColumns?: boolean;
+  /** Text colors aligned with data rows/columns; undefined preserves template color. */
+  cellColors?: (string | undefined)[][];
 }

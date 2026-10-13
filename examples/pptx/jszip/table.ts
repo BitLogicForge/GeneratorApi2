@@ -14,7 +14,14 @@ fillTable(
     [1, 2, 3, 4],
     [5, 6, 7, 8],
   ],
-  { startRow: 1, resizeRows: true },
+  {
+    startRow: 1,
+    resizeRows: true,
+    cellColors: [
+      ['FF0000', '008800', '0000FF', undefined],
+      ['880088', 'FF8800', '008888', undefined],
+    ],
+  },
 );
 for (const [path, document] of slides) writeXml(zip, path, document);
 

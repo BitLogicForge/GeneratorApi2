@@ -118,6 +118,35 @@ test('onepager accepts each optional parameter independently and both benchmarks
   }
 });
 
+test('onepager uses the request time in a filename-safe download name', async (t) => {
+  t.mock.timers.enable({
+    apis: ['Date'],
+    now: new Date('2024-02-29T23:59:00Z'),
+  });
+  const { app, inputs } = setup();
+  const first = await request(app).get('/pdf/onepager/id2222').expect(200);
+  assert.match(
+    first.headers['content-disposition'],
+    /onepager-2024-02-29-23-59-id2222\.pdf/,
+  );
+  t.mock.timers.setTime(new Date('2024-03-01T00:01:00Z').getTime());
+  const second = await request(app).head('/pdf/onepager/id2222').expect(200);
+  assert.match(
+    second.headers['content-disposition'],
+    /onepager-2024-03-01-00-01-id2222\.pdf/,
+  );
+  assert.equal(inputs.length, 1);
+});
+
+test('onepager preserves a maximum-length document ID in its download name', async () => {
+  const { app, inputs } = setup();
+  const id = 'a'.repeat(80);
+  const response = await request(app).get(`/pdf/onepager/${id}`).expect(200);
+  assert.ok(response.headers['content-disposition'].includes(`${id}.pdf`));
+  assert.equal(inputs[0]?.filename, id);
+  assert.equal(inputs[0]?.route, `/onepager/${id}`);
+});
+
 test('onepager rejects removed language/year, invalid dates, benchmark values and duplicate parameters', async () => {
   const { app, inputs } = setup();
   for (const query of [

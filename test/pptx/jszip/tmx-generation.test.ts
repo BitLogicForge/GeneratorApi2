@@ -44,15 +44,23 @@ for (const [endpoint, filename] of [
   ['tma', 'Tmp1.pptx'],
   ['tmb', 'Tmp2.pptx'],
 ]) {
-  test(`${endpoint} generates editable date charts and leaves its source unchanged`, async () => {
+  test(`${endpoint} generates editable date charts and leaves its source unchanged`, async (t) => {
+    t.mock.timers.enable({
+      apis: ['Date'],
+      now: new Date('2024-03-01T00:05:00Z'),
+    });
     const path = templateFile(filename!);
     const before = await readFile(path);
     const result = await new TmxPocPresentationService(path, () => 42).generate(
       'Custom title',
     );
     const zip = await JSZip.loadAsync(result);
-    const { objects } = await findNamedObjects(zip, ['X_T0']);
+    const { objects } = await findNamedObjects(zip, ['X_T0', 'X_SUB']);
     assert.match(objects.get('X_T0')!.element.textContent!, /Custom title/);
+    assert.match(
+      objects.get('X_SUB')!.element.textContent!,
+      /2024-03-01 00:05/,
+    );
     const { chart, sheet } = await chartWorkbook(zip);
     const categories = chart.getElementsByTagNameNS(chartNs, 'cat')[0];
     const cache = categories.getElementsByTagNameNS(chartNs, 'numCache')[0];
@@ -68,6 +76,7 @@ for (const [endpoint, filename] of [
       (item) => Number(item.textContent),
     );
     assert.equal(values.length, 20);
+    assert.equal(values[0], 45352);
     assert.equal(values[0] - values[19], 19);
     assert.ok(chart.getElementsByTagNameNS(chartNs, 'dateAx').length);
     for (const [index, value] of values.entries()) {

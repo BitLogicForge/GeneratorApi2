@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto';
 
 import JSZip from 'jszip';
 
+import { formatDateTime } from '@/date-time';
 import { fillCategoryChart } from '@/pptx/jszip/charts';
 import { findNamedObjects } from '@/pptx/jszip/objects';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
@@ -50,20 +51,14 @@ export class TmxPocPresentationService {
     const text1 = objects.get(templateSettings.objects.text1)!;
     const text2 = objects.get(templateSettings.objects.text2)!;
 
-    const date = new Date().toISOString().split('T')[0];
-    const time = new Date()
-      .toISOString()
-      .split('T')[1]
-      .split(':')
-      .slice(0, 2)
-      .join(':');
+    const now = new Date();
 
     fillTextShape(text0.element, text);
     fillTextShape(text1.element, 'CHART A');
     fillTextShape(text2.element, 'CHART B');
 
     const subtitile = objects.get(templateSettings.objects.subtitile)!;
-    replaceParagraphText(subtitile.element, '{{ASOF}}', date + ' ' + time);
+    replaceParagraphText(subtitile.element, '{{ASOF}}', formatDateTime(now));
 
     /// Generate chart data for the category chart
     ///  random values from 1 to 100
@@ -78,9 +73,9 @@ export class TmxPocPresentationService {
     const chartRowsNames = Array.from(
       { length: templateSettings.chartA.rows },
       (_, index) => {
-        const date = new Date();
-        date.setDate(date.getDate() - index);
-        return date.toISOString().split('T')[0];
+        const date = new Date(now);
+        date.setUTCDate(date.getUTCDate() - index);
+        return formatDateTime(date, { format: 'date' });
       },
     );
 

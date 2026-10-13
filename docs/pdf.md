@@ -11,7 +11,7 @@
 | GET/HEAD `/pdf/onepager/:id`  | `/onepager/{id}`          | Always landscape                    |
 | GET/HEAD `/pdf/quarterly`     | `/reports/quarterly`      | Always portrait                     |
 
-Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Both download an attachment named `{id}.pdf`. The previous portrait/landscape document download URLs are removed. See [PDF examples](../examples/pdf/README.md).
+Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Factsheet downloads `{id}.pdf`. Onepager downloads `onepager-YYYY-MM-DD-HH-mm-{id}.pdf`, using the request's UTC date and time. If the complete filename would exceed 80 characters before the extension, it uses `{id}.pdf` to preserve the full ID. The previous portrait/landscape document download URLs are removed. See [PDF examples](../examples/pdf/README.md).
 
 ## External page configuration
 

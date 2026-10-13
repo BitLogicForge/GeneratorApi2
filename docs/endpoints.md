@@ -56,7 +56,7 @@ Open this URL in your browser outside Docker:
 http://localhost:3000/pdf/factsheet/id2222?language=en
 ```
 
-The document ID is the filename. Factsheet accepts `language` and `year`. Onepager accepts `START`, `END`, and `BENCHMARK`:
+Factsheet uses the document ID as its filename; onepager includes the request's UTC timestamp when the name fits the filename limit. Factsheet accepts `language` and `year`. Onepager accepts `START`, `END`, and `BENCHMARK`:
 
 Query parameters are optional: `http://localhost:3000/pdf/factsheet/id2222` uses the route-local `defaultLanguage` (`en` by default). Change it in the endpoint's `report.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
 
@@ -155,7 +155,7 @@ Renders `/onepager/{id}` on `WEBAPP_BASE_URL`, always in landscape orientation:
 curl --fail-with-body 'http://localhost:3000/pdf/onepager/id2222?START=2027-01-01&END=2027-12-31&BENCHMARK=SAA' --output onepager.pdf
 ```
 
-This selects its own external page rather than reprinting the factsheet page. Both endpoints return `Content-Type: application/pdf`, attachment downloads, `Cache-Control: no-store`, and request IDs. The filename remains `id2222.pdf`.
+This selects its own external page rather than reprinting the factsheet page. Both endpoints return `Content-Type: application/pdf`, attachment downloads, `Cache-Control: no-store`, and request IDs. Onepager names its attachment `onepager-YYYY-MM-DD-HH-mm-id2222.pdf` using the request's UTC date and time. If adding the prefix and timestamp would exceed the 80-character filename limit before `.pdf`, the filename is `{id}.pdf` without truncating the ID.
 
 Both routes support HEAD without rendering. IDs accept 1–80 letters, numbers, underscores, and hyphens. The allowed query parameters depend on the route:
 

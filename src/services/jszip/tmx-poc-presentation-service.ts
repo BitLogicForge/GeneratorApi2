@@ -88,15 +88,7 @@ export class TmxPocPresentationService {
       colors,
     });
 
-    for (const path of new Set([
-      chartA.path,
-      chartB.path,
-      text0.path,
-      text1.path,
-      text2.path,
-      subtitile.path,
-    ]))
-      writeXml(zip, path, slides.get(path)!);
+    for (const [path, document] of slides) writeXml(zip, path, document);
 
     return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   }

@@ -63,8 +63,7 @@ export class DaaPocPresentationService {
         (_, index) => `${templateSettings.chart.categoryPrefix}${index + 1}`,
       ),
     });
-    for (const path of new Set([table.path, textShape.path]))
-      writeXml(zip, path, slides.get(path)!);
+    for (const [path, document] of slides) writeXml(zip, path, document);
 
     return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   }

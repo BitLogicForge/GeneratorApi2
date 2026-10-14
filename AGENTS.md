@@ -75,6 +75,14 @@ The following map identifies the main areas of responsibility:
 
 ## Verification
 
+For Codex tasks, prefer static checks. Do not add or run tests unless the user
+explicitly requests tests or a workflow that includes them, such as full CI
+verification. A request to implement, fix, refactor, or review code alone does
+not request tests. Reading existing tests to understand behavior is encouraged.
+If a concrete runtime concern remains, report it and the smallest useful check;
+do not automatically start testing or repeatedly ask to run a suite.
+Preserve existing tests and CI checks.
+
 Run `npm run knip` after changing code, exports, dependencies, or entry points.
 Knip checks unused files, exports, and dependencies. Add new standalone entry
 points that are not recognized from npm scripts to `entry` in `knip.json`.
@@ -82,23 +90,54 @@ Do not suppress findings without checking whether the reported code is used.
 
 Choose checks appropriate to the change. Check `package.json` for available commands.
 
-| Change                              | Verification                                                                       |
-| ----------------------------------- | ---------------------------------------------------------------------------------- |
-| TypeScript                          | `npm run typecheck` and relevant tests                                             |
-| Single module                       | `npx --no-install tsx --test test/http/api.test.ts` (substitute the relevant file) |
-| Shared logic, routing, or contracts | `npm test`                                                                         |
-| Formatting a changed file           | `npx --no-install prettier --check AGENTS.md` (substitute the relevant path)       |
-| Formatting the entire project       | `npm run format:check`                                                             |
-| Compilation and running from `dist` | `npm run build`                                                                    |
-| Azure packaging                     | `npm run test:azure`; see `docs/azure.md`                                          |
-| Document appearance                 | `npm run test:outputs` and inspection of the relevant artifacts                    |
+| Change                              | Verification                                                                 |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| TypeScript                          | `npm run typecheck`, `npm run lint:code`, and Knip                           |
+| Documentation or skill instructions | Check correctness and format only changed files                              |
+| Formatting a changed file           | `npx --no-install prettier --check AGENTS.md` (substitute the relevant path) |
+| Formatting the entire project       | `npm run format:check`                                                       |
+| Compilation and running from `dist` | `npm run build`                                                              |
 
-- For behavior changes or bug fixes, add a test that verifies an observable
-  result. Do not add tests that merely reproduce the implementation.
+When the user requests tests, select the smallest relevant scope:
+
+- For one module, use `npx --no-install tsx --test test/http/api.test.ts`,
+  substituting the relevant file. Use `npm test` when the requested verification
+  needs coverage across shared logic, routing, or contracts.
+- For Azure packaging, use `npm run test:azure`; see `docs/azure.md`.
+- Add a test for observable behavior when requested. Do not add tests that merely
+  reproduce the implementation or assert private helper structure.
 - PDF rendering tests require Chromium and its system libraries.
   `npm run browser:install` installs the browser and its dependencies.
 - HTTP tests should cover relevant statuses, headers, validation, and errors.
   PPTX tests should verify the relevant ZIP/XML parts and document data.
 - For documentation-only changes, checking correctness and formatting is sufficient.
+- Check npm scripts before running an aggregate command. Commands such as
+  `npm run verify:ci`, `npm run deps:verify`, and `npm run deps:update` include
+  tests and are subject to the same explicit-request policy. Browser installation
+  and document artifact generation are not default static checks.
+- Once relevant checks pass, do not broaden or repeat them without a new change,
+  failure, or unresolved concern. Static checks do not prove runtime behavior.
 - In the summary, report the result, checks performed, and any blockers.
   Do not claim that tests passed unless they were run.
+
+## Code quality and maintenance
+
+- Choose the smallest clear change that satisfies the request. Add abstractions,
+  dependencies, options, or files only when they solve a current need.
+- Keep report-specific rules near their owner. Extract shared logic when callers
+  have the same semantics and reason to change, not merely similar code.
+- Reuse schemas and service contracts rather than duplicating input types or
+  hiding mismatches with `any`, type assertions, or lint suppressions.
+- Limit refactoring to the requested scope. Prefer readable data flow and clear
+  responsibilities over arbitrary file/function size targets or indirection.
+
+## Project skills
+
+Use the matching skill for the current task; do not load all skills or start an
+unrelated audit. The verification policy above applies even when no skill is used.
+
+| Task                        | Skill                                                                  |
+| --------------------------- | ---------------------------------------------------------------------- |
+| Implement features or fixes | [generatorapi-quality](.agents/skills/generatorapi-quality/SKILL.md)   |
+| Simplify or reorganize code | [generatorapi-refactor](.agents/skills/generatorapi-refactor/SKILL.md) |
+| Review code or a change     | [generatorapi-review](.agents/skills/generatorapi-review/SKILL.md)     |

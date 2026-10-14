@@ -155,10 +155,12 @@ The DAA report maps the public `TEXT_ME` field to the string consumed by its ser
 
 ## Test, document, and deploy
 
-1. Add HTTP tests under `test/http/` covering downloads, defaults, invalid/unknown/duplicate parameters, errors, and HEAD. Cover both methods when exposing GET and POST.
-2. Verify PDF forwarding/appearance or relevant PPTX ZIP/XML content. For chart changes, check the embedded workbook and editability too.
+For Codex tasks, follow the [verification policy in AGENTS.md](../AGENTS.md#verification): use static checks by default and add or run tests only when explicitly requested. Existing tests and CI verification remain in place.
+
+1. When tests are requested, add or run relevant HTTP tests under `test/http/` covering downloads, defaults, invalid/unknown/duplicate parameters, errors, and HEAD. Cover both methods when exposing GET and POST.
+2. When document verification is requested, inspect PDF forwarding/appearance or relevant PPTX ZIP/XML content. For chart changes, check the embedded workbook and editability too.
 3. Update `docs/endpoints.md` and add an output example when useful.
-4. Run `npm run lint`, `npm test`, and `npm run build`. Run `npm run test:outputs` when document appearance changes.
+4. For TypeScript changes, run `npm run typecheck`, `npm run lint:code`, and `npm run knip`; check formatting of changed files. Run `npm run build` when compilation, import rewriting, or execution from `dist/` changes. Use `npm test` only when the requested verification requires the full suite.
 5. Restart after adding/moving method files. GitLab compiles `dist/` before ACR packages the image; template `.pptx` files are included automatically.
 
 For report tests, use the generic service container rather than adding a property to `AppOptions`:
@@ -172,7 +174,7 @@ await reports.initialize();
 
 Import `createReportServices` from `@/reports/services` and `report` from the report module. The PDF service remains directly injectable. Existing `presentations`, `templatePresentations`, and `templateReportDemo` injections remain supported for compatibility. New reports should use `reports.override`. A test can pass discovered routes as the second argument to `createApp` to exercise a new report in isolation.
 
-Adding a report requires its definition, method re-exports, optional service/template, tests, and documentation. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
+Adding a report requires its definition, method re-exports, optional service/template, and documentation; add tests when requested. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
 
 ## Manual checks
 

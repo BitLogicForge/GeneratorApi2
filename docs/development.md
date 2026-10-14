@@ -155,7 +155,7 @@ The DAA report maps the public `TEXT_ME` field to the string consumed by its ser
 
 ## Test, document, and deploy
 
-For Codex tasks, follow the [verification policy in AGENTS.md](../AGENTS.md#verification): use static checks by default and add or run tests only when explicitly requested. Existing tests and CI verification remain in place.
+For agent tasks, follow the [verification policy in AGENTS.md](../AGENTS.md#verification): use static checks by default and add or run tests only when explicitly requested. Existing tests and CI verification remain in place.
 
 1. When tests are requested, add or run relevant HTTP tests under `test/http/` covering downloads, defaults, invalid/unknown/duplicate parameters, errors, and HEAD. Cover both methods when exposing GET and POST.
 2. When document verification is requested, inspect PDF forwarding/appearance or relevant PPTX ZIP/XML content. For chart changes, check the embedded workbook and editability too.

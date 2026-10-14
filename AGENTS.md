@@ -75,7 +75,7 @@ The following map identifies the main areas of responsibility:
 
 ## Verification
 
-For Codex tasks, prefer static checks. Do not add or run tests unless the user
+For agent tasks, prefer static checks. Do not add or run tests unless the user
 explicitly requests tests or a workflow that includes them, such as full CI
 verification. A request to implement, fix, refactor, or review code alone does
 not request tests. Reading existing tests to understand behavior is encouraged.

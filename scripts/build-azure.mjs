@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import {
   cp,
   lstat,
@@ -18,35 +18,23 @@ import JSZip from 'jszip';
 
 import { rewriteSourceAliases } from './rewrite-imports.mjs';
 
+if (process.platform !== 'linux')
+  throw new Error(
+    'Build this Linux App Service package on Linux, WSL, or in the devcontainer.',
+  );
+
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'output', 'azure', 'generator-api.zip');
 const staging = await mkdtemp(join(tmpdir(), 'generator-api-azure-'));
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-async function run(command, args, cwd = root) {
-  await new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd,
-      stdio: 'inherit',
-      env: process.env,
-    });
-    child.once('error', reject);
-    child.once('exit', (code, signal) =>
-      code === 0
-        ? resolve()
-        : reject(new Error(`${command} failed (${signal ?? code})`)),
-    );
-  });
+function run(command, args, cwd = root) {
+  execFileSync(command, args, { cwd, stdio: 'inherit' });
 }
 
 try {
-  if (process.platform !== 'linux')
-    throw new Error(
-      'Build this Linux App Service package on Linux, WSL, or in the devcontainer.',
-    );
-  await run(npm, ['run', 'typecheck']);
+  run('npm', ['run', 'typecheck']);
   // Compile into a fresh directory so renamed/deleted services cannot leave stale files.
-  await run(process.execPath, [
+  run(process.execPath, [
     'node_modules/typescript/bin/tsc',
     '-p',
     'tsconfig.json',
@@ -56,41 +44,35 @@ try {
     'false',
   ]);
   await rewriteSourceAliases(join(staging, 'dist'));
-  for (const name of ['package.json', 'package-lock.json'])
-    await cp(join(root, name), join(staging, name));
-  await mkdir(join(staging, 'templates'));
-  for (const file of await readdir(join(root, 'templates'))) {
-    if (file.endsWith('.pptx'))
-      await cp(join(root, 'templates', file), join(staging, 'templates', file));
+  for (const name of [
+    'package.json',
+    'package-lock.json',
+    'scripts/start-azure.sh',
+    'templates',
+  ]) {
+    await mkdir(dirname(join(staging, name)), { recursive: true });
+    await cp(join(root, name), join(staging, name), { recursive: true });
   }
-  for (const required of ['business.pptx', 'daa.pptx'])
-    await readFile(join(staging, 'templates', required));
-  await mkdir(join(staging, 'scripts'));
-  await cp(
-    join(root, 'scripts', 'start-azure.sh'),
-    join(staging, 'scripts', 'start-azure.sh'),
-  );
-  await run(npm, ['ci', '--omit=dev', '--no-audit', '--no-fund'], staging);
+  run('npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], staging);
 
   const zip = new JSZip();
-  async function addDirectory(directory) {
-    for (const name of (await readdir(directory)).sort()) {
-      const path = join(directory, name);
-      const info = await lstat(path);
-      const archivePath = relative(staging, path).split('\\').join('/');
-      if (info.isDirectory()) await addDirectory(path);
-      else
-        zip.file(
-          archivePath,
-          info.isSymbolicLink() ? await readlink(path) : await readFile(path),
-          {
-            unixPermissions: info.mode,
-            createFolders: false,
-          },
-        );
-    }
+  // Dirents avoid traversing symlinked directories in node_modules.
+  const entries = await readdir(staging, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  const files = entries
+    .filter((entry) => !entry.isDirectory())
+    .map((entry) => join(entry.parentPath, entry.name))
+    .sort();
+  for (const path of files) {
+    const info = await lstat(path);
+    zip.file(
+      relative(staging, path),
+      info.isSymbolicLink() ? await readlink(path) : await readFile(path),
+      { unixPermissions: info.mode, createFolders: false },
+    );
   }
-  await addDirectory(staging);
   await mkdir(dirname(output), { recursive: true });
   const archive = await zip.generateAsync({
     type: 'nodebuffer',

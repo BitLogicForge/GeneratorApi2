@@ -45,6 +45,20 @@ verify:
       - dist/
     expire_in: 1 week
 
+build_zip:
+  extends: .node_job
+  stage: build
+  needs:
+    - job: verify
+      artifacts: true
+  script:
+    - npm ci --omit=dev --no-audit --no-fund
+    - npm run build:azure
+  artifacts:
+    paths:
+      - output/azure/generator-api.zip
+    expire_in: 1 week
+
 .azure_job:
   image:
     name: '$AZURE_CLI_IMAGE'

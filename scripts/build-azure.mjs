@@ -16,8 +16,6 @@ import { fileURLToPath } from 'node:url';
 
 import JSZip from 'jszip';
 
-import { rewriteSourceAliases } from './rewrite-imports.mjs';
-
 if (process.platform !== 'linux')
   throw new Error(
     'Build this Linux App Service package on Linux, WSL, or in the devcontainer.',
@@ -27,24 +25,10 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const output = join(root, 'output', 'azure', 'generator-api.zip');
 const staging = await mkdtemp(join(tmpdir(), 'generator-api-azure-'));
 
-function run(command, args, cwd = root) {
-  execFileSync(command, args, { cwd, stdio: 'inherit' });
-}
-
 try {
-  run('npm', ['run', 'typecheck']);
-  // Compile into a fresh directory so renamed/deleted services cannot leave stale files.
-  run(process.execPath, [
-    'node_modules/typescript/bin/tsc',
-    '-p',
-    'tsconfig.json',
-    '--outDir',
-    join(staging, 'dist'),
-    '--sourceMap',
-    'false',
-  ]);
-  await rewriteSourceAliases(join(staging, 'dist'));
+  // Compilation and checks run before packaging; CI supplies dist/ as an artifact.
   for (const name of [
+    'dist',
     'package.json',
     'package-lock.json',
     'scripts/start-azure.sh',
@@ -53,7 +37,10 @@ try {
     await mkdir(dirname(join(staging, name)), { recursive: true });
     await cp(join(root, name), join(staging, name), { recursive: true });
   }
-  run('npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], staging);
+  execFileSync('npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
+    cwd: staging,
+    stdio: 'inherit',
+  });
 
   const zip = new JSZip();
   // Dirents avoid traversing symlinked directories in node_modules.

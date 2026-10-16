@@ -160,4 +160,17 @@ The document language and external route live in each PDF route folder's `report
 
 ## Legacy ZIP packaging
 
-`npm run build:azure` and `npm run test:azure` remain available for Node.js App Service hosts that permit Chromium and OS package installation at startup. They create and verify `output/azure/generator-api.zip`, using `bash scripts/start-azure.sh` as the startup command. The GitLab pipeline described here uses the prebuilt Chromium base image and container deployment.
+The `build_zip` job downloads `dist/` from `verify`, runs `npm run build:azure`, and publishes `output/azure/generator-api.zip` as a downloadable artifact for one week. It runs in branch and merge-request pipelines admitted by the workflow rules. Deployment jobs continue to use the Docker image.
+
+The packaging script uses the existing compiled output, copies all of `templates/` and the startup script, installs production dependencies, and creates the ZIP. It does not compile or run checks. For a local package, run on Linux:
+
+```bash
+npm ci
+npm run typecheck
+npm run build
+npm run build:azure
+```
+
+The ZIP targets Node.js App Service hosts that permit Chromium and OS package installation at startup, using `bash scripts/start-azure.sh` as the startup command. Browser files and system libraries are not bundled in the ZIP. Configure any corporate npm registry authentication for both the CI job and the packaging script's temporary-directory install, for example through a user-level npm configuration. A repository-local `.npmrc` is not copied into the package.
+
+The existing `test:azure` command points to a missing `test/deployment/azure-package.ts` file, so it cannot currently verify the ZIP.

@@ -14,30 +14,54 @@ variables:
   npm_config_audit: 'false'
   npm_config_fund: 'false'
 
+default:
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+
 stages:
+  - test
   - build
   - deploy
 
-workflow: # Define the workflow for the pipeline
+workflow:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' # Run for merge request events
-    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH' # Run for production or dev branch commits
-    - when: never # Do not run for any other cases
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH'
+    - when: never
 
 .node_job:
   image:
     name: '$NODE_IMAGE'
     entrypoint: ['']
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+
+lint:
+  extends: .node_job
+  stage: test
+  needs: []
+  script:
+    - npm run lint
+
+test:
+  extends: .node_job
+  stage: test
+  needs: []
+  script:
+    - npm test
 
 build:
   extends: .node_job
   stage: build
+  needs: []
   before_script:
     - which zip >/dev/null 2>&1 || (apt-get update && apt-get install -y --no-install-recommends zip)
+    - npm ci --cache .npm --prefer-offline
   script:
-    - npm ci
-    - npm run lint
-    - npm test
     - npm run build
     - npm prune --omit=dev
     - chmod +x scripts/start-azure.sh
@@ -60,6 +84,8 @@ build:
   extends: .azure_job
   stage: deploy
   needs:
+    - job: lint
+    - job: test
     - job: build
       artifacts: true
   variables:

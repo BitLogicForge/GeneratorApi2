@@ -19,7 +19,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### R1. Every onepager request fails its own filename validation
 
-**Where:** [onepager/report.ts:13](../src/routes/pdf/onepager/[id]/report.ts#L13), [onepager/report.ts:30](../src/routes/pdf/onepager/[id]/report.ts#L30), [filename.ts:3](../src/validation/filename.ts#L3).
+**Where:** [onepager/report.ts:13](../../src/routes/pdf/onepager/[id]/report.ts#L13), [onepager/report.ts:30](../../src/routes/pdf/onepager/[id]/report.ts#L30), [filename.ts:3](../../src/validation/filename.ts#L3).
 
 **Why:** The filename contains `HH:MM`, but the filename schema permits only letters, numbers, underscores, and hyphens. A valid `GET /pdf/onepager/id2222` therefore returns 400 before rendering; HEAD also fails. The date/time are captured at module import, so they would describe server startup even after the colon is removed. Prefixing an otherwise valid 80-character ID would also exceed the 80-character filename limit.
 
@@ -29,7 +29,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### R2. Tests import deleted routes and cannot execute
 
-**Where:** [onet.test.ts:10](../test/http/onet.test.ts#L10), [pptx-routes.test.ts:12](../test/http/pptx-routes.test.ts#L12).
+**Where:** [onet.test.ts:10](../../test/http/onet.test.ts#L10), [pptx-routes.test.ts:12](../../test/http/pptx-routes.test.ts#L12).
 
 **Why:** Five imports still target `pdf/onet`, `pptx/jszip/{business,daa,summary}`, and `pptx/pptxgenjs/brief`. Those modules do not exist. The corresponding surviving definitions live under `pdf/example`, `pptx/daa`, and `pptxgenjs/brief`; business and summary definitions are absent. Two test files fail to load, hiding all of their behavior checks. Type checking and Knip fail on the same imports, blocking the CI verification stage.
 
@@ -39,7 +39,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### R3. The published API and the discovered API disagree
 
-**Where:** [README.md:28](../README.md#L28), [endpoints.md:115](endpoints.md#L115), [endpoints.md:164](endpoints.md#L164), [examples/README.md:41](../examples/README.md#L41), [factsheet/schema.ts:6](../src/routes/pdf/factsheet/[id]/schema.ts#L6), [factsheet/report.ts:12](../src/routes/pdf/factsheet/[id]/report.ts#L12).
+**Where:** [README.md:28](../../README.md#L28), [endpoints.md:115](../guides/endpoints.md#L115), [endpoints.md:164](../guides/endpoints.md#L164), [examples/README.md:41](../../examples/README.md#L41), [factsheet/schema.ts:6](../../src/routes/pdf/factsheet/[id]/schema.ts#L6), [factsheet/report.ts:12](../../src/routes/pdf/factsheet/[id]/report.ts#L12).
 
 **Why:** Copying several documented commands produces 404s. Factsheet documentation and tests promise `language`/`year` and a default language, but its strict query schema is empty and rejects both fields. `defaultLanguage` is declared but never used; code lint fails on it. These are observable disagreements, not proof that the older contract should automatically be restored.
 
@@ -62,7 +62,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y1. Template failures disclose internal paths to clients
 
-**Where:** [template-source.ts:17](../src/services/jszip/template-source.ts#L17), [error-handler.ts:53](../src/http/error-handler.ts#L53), [error-handler.ts:69](../src/http/error-handler.ts#L69).
+**Where:** [template-source.ts:17](../../src/services/jszip/template-source.ts#L17), [error-handler.ts:53](../../src/http/error-handler.ts#L53), [error-handler.ts:69](../../src/http/error-handler.ts#L69).
 
 **Why:** `TemplateSource` puts the absolute filename and original exception message into an `AppError`. The HTTP error handler sends every `AppError.message` verbatim. Missing or malformed server-owned templates can therefore reveal filesystem paths and parser details. The startup logger already has a place for detailed template diagnostics.
 
@@ -72,7 +72,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y2. Deployment and output verification refer to deleted infrastructure
 
-**Where:** [package.json:15](../package.json#L15), [build-azure.mjs:66](../scripts/build-azure.mjs#L66), [azure.md:22](azure.md#L22), [development.md:193](development.md#L193), [test/README.md:28](../test/README.md#L28), [Dockerfile:23](../Dockerfile#L23).
+**Where:** [package.json:15](../../package.json#L15), [build-azure.mjs:66](../../scripts/build-azure.mjs#L66), [azure.md:22](../deployment/azure.md#L22), [development.md:193](../guides/development.md#L193), [test/README.md:28](../../test/README.md#L28), [Dockerfile:23](../../Dockerfile#L23).
 
 **Why:** `test:azure` points to a nonexistent file. The ZIP builder requires `business.pptx`, but only `daa.pptx`, `Tmp1.pptx`, and `Tmp2.pptx` are present. Documentation promises `test:outputs` and `smoke:container`, neither of which exists in `package.json`. The Dockerfile does not run the promised smoke check. Historical review statements about these checks should not be read as current verification.
 
@@ -82,7 +82,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y3. Important safeguards have lost executable regression coverage
 
-**Where:** [generation-queue.ts:42](../src/queue/generation-queue.ts#L42), [download.ts:30](../src/http/download.ts#L30), [navigation-boundary.ts:20](../src/services/pdf/navigation-boundary.ts#L20), [data-api/request.ts:12](../src/services/data-api/request.ts#L12), [test/README.md:7](../test/README.md#L7).
+**Where:** [generation-queue.ts:42](../../src/queue/generation-queue.ts#L42), [download.ts:30](../../src/http/download.ts#L30), [navigation-boundary.ts:20](../../src/services/pdf/navigation-boundary.ts#L20), [data-api/request.ts:12](../../src/services/data-api/request.ts#L12), [test/README.md:7](../../test/README.md#L7).
 
 **Why:** The current test tree has no focused queue or Data API tests, although the test guide describes them. The navigation tests in `onet.test.ts` cannot load because of R2. Current passing PDF tests exercise readiness/network-idle behavior, but do not establish queue saturation/cancellation, the redirect boundary, or upstream timeout/redirect/cache correctness. These are precisely the behaviors that a simplification could accidentally break.
 
@@ -90,7 +90,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y4. Two implementations perform the same formatted-run replacement
 
-**Where:** [replace-token-across-runs.ts:3](../src/pptx/jszip/placeholders/replace-token-across-runs.ts#L3), [replace-paragraph-text.ts:35](../src/pptx/jszip/text/replace-paragraph-text.ts#L35).
+**Where:** [replace-token-across-runs.ts:3](../../src/pptx/jszip/placeholders/replace-token-across-runs.ts#L3), [replace-paragraph-text.ts:35](../../src/pptx/jszip/text/replace-paragraph-text.ts#L35).
 
 **Why:** Both calculate offsets in the original runs, process matches backwards, and replace the overlapping text while retaining formatting. Fixing one algorithm can leave the other with different behavior. These are substantive duplicates, unlike the one-line method exports.
 
@@ -98,7 +98,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y5. Placeholder route wiring is unused but still presented as active functionality
 
-**Where:** [template.ts:16](../src/reports/template.ts#L16), [jszip/contracts.ts:7](../src/services/jszip/contracts.ts#L7), [power-point-template-service.ts:11](../src/services/jszip/power-point-template-service.ts#L11), [powerpoint.md:7](powerpoint.md#L7).
+**Where:** [template.ts:16](../../src/reports/template.ts#L16), [jszip/contracts.ts:7](../../src/services/jszip/contracts.ts#L7), [power-point-template-service.ts:11](../../src/services/jszip/power-point-template-service.ts#L11), [powerpoint.md:7](../services/powerpoint.md#L7).
 
 **Why:** Knip reports `templateService` and `pptxRenderSchema` as unused exports. No current route calls the placeholder template factory, and no business/summary source deck remains. Its service class is reachable through that unused wrapper, so absence from Knip's unused-file list does not establish that it serves a request. The lower-level placeholder operation is used by examples and should not be deleted blindly.
 
@@ -106,7 +106,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y6. Two service injection systems complicate lifecycle and readiness
 
-**Where:** [http/types.ts:10](../src/http/types.ts#L10), [reports/pptx.ts:24](../src/reports/pptx.ts#L24), [reports/pptx.ts:35](../src/reports/pptx.ts#L35), [reports/services.ts:48](../src/reports/services.ts#L48).
+**Where:** [http/types.ts:10](../../src/http/types.ts#L10), [reports/pptx.ts:24](../../src/reports/pptx.ts#L24), [reports/pptx.ts:35](../../src/reports/pptx.ts#L35), [reports/services.ts:48](../../src/reports/services.ts#L48).
 
 **Why:** Reports use either legacy `presentations`/`templatePresentations`/`templateReportDemo` options or the newer `ReportServices` container. Legacy injections take precedence and bypass container registration, validation, and cleanup. One `templateReportDemo` override also replaces DAA, TMA, and TMB together. A human must understand two ownership paths to explain one endpoint.
 
@@ -114,7 +114,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y7. Data API memory consumption is not bounded by its cache settings
 
-**Where:** [data-api/request.ts:30](../src/services/data-api/request.ts#L30), [data-api-client.ts:49](../src/services/data-api-client.ts#L49), [report-ids-schema.ts:5](../src/data-api/report-ids-schema.ts#L5).
+**Where:** [data-api/request.ts:30](../../src/services/data-api/request.ts#L30), [data-api-client.ts:49](../../src/services/data-api-client.ts#L49), [report-ids-schema.ts:5](../../src/data-api/report-ids-schema.ts#L5).
 
 **Why:** `response.json()` reads and parses the complete body before schema validation and cache sizing. A timeout limits network waiting; it does not cap bytes received or synchronous JSON parsing. Cache `maxBytes` applies after the response is materialized. A large or faulty upstream response can therefore consume far more memory than the advertised cache limit. No current production export uses this client, so this is preparation for integration rather than a demonstrated public endpoint exploit.
 
@@ -122,7 +122,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y8. Shutdown promises more draining time than it allows
 
-**Where:** [runtime.ts:49](../src/runtime.ts#L49), [runtime.ts:55](../src/runtime.ts#L55), [environment.ts:53](../src/config/environment.ts#L53).
+**Where:** [runtime.ts:49](../../src/runtime.ts#L49), [runtime.ts:55](../../src/runtime.ts#L55), [environment.ts:53](../../src/config/environment.ts#L53).
 
 **Why:** Shutdown forces process exit after 15 seconds, while rendering defaults to 30 seconds and allows up to 120 seconds. A valid active render can be killed halfway through, producing a dropped connection during deployment. The fixed number and “drains active requests” wording hide the effective behavior.
 
@@ -130,7 +130,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### Y9. Browser recovery depends on traffic that readiness may exclude
 
-**Where:** [runtime.ts:25](../src/runtime.ts#L25), [runtime.ts:32](../src/runtime.ts#L32), [web-page-pdf.ts:44](../src/services/pdf/web-page-pdf.ts#L44), [Dockerfile:29](../Dockerfile#L29).
+**Where:** [runtime.ts:25](../../src/runtime.ts#L25), [runtime.ts:32](../../src/runtime.ts#L32), [web-page-pdf.ts:44](../../src/services/pdf/web-page-pdf.ts#L44), [Dockerfile:29](../../Dockerfile#L29).
 
 **Why:** Warmup runs once. Launch failure or browser disconnection marks readiness false; only a subsequent PDF request triggers relaunch. With a host that routes traffic only to ready instances, no such request may arrive. This can leave an otherwise recoverable instance unhealthy. The code path is confirmed; whether the deployment restarts or starves that instance depends on hosting behavior and was not tested.
 
@@ -140,7 +140,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### G1. Some tiny modules and identity mappings add avoidable reading hops
 
-**Where:** [config.ts:1](../src/config.ts#L1), [config/index.ts:8](../src/config/index.ts#L8), [charts/workbook/dimension.ts:1](../src/pptx/jszip/charts/workbook/dimension.ts#L1), [brief/schema.ts:7](../src/routes/pptxgenjs/brief/schema.ts#L7), [brief/report.ts:17](../src/routes/pptxgenjs/brief/report.ts#L17).
+**Where:** [config.ts:1](../../src/config.ts#L1), [config/index.ts:8](../../src/config/index.ts#L8), [charts/workbook/dimension.ts:1](../../src/pptx/jszip/charts/workbook/dimension.ts#L1), [brief/schema.ts:7](../../src/routes/pptxgenjs/brief/schema.ts#L7), [brief/report.ts:17](../../src/routes/pptxgenjs/brief/report.ts#L17).
 
 **Why:** `config.ts` only re-exports its implementation. Workbook table renaming and dimension updates involve several very small modules. Brief picks every field from the renderer schema, destructures all of them, rebuilds the same object, and parses it again. These steps have little explanatory value in the current identity mapping.
 
@@ -148,7 +148,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### G2. Spreadsheet column conversion is duplicated with different validation
 
-**Where:** [charts/ranges.ts:20](../src/pptx/jszip/charts/ranges.ts#L20), [charts/workbook/column-name.ts:1](../src/pptx/jszip/charts/workbook/column-name.ts#L1), [spreadsheet.ts:35](../src/pptx/jszip/spreadsheet.ts#L35), [charts/workbook/cell-address.ts:14](../src/pptx/jszip/charts/workbook/cell-address.ts#L14).
+**Where:** [charts/ranges.ts:20](../../src/pptx/jszip/charts/ranges.ts#L20), [charts/workbook/column-name.ts:1](../../src/pptx/jszip/charts/workbook/column-name.ts#L1), [spreadsheet.ts:35](../../src/pptx/jszip/spreadsheet.ts#L35), [charts/workbook/cell-address.ts:14](../../src/pptx/jszip/charts/workbook/cell-address.ts#L14).
 
 **Why:** Column-letter/number conversion is repeated across four places. The chart-local conversion checks Excel's column limit, while the standalone conversion has no bounds check. Duplicate implementations make supported bounds harder to understand and maintain.
 
@@ -156,7 +156,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### G3. Demo names, comments, and timestamps need a small cleanup
 
-**Where:** [tmx-poc-presentation-service.ts:21](../src/services/jszip/tmx-poc-presentation-service.ts#L21), [tmx-poc-presentation-service.ts:53](../src/services/jszip/tmx-poc-presentation-service.ts#L53), [tmx-poc-presentation-service.ts:77](../src/services/jszip/tmx-poc-presentation-service.ts#L77), [tma/schema.ts:13](../src/routes/pptx/tma/schema.ts#L13), [tmb/schema.ts:13](../src/routes/pptx/tmb/schema.ts#L13), [example/report.ts:17](../src/routes/pdf/example/report.ts#L17).
+**Where:** [tmx-poc-presentation-service.ts:21](../../src/services/jszip/tmx-poc-presentation-service.ts#L21), [tmx-poc-presentation-service.ts:53](../../src/services/jszip/tmx-poc-presentation-service.ts#L53), [tmx-poc-presentation-service.ts:77](../../src/services/jszip/tmx-poc-presentation-service.ts#L77), [tma/schema.ts:13](../../src/routes/pptx/tma/schema.ts#L13), [tmb/schema.ts:13](../../src/routes/pptx/tmb/schema.ts#L13), [example/report.ts:17](../../src/routes/pdf/example/report.ts#L17).
 
 **Why:** `subtitile` is misspelled; TMA/TMB comments say DAA; `/pdf/example` still downloads `onet.pdf`. `Tmp1.pptx`/`Tmp2.pptx` do not explain which demo uses them. TMX takes separate clock snapshots and combines UTC formatting with local date subtraction, which can produce inconsistent date labels around boundaries. Repetitive comments explain obvious random-number loops while the time convention remains implicit.
 
@@ -164,7 +164,7 @@ The architecture is mostly sensible. The immediate problem is an incomplete cont
 
 ### G4. Two small dependency updates are available
 
-**Where:** [package.json:51](../package.json#L51), [package.json:61](../package.json#L61), `package-lock.json`.
+**Where:** [package.json:51](../../package.json#L51), [package.json:61](../../package.json#L61), `package-lock.json`.
 
 **Why:** Registry checks reported Zod `4.6.5 → 4.6.7` and Oxlint `1.87.0 → 1.88.0`. These are maintenance updates, not evidence of a security defect. Knip reported no unused dependencies, and the production audit reported zero known vulnerabilities.
 

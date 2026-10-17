@@ -1,6 +1,6 @@
 # Architecture and code map
 
-[Back to overview](../README.md)
+[Back to overview](../../README.md)
 
 ## Where to look
 
@@ -23,11 +23,11 @@
 | Designs and XML/workbook utilities                           | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                      |
 | Typed upstream API registry/client                           | `src/data-api/`, `src/services/data-api-client.ts`            |
 | Source decks, examples, tests                                | `templates/`, `examples/`, `test/`                            |
-| Azure deployment and ZIP packaging                           | `.gitlab-ci.yml`, [Azure guide](azure.md)                     |
+| Azure deployment and ZIP packaging                           | `.gitlab-ci.yml`, [Azure guide](../deployment/azure.md)       |
 
 ## Request and report flow
 
-Folders define URLs; method files re-export report factories. Discovery imports only supported method files, validates paths and duplicates, and registers static routes before parameters. It discovers compiled JavaScript in production. See [route conventions](../src/routes/README.md).
+Folders define URLs; method files re-export report factories. Discovery imports only supported method files, validates paths and duplicates, and registers static routes before parameters. It discovers compiled JavaScript in production. See [route conventions](../../src/routes/README.md).
 
 A PDF definition declares its request schema, input mapping, and optional print overrides. `definePdfReport` performs transport decoding, request and renderer validation, then calls the injected Chromium service through `sendDownload`. The renderer owns the navigation boundary, browser/context lifecycle, and merged print settings. Report-specific settings never mutate shared defaults.
 
@@ -47,4 +47,4 @@ Endpoint request schemas and business defaults stay with their report. The gener
 
 Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
 
-See [development](development.md) for the complete PDF, template-PPTX, and custom-service workflows. [Output tests](../test/integration/output-routes.ts) produce sample artifacts for manual inspection.
+See [development](../guides/development.md) for the complete PDF, template-PPTX, and custom-service workflows. [Output tests](../../test/integration/output-routes.ts) produce sample artifacts for manual inspection.

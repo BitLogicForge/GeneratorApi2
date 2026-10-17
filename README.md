@@ -32,22 +32,23 @@ curl -X POST http://localhost:3000/api/exports/pdf/test \
 
 ## Documentation
 
-| Guide                                             | Contents                                                                      |
-| ------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [Getting started](docs/getting-started.md)        | Local setup, configuration, Docker access, and sample requests                |
-| [API endpoints](docs/endpoints.md)                | Routes, inputs, download examples, responses, and errors                      |
-| [Architecture and code map](docs/architecture.md) | File responsibilities, services, routing, queues, and shutdown                |
-| [Development](docs/development.md)                | Adding endpoints, imports, tests, hooks, and builds                           |
-| [Data API](docs/data-api.md)                      | Upstream configuration, typed responses, single requests, chains, and batches |
-| [PDF](docs/pdf.md)                                | Document URLs, IDs, language, and query forwarding                            |
-| [PowerPoint](docs/powerpoint.md)                  | File templates, placeholders, the DAA demo, and JSZip utilities               |
-| [Azure deployment](docs/azure.md)                 | Docker, ACR, GitLab CI, App Service configuration, and smoke tests            |
+| Sector / Guide                                                 | Contents                                                                      |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [Documentation Overview](docs/README.md)                       | Complete index of technical guides, services, architecture, and reviews       |
+| [Getting started](docs/guides/getting-started.md)              | Local setup, configuration, Docker access, and sample requests                |
+| [API endpoints](docs/guides/endpoints.md)                      | Routes, inputs, download examples, responses, and errors                      |
+| [Architecture and code map](docs/architecture/architecture.md) | File responsibilities, services, routing, queues, and shutdown                |
+| [Development](docs/guides/development.md)                      | Adding endpoints, imports, tests, hooks, and builds                           |
+| [Data API](docs/services/data-api.md)                          | Upstream configuration, typed responses, single requests, chains, and batches |
+| [PDF](docs/services/pdf.md)                                    | Document URLs, IDs, language, and query forwarding                            |
+| [PowerPoint](docs/services/powerpoint.md)                      | File templates, placeholders, the DAA demo, and JSZip utilities               |
+| [Azure deployment](docs/deployment/azure.md)                   | Docker, ACR, GitLab CI, App Service configuration, and smoke tests            |
 
 All commands in the documentation run from the repository root.
 
 ## Where to look
 
-Start with [src/runtime.ts](src/runtime.ts) for shared infrastructure and [src/app.ts](src/app.ts) for the HTTP flow. Route handlers live in [src/routes/](src/routes/), report definitions and helpers in [src/reports/](src/reports/) and route-local `report.ts` files, generation services in [src/services/](src/services/), and reusable PowerPoint helpers in [src/pptx/](src/pptx/). See the [full code map](docs/architecture.md#where-to-look) for individual files.
+Start with [src/runtime.ts](src/runtime.ts) for shared infrastructure and [src/app.ts](src/app.ts) for the HTTP flow. Route handlers live in [src/routes/](src/routes/), report definitions and helpers in [src/reports/](src/reports/) and route-local `report.ts` files, generation services in [src/services/](src/services/), and reusable PowerPoint helpers in [src/pptx/](src/pptx/). See the [full code map](docs/architecture/architecture.md#where-to-look) for individual files.
 
 Examples live in [examples/](examples/README.md), source presentations in [templates/](templates/), and tests in [test/](test/README.md).
 
@@ -60,4 +61,4 @@ npm test
 npm run build
 ```
 
-This POC is intended for trusted webapps and internal use. See the [runtime limitations](docs/development.md#verification-and-production-build) before deploying publicly.
+This POC is intended for trusted webapps and internal use. See the [runtime limitations](docs/guides/development.md#verification-and-production-build) before deploying publicly.

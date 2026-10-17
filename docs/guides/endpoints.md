@@ -1,6 +1,6 @@
 # API endpoints
 
-[Back to overview](../README.md)
+[Back to overview](../../README.md)
 
 ## Overview
 
@@ -24,7 +24,7 @@ PDF navigation, including every redirect hop and frame, must stay on `WEBAPP_BAS
 
 All PowerPoint text fields must contain XML 1.0-compatible characters. Forbidden controls, lone UTF-16 surrogates, U+FFFE, and U+FFFF return 400 `VALIDATION_ERROR`. Tabs, line endings, and valid Unicode, including emoji, are accepted and preserved.
 
-See [examples/README.md](../examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
+See [examples/README.md](../../examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
 
 ## Generate test output files
 

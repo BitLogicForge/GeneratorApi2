@@ -1,6 +1,6 @@
 # Azure deployment with ZIP package and GitLab CI
 
-[Back to overview](../README.md)
+[Back to overview](../../README.md)
 
 This deployment packages the compiled application, presentation templates, and production dependencies into a standalone ZIP package (`output/azure/generator-api.zip`) for Linux Azure App Service. GitLab compiles the application, packages the ZIP, and deploys it using the Azure CLI (`az webapp deploy`).
 
@@ -20,7 +20,7 @@ zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scr
 
 ## Runtime configuration and startup
 
-The package starts through [scripts/start-azure.sh](../scripts/start-azure.sh). It configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries into `/home/playwright` on first run, and finally starts `node dist/index.js`.
+The package starts through [scripts/start-azure.sh](../../scripts/start-azure.sh). It configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries into `/home/playwright` on first run, and finally starts `node dist/index.js`.
 
 Configure the App Service with the following settings:
 
@@ -73,7 +73,7 @@ For slot deployments (e.g. `dev`), add `--slot dev` to the commands.
 
 ## GitLab CI pipeline
 
-The pipeline defined in [.gitlab-ci.yml](../.gitlab-ci.yml) automates this workflow:
+The pipeline defined in [.gitlab-ci.yml](../../.gitlab-ci.yml) automates this workflow:
 
 1. **`test` stage (`lint` & `test`):** Runs static checks (`lint`) and unit tests (`test`) concurrently in parallel with runner caching.
 2. **`build` stage (`build`):** Compiles with `npm run build`, prunes dev-dependencies (`npm prune --omit=dev`), and packages `output/azure/generator-api.zip`.

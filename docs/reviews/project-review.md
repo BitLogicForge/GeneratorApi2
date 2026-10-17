@@ -19,9 +19,9 @@ The project has a good foundation for an internal document service. The six prio
 
 ## What is already working well
 
-- **Testable architecture.** [AppOptions](../src/http/types.ts) and [createApp](../src/app.ts) allow HTTP tests to inject services without launching Chromium.
+- **Testable architecture.** [AppOptions](../../src/http/types.ts) and [createApp](../../src/app.ts) allow HTTP tests to inject services without launching Chromium.
 - **Consistent API contracts.** Strict Zod schemas, shared GET/POST handlers, request IDs, safe filenames, attachment headers, and generic unexpected-error responses are already in place.
-- **Correct admission control.** [GenerationQueue](../src/queue/generation-queue.ts) bounds active and waiting work, preserves FIFO order, and retains active slots until tasks actually finish. Keep this behavior when adding cancellation or background jobs.
+- **Correct admission control.** [GenerationQueue](../../src/queue/generation-queue.ts) bounds active and waiting work, preserves FIFO order, and retains active slots until tasks actually finish. Keep this behavior when adding cancellation or background jobs.
 - **Editable PowerPoint output.** The JSZip helpers update chart caches and embedded workbooks together, resolve package relationships, preserve formatting, and keep source templates unchanged. Tests verify these properties.
 - **Useful development tooling.** Type checking, Knip, import checks, Git hooks, clean compilation, and deployment-package tooling already exist. Improvements can build on them.
 
@@ -188,16 +188,16 @@ Once jobs exist, a batch export returning a ZIP of several PDFs/PPTXs becomes us
 
 **Verify browser recovery and disconnect behavior.** Existing PDF tests cover output, HTTP failures, readiness timeouts, and renderer capacity. Add focused tests for launch failure, browser disconnection/relaunch, timeout cleanup, and actual HTTP client disconnection while queued. Queue-unit cancellation tests do not exercise the response-close wiring in `sendDownload()`.
 
-**Prepare browser dependencies before runtime where feasible.** [start-azure.sh](../scripts/start-azure.sh) installs Chromium and system libraries at startup. A prepared deployment image can reduce startup dependency on downloads and package installation. If retaining ZIP deployment, measure cold start and test the startup script in an Azure-equivalent environment; the current Azure smoke test launches `dist/index.js` directly.
+**Prepare browser dependencies before runtime where feasible.** [start-azure.sh](../../scripts/start-azure.sh) installs Chromium and system libraries at startup. A prepared deployment image can reduce startup dependency on downloads and package installation. If retaining ZIP deployment, measure cold start and test the startup script in an Azure-equivalent environment; the current Azure smoke test launches `dist/index.js` directly.
 
 **Match access controls to actual consumers.** The repository already describes an internal-use POC. Before expanding access to end users, define caller identity, document authorization, and fair per-caller admission so one consumer cannot occupy all capacity. For authenticated webapp pages, use a server-managed browser authentication strategy with clear scoping while preserving per-request context isolation.
 
 ## Documentation and packaging gaps to clean up
 
-- **Resolved with R3:** [docs/azure.md](azure.md) now uses `/api/exports/pptx/jszip/daa` in the smoke example instead of the obsolete `/demo-report.pptx` URL.
-- **Resolved with R4:** the canonical endpoint matrix in [docs/endpoints.md](endpoints.md) now includes summary, POST, and HEAD variants.
-- [build-azure.mjs:66](../scripts/build-azure.mjs#L66) and [the package test](../test/deployment/azure-package.ts) explicitly require business and DAA templates, but not the registered summary template. All `.pptx` files are copied today; add explicit validation and a summary-download smoke case so a missing summary file is caught before deployment.
-- Add Knip to the “verify and rebuild” instructions in [docs/development.md](development.md), matching the repository's change requirements.
+- **Resolved with R3:** [docs/deployment/azure.md](../deployment/azure.md) now uses `/api/exports/pptx/jszip/daa` in the smoke example instead of the obsolete `/demo-report.pptx` URL.
+- **Resolved with R4:** the canonical endpoint matrix in [docs/guides/endpoints.md](../guides/endpoints.md) now includes summary, POST, and HEAD variants.
+- [build-azure.mjs:66](../../scripts/build-azure.mjs#L66) and [the package test](../../test/deployment/azure-package.ts) explicitly require business and DAA templates, but not the registered summary template. All `.pptx` files are copied today; add explicit validation and a summary-download smoke case so a missing summary file is caught before deployment.
+- Add Knip to the “verify and rebuild” instructions in [docs/guides/development.md](../guides/development.md), matching the repository's change requirements.
 
 ## Suggested implementation order
 

@@ -1,6 +1,6 @@
 # PDF generation
 
-[Back to overview](../README.md)
+[Back to overview](../../README.md)
 
 ## PDF endpoints
 
@@ -11,7 +11,7 @@
 | GET/HEAD `/pdf/onepager/:id`  | `/onepager/{id}`          | Always landscape                    |
 | GET/HEAD `/pdf/quarterly`     | `/reports/quarterly`      | Always portrait                     |
 
-Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Factsheet downloads `{id}.pdf`. Onepager downloads `onepager-YYYY-MM-DD-HH-mm-{id}.pdf`, using the request's UTC date and time. If the complete filename would exceed 80 characters before the extension, it uses `{id}.pdf` to preserve the full ID. The previous portrait/landscape document download URLs are removed. See [PDF examples](../examples/pdf/README.md).
+Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Factsheet downloads `{id}.pdf`. Onepager downloads `onepager-YYYY-MM-DD-HH-mm-{id}.pdf`, using the request's UTC date and time. If the complete filename would exceed 80 characters before the extension, it uses `{id}.pdf` to preserve the full ID. The previous portrait/landscape document download URLs are removed. See [PDF examples](../../examples/pdf/README.md).
 
 ## External page configuration
 
@@ -57,7 +57,7 @@ prepareInput: ({ query }) => ({
 
 A missing readiness marker or network-idle timeout produces `504 RENDER_TIMEOUT`. HEAD validates input and returns attachment metadata without loading the webapp or entering the render queue.
 
-Shared appearance lives in `src/config/defaults.ts`. A `definePdfReport` definition can specify server-owned `print` overrides, including individual margin sides. Factsheet always selects portrait and onepager always selects landscape. The generic test export accepts its declared per-request print options. See [adding a PDF endpoint](development.md#add-a-pdf-endpoint).
+Shared appearance lives in `src/config/defaults.ts`. A `definePdfReport` definition can specify server-owned `print` overrides, including individual margin sides. Factsheet always selects portrait and onepager always selects landscape. The generic test export accepts its declared per-request print options. See [adding a PDF endpoint](../guides/development.md#add-a-pdf-endpoint).
 
 ## Navigation and downloads
 

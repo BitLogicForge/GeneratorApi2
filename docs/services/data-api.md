@@ -1,6 +1,6 @@
 # Fetching report data
 
-[Back to overview](../README.md)
+[Back to overview](../../README.md)
 
 ## Cached upstream values
 
@@ -101,6 +101,6 @@ Output is saved to `output/data-api/reports-dict.json` or `reports-list.json`.
 
 The client preserves the configured URL prefix, rejects paths outside it, and does not follow redirects. HTTP failures, connection failures, invalid JSON, and invalid response data become 502 errors; timeouts become 504 errors.
 
-When the API is on your computer and Generator API runs in Docker, use a Docker-reachable hostname such as `host.docker.internal`, as described in [Docker setup](getting-started.md#access-from-outside-docker).
+When the API is on your computer and Generator API runs in Docker, use a Docker-reachable hostname such as `host.docker.internal`, as described in [Docker setup](../guides/getting-started.md#access-from-outside-docker).
 
 Generation services live in `src/services/pptxgenjs/` and `src/services/jszip/`. Designs and XML helpers live in `src/pptx/`; `placeholders.ts` handles text tokens independently of template registration and file loading.

@@ -8,9 +8,9 @@ This document outlines the design and implementation plan for simplifying Genera
 2. **Elimination of `jsonFields`:** Remove per-route `jsonFields` declarations and associated fallback branches.
 3. **Streamlined execution pipeline:** Collapse the 4-stage pipeline (`readRequestInput -> schema.parse -> prepareInput -> preparedInputSchema.parse -> pdfRenderSchema.parse`) into a direct, single-pass validation and execution pipeline.
 4. **Declarative route definitions:**
-   - [`definePdfReport`](../src/reports/pdf.ts) accepts route patterns, filename resolvers, and print settings directly, eliminating manual [`mapPdfRoute`](../src/reports/pdf-route.ts) boilerplate.
-   - [`definePptxReport`](../src/reports/pptx.ts) provides a direct input mapping and filename resolver.
-5. **String-keyed service registry:** Transition [`ReportServices`](../src/reports/services.ts) from opaque object-identity keys (`Map<object, Entry>`) to explicit report names (e.g. `'daa'`, `'tma'`, `'brief'`), simplifying route registration, startup template validation, and test mocking via `reports.override('brief', fakeService)`.
+   - [`definePdfReport`](../../src/reports/pdf.ts) accepts route patterns, filename resolvers, and print settings directly, eliminating manual [`mapPdfRoute`](../../src/reports/pdf-route.ts) boilerplate.
+   - [`definePptxReport`](../../src/reports/pptx.ts) provides a direct input mapping and filename resolver.
+5. **String-keyed service registry:** Transition [`ReportServices`](../../src/reports/services.ts) from opaque object-identity keys (`Map<object, Entry>`) to explicit report names (e.g. `'daa'`, `'tma'`, `'brief'`), simplifying route registration, startup template validation, and test mocking via `reports.override('brief', fakeService)`.
 6. **File organization:** Preserve the 3-file modular layout (`schema.ts`, `report.ts`, `get.ts`) so each file remains small (~15–35 lines) and focused on a single responsibility, while eliminating redundant intermediate wrapper code.
 
 ---
@@ -445,14 +445,14 @@ export default definePptxReport({
 
 ### Step 1: Request extraction refactor
 
-- Update [`src/http/input.ts`](../src/http/input.ts) with `extractRequestData`.
+- Update [`src/http/input.ts`](../../src/http/input.ts) with `extractRequestData`.
 - Deprecate/remove `decodeExportInput`.
 
 ### Step 2: Helpers refactor
 
-- Update [`src/reports/pdf.ts`](../src/reports/pdf.ts) with declarative route definition and query forwarding.
-- Update [`src/reports/pptx.ts`](../src/reports/pptx.ts) with string-name registration.
-- Update [`src/reports/services.ts`](../src/reports/services.ts) to support string-keyed names and test overrides.
+- Update [`src/reports/pdf.ts`](../../src/reports/pdf.ts) with declarative route definition and query forwarding.
+- Update [`src/reports/pptx.ts`](../../src/reports/pptx.ts) with string-name registration.
+- Update [`src/reports/services.ts`](../../src/reports/services.ts) to support string-keyed names and test overrides.
 
 ### Step 3: Route simplification
 

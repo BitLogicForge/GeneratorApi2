@@ -29,14 +29,14 @@ However, the codebase currently suffers from friction across four key dimensions
 
 Checks performed on 2026-10-17 using Node.js 24.15.0:
 
-| Check                  | Result     | Root Cause / Details                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run typecheck`    | **Passed** | 0 errors. Passed only because deleted test files in commit `b31c1426` removed the five broken imports.                                                                                                                                                                                                                                                                                                                                                                         |
-| `npm run lint:code`    | **Failed** | Unused variable `defaultLanguage` in [src/routes/pdf/factsheet/[id]/report.ts:12](../src/routes/pdf/factsheet/[id]/report.ts#L12).                                                                                                                                                                                                                                                                                                                                             |
-| `npm run knip`         | **Failed** | 5 unused exports: `templateService` in [src/reports/template.ts:16](../src/reports/template.ts#L16), `pptxRenderSchema` in [src/services/jszip/contracts.ts:7](../src/services/jszip/contracts.ts#L7), and `report` exports in [src/routes/pptx/daa/report.ts:12](../src/routes/pptx/daa/report.ts#L12), [src/routes/pptx/tma/report.ts:12](../src/routes/pptx/tma/report.ts#L12), and [src/routes/pptxgenjs/brief/report.ts:14](../src/routes/pptxgenjs/brief/report.ts#L14). |
-| `npm run format:check` | **Failed** | Code style issues in 4 files: `src/config.ts`, `src/routes/pdf/factsheet/[id]/report.ts`, `src/routes/pdf/factsheet/[id]/schema.ts`, `src/routes/pptx/tma/report.ts`.                                                                                                                                                                                                                                                                                                          |
-| `npm run build`        | **Passed** | Clean compilation to `dist/` with import rewriting.                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `npm run test:azure`   | **Failed** | `Could not find 'test/deployment/azure-package.ts'`.                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Check                  | Result     | Root Cause / Details                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`    | **Passed** | 0 errors. Passed only because deleted test files in commit `b31c1426` removed the five broken imports.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `npm run lint:code`    | **Failed** | Unused variable `defaultLanguage` in [src/routes/pdf/factsheet/[id]/report.ts:12](../../src/routes/pdf/factsheet/[id]/report.ts#L12).                                                                                                                                                                                                                                                                                                                                                         |
+| `npm run knip`         | **Failed** | 5 unused exports: `templateService` in [src/reports/template.ts:16](../../src/reports/template.ts#L16), `pptxRenderSchema` in [src/services/jszip/contracts.ts:7](../../src/services/jszip/contracts.ts#L7), and `report` exports in [src/routes/pptx/daa/report.ts:12](../../src/routes/pptx/daa/report.ts#L12), [src/routes/pptx/tma/report.ts:12](../../src/routes/pptx/tma/report.ts#L12), and [src/routes/pptxgenjs/brief/report.ts:14](../../src/routes/pptxgenjs/brief/report.ts#L14). |
+| `npm run format:check` | **Failed** | Code style issues in 4 files: `src/config.ts`, `src/routes/pdf/factsheet/[id]/report.ts`, `src/routes/pdf/factsheet/[id]/schema.ts`, `src/routes/pptx/tma/report.ts`.                                                                                                                                                                                                                                                                                                                         |
+| `npm run build`        | **Passed** | Clean compilation to `dist/` with import rewriting.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `npm run test:azure`   | **Failed** | `Could not find 'test/deployment/azure-package.ts'`.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
 
@@ -53,8 +53,8 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### C2. Factsheet parameter rejection and unused `defaultLanguage`
 
-- **Location:** [src/routes/pdf/factsheet/[id]/report.ts:12](../src/routes/pdf/factsheet/[id]/report.ts#L12), [src/routes/pdf/factsheet/[id]/schema.ts:6-8](../src/routes/pdf/factsheet/[id]/schema.ts#L6-L8), [docs/endpoints.md:61](endpoints.md#L61), [docs/pdf.md:37](pdf.md#L37).
-- **Trigger:** `docs/endpoints.md` and `docs/pdf.md` document that `/pdf/factsheet/:id` accepts `language` (defaulting to `'en'`) and `year`. However, `querySchema` is defined as `z.object({}).strict()`, which rejects any query string with HTTP 400. In `report.ts`, `const defaultLanguage = 'en'` is declared but never referenced, causing `npm run lint:code` to fail.
+- **Location:** [src/routes/pdf/factsheet/[id]/report.ts:12](../../src/routes/pdf/factsheet/[id]/report.ts#L12), [src/routes/pdf/factsheet/[id]/schema.ts:6-8](../../src/routes/pdf/factsheet/[id]/schema.ts#L6-L8), [docs/guides/endpoints.md:61](../guides/endpoints.md#L61), [docs/services/pdf.md:37](../services/pdf.md#L37).
+- **Trigger:** `docs/guides/endpoints.md` and `docs/services/pdf.md` document that `/pdf/factsheet/:id` accepts `language` (defaulting to `'en'`) and `year`. However, `querySchema` is defined as `z.object({}).strict()`, which rejects any query string with HTTP 400. In `report.ts`, `const defaultLanguage = 'en'` is declared but never referenced, causing `npm run lint:code` to fail.
 - **Effect:** Sending the documented request `/pdf/factsheet/id2222?language=en` fails with a 400 `VALIDATION_ERROR`, while the codebase fails static linting.
 - **Actionable Fix:** Either:
   1. Restore the schema in `schema.ts`:
@@ -70,11 +70,11 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
        .strict();
      ```
      and pass `defaultLanguage` to `mapPdfRoute` or query parsing.
-  2. Or, if query parameters are intentionally unsupported, remove `const defaultLanguage = 'en'` from `report.ts` and correct `docs/endpoints.md` and `docs/pdf.md`.
+  2. Or, if query parameters are intentionally unsupported, remove `const defaultLanguage = 'en'` from `report.ts` and correct `docs/guides/endpoints.md` and `docs/services/pdf.md`.
 
 ### C3. Internal filesystem path disclosure in error responses
 
-- **Location:** [src/services/jszip/template-source.ts:23](../src/services/jszip/template-source.ts#L23), [src/http/error-handler.ts:53-70](../src/http/error-handler.ts#L53-L70).
+- **Location:** [src/services/jszip/template-source.ts:23](../../src/services/jszip/template-source.ts#L23), [src/http/error-handler.ts:53-70](../../src/http/error-handler.ts#L53-L70).
 - **Trigger:** `TemplateSource` instantiates `AppError` with `message: 'Template "' + this.path + '": ' + message`, embedding the absolute local filesystem path and raw Node.js I/O or XML parser error. The centralized HTTP error handler directly echoes `error.message` for any `AppError` instance into the client JSON response.
 - **Effect:** If a server template is missing or malformed, clients receive internal directory structures (e.g. `/workspaces/GeneratorApi/templates/daa.pptx`) and server diagnostic details.
 - **Actionable Fix:** In `TemplateSource`, pass the detailed diagnostic message to `cause` for server logging, while using a generic public message in `AppError`:
@@ -90,11 +90,11 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### C4. Endpoint naming discrepancies across code and documentation
 
-- **Location:** [src/routes/pdf/example/report.ts:15](../src/routes/pdf/example/report.ts#L15), [docs/endpoints.md:201-210](endpoints.md#L201-L210), [docs/endpoints.md:48](endpoints.md#L48).
+- **Location:** [src/routes/pdf/example/report.ts:15](../../src/routes/pdf/example/report.ts#L15), [docs/guides/endpoints.md:201-210](../guides/endpoints.md#L201-L210), [docs/guides/endpoints.md:48](../guides/endpoints.md#L48).
 - **Discrepancies:**
-  - Route `/pdf/example` generates an attachment named `onet.pdf`. Meanwhile, `docs/endpoints.md` documents `GET /pdf/onet` and references nonexistent `src/routes/pdf/onet/report.ts`.
-  - `docs/endpoints.md` lists `/pptx/jszip/daa` (404) and `/pptx/pptxgenjs/brief` (404), whereas the actual endpoints are `/pptx/daa` and `/pptxgenjs/brief`.
-- **Actionable Fix:** Align code and docs: rename download filename in `src/routes/pdf/example/report.ts` to `example`, and update `docs/endpoints.md` to reflect canonical URLs (`/pdf/example`, `/pptx/daa`, `/pptx/tma`, `/pptxgenjs/brief`).
+  - Route `/pdf/example` generates an attachment named `onet.pdf`. Meanwhile, `docs/guides/endpoints.md` documents `GET /pdf/onet` and references nonexistent `src/routes/pdf/onet/report.ts`.
+  - `docs/guides/endpoints.md` lists `/pptx/jszip/daa` (404) and `/pptx/pptxgenjs/brief` (404), whereas the actual endpoints are `/pptx/daa` and `/pptxgenjs/brief`.
+- **Actionable Fix:** Align code and docs: rename download filename in `src/routes/pdf/example/report.ts` to `example`, and update `docs/guides/endpoints.md` to reflect canonical URLs (`/pdf/example`, `/pptx/daa`, `/pptx/tma`, `/pptxgenjs/brief`).
 
 ---
 
@@ -102,7 +102,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### S1. Dynamic file-based routing introduces excessive ceremony for 11 endpoints
 
-- **Location:** [src/http/file-routes/](../src/http/file-routes/) (`discover.ts`, `register.ts`, `compare.ts`, `path.ts`, `types.ts`), [src/app.ts:22](../src/app.ts#L22), [src/routes/](../src/routes/).
+- **Location:** [src/http/file-routes/](../../src/http/file-routes/) (`discover.ts`, `register.ts`, `compare.ts`, `path.ts`, `types.ts`), [src/app.ts:22](../../src/app.ts#L22), [src/routes/](../../src/routes/).
 - **The Problem:** The application uses Next.js-style file-based routing requiring 5 infrastructure files (173 lines of code) to scan directories, parse bracket syntax (`[id]`), sort static routes before parameter routes, and dynamically `import()` route modules.
   - At startup, `src/app.ts` executes top-level `await discoverRoutes(...)`, running asynchronous filesystem traversal upon module load.
   - Each endpoint is fragmented across a directory with 3 to 4 tiny files (`get.ts`, `post.ts`, `report.ts`, `schema.ts`). For example, `src/routes/pptx/daa/get.ts` contains only 2 lines: `export { default } from './report.ts';`.
@@ -126,15 +126,15 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 ### S2. Excessive micro-file fragmentation
 
 - **Location:**
-  - [src/config.ts](../src/config.ts) (6 lines) merely re-exports from [src/config/index.ts](../src/config/index.ts).
-  - [src/pptx/jszip/charts/workbook/](../src/pptx/jszip/charts/workbook/) contains 6 tiny modules:
+  - [src/config.ts](../../src/config.ts) (6 lines) merely re-exports from [src/config/index.ts](../../src/config/index.ts).
+  - [src/pptx/jszip/charts/workbook/](../../src/pptx/jszip/charts/workbook/) contains 6 tiny modules:
     - `bounds.ts` (18 lines)
     - `column-name.ts` (10 lines)
     - `dimension.ts` (15 lines)
     - `rename-table-columns.ts` (28 lines)
     - `resize-table.ts` (45 lines)
     - `types.ts` (9 lines)
-- **The Problem:** These workbook modules have exactly one consumer: [src/pptx/jszip/charts/resize-workbook-tables.ts](../src/pptx/jszip/charts/resize-workbook-tables.ts). Splitting 120 lines of logic across 6 separate files creates file-hopping friction without providing reusable abstractions.
+- **The Problem:** These workbook modules have exactly one consumer: [src/pptx/jszip/charts/resize-workbook-tables.ts](../../src/pptx/jszip/charts/resize-workbook-tables.ts). Splitting 120 lines of logic across 6 separate files creates file-hopping friction without providing reusable abstractions.
 - **Actionable Fix:**
   - Move configuration assembly from `src/config/index.ts` directly into `src/config.ts` and remove `src/config/index.ts`.
   - Inline `bounds.ts`, `dimension.ts`, `cell-address.ts`, and `types.ts` into `resize-workbook-tables.ts`.
@@ -142,7 +142,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### S3. Implementation library leaked into public route URLs
 
-- **Location:** [src/routes/pptxgenjs/brief/](../src/routes/pptxgenjs/brief/), [src/routes/pptx/daa/](../src/routes/pptx/daa/).
+- **Location:** [src/routes/pptxgenjs/brief/](../../src/routes/pptxgenjs/brief/), [src/routes/pptx/daa/](../../src/routes/pptx/daa/).
 - **The Problem:** PowerPoint generation routes are partitioned by the underlying library: `/pptx/daa` and `/pptx/tma` (JSZip-based) vs. `/pptxgenjs/brief` (PptxGenJS-based). A client should not know or care whether a presentation is built with template XML mutation or programmatic slide building.
 - **Simpler Structure:** Group all presentation exports under `/pptx/` (e.g. `/pptx/brief`, `/pptx/daa`, `/pptx/tma`) or `/presentations/`. Keep the internal library choice as an implementation detail in `services/`.
 
@@ -152,7 +152,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### W1. Dual service injection mechanisms in `AppOptions`
 
-- **Location:** [src/http/types.ts:10-33](../src/http/types.ts#L10-L33), [src/reports/pptx.ts:25-27](../src/reports/pptx.ts#L25-L27), [src/reports/pptx.ts:35-37](../src/reports/pptx.ts#L35-L37), [src/reports/services.ts:47-55](../src/reports/services.ts#L47-L55).
+- **Location:** [src/http/types.ts:10-33](../../src/http/types.ts#L10-L33), [src/reports/pptx.ts:25-27](../../src/reports/pptx.ts#L25-L27), [src/reports/pptx.ts:35-37](../../src/reports/pptx.ts#L35-L37), [src/reports/services.ts:47-55](../../src/reports/services.ts#L47-L55).
 - **The Problem:** There are two concurrent ways to inject services for testing:
   1. The unified container `reports: ReportServices`, which provides `reports.override(definition, mockService)`.
   2. Legacy options in `AppOptions`: `templateReportDemo`, `presentations`, and `templatePresentations`.
@@ -161,7 +161,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### W2. Prune unused template services and dead schemas
 
-- **Location:** [src/reports/template.ts:16](../src/reports/template.ts#L16), [src/services/jszip/power-point-template-service.ts:11](../src/services/jszip/power-point-template-service.ts#L11), [src/services/jszip/contracts.ts:7](../src/services/jszip/contracts.ts#L7).
+- **Location:** [src/reports/template.ts:16](../../src/reports/template.ts#L16), [src/services/jszip/power-point-template-service.ts:11](../../src/services/jszip/power-point-template-service.ts#L11), [src/services/jszip/contracts.ts:7](../../src/services/jszip/contracts.ts#L7).
 - **The Problem:**
   - `templateService` is exported by `src/reports/template.ts` but has zero callers in the application.
   - `PowerPointTemplateService` is only called by `templateService` and has zero callers.
@@ -177,7 +177,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### W4. Decouple or integrate the unused Data API subsystem
 
-- **Location:** [src/data-api/](../src/data-api/), [src/services/data-api-client.ts](../src/services/data-api-client.ts), [src/services/data-api/](../src/services/data-api/).
+- **Location:** [src/data-api/](../../src/data-api/), [src/services/data-api-client.ts](../../src/services/data-api-client.ts), [src/services/data-api/](../../src/services/data-api/).
 - **The Problem:** The repository maintains an elaborate upstream data client:
   - 5 schema files in `src/data-api/`
   - LRU caching with size tracking and SHA-256 cache-key hashing in `DataApiClient`
@@ -191,7 +191,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### W5. Eliminate identity re-parsing in Brief report
 
-- **Location:** [src/routes/pptxgenjs/brief/schema.ts:7-16](../src/routes/pptxgenjs/brief/schema.ts#L7-L16), [src/routes/pptxgenjs/brief/report.ts:17-26](../src/routes/pptxgenjs/brief/report.ts#L17-L26).
+- **Location:** [src/routes/pptxgenjs/brief/schema.ts:7-16](../../src/routes/pptxgenjs/brief/schema.ts#L7-L16), [src/routes/pptxgenjs/brief/report.ts:17-26](../../src/routes/pptxgenjs/brief/report.ts#L17-L26).
 - **The Problem:** `schema.ts` uses `briefInputSchema.pick({ ...all fields... }).strict()` to define `requestSchema`. Then in `report.ts`, `prepareInput` manually destructures every field (`filename, title, subtitle, author, accent, slides`), reconstructs an identical object literal, and invokes `briefInputSchema.parse(...)` a second time.
 - **Simplification:** Replace lines 17–26 of `brief/report.ts` with:
   ```ts
@@ -208,7 +208,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### R1. Consolidate duplicated formatted-run text replacement
 
-- **Location:** [src/pptx/jszip/placeholders/replace-token-across-runs.ts:3-25](../src/pptx/jszip/placeholders/replace-token-across-runs.ts#L3-L25), [src/pptx/jszip/text/replace-paragraph-text.ts:31-41](../src/pptx/jszip/text/replace-paragraph-text.ts#L31-L41).
+- **Location:** [src/pptx/jszip/placeholders/replace-token-across-runs.ts:3-25](../../src/pptx/jszip/placeholders/replace-token-across-runs.ts#L3-L25), [src/pptx/jszip/text/replace-paragraph-text.ts:31-41](../../src/pptx/jszip/text/replace-paragraph-text.ts#L31-L41).
 - **Duplication:** Both functions implement the exact same algorithm: calculating run boundary offsets across `<a:r><a:t>` nodes in a PowerPoint paragraph, determining overlap with a target substring range `[start, end]`, and updating `node.textContent` with `slice()` while maintaining run formatting.
 - **Refactoring:** Extract a unified helper in `src/pptx/jszip/text/replace-run-range.ts`:
   ```ts
@@ -238,25 +238,25 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 ### R2. Consolidate spreadsheet column conversions
 
 - **Location:**
-  1. [src/pptx/jszip/charts/ranges.ts:20-33](../src/pptx/jszip/charts/ranges.ts#L20-L33)
-  2. [src/pptx/jszip/charts/workbook/column-name.ts:1-9](../src/pptx/jszip/charts/workbook/column-name.ts#L1-L9)
-  3. [src/pptx/jszip/spreadsheet.ts:35-39](../src/pptx/jszip/spreadsheet.ts#L35-L39)
-  4. [src/pptx/jszip/charts/workbook/cell-address.ts:14-17](../src/pptx/jszip/charts/workbook/cell-address.ts#L14-L17)
+  1. [src/pptx/jszip/charts/ranges.ts:20-33](../../src/pptx/jszip/charts/ranges.ts#L20-L33)
+  2. [src/pptx/jszip/charts/workbook/column-name.ts:1-9](../../src/pptx/jszip/charts/workbook/column-name.ts#L1-L9)
+  3. [src/pptx/jszip/spreadsheet.ts:35-39](../../src/pptx/jszip/spreadsheet.ts#L35-L39)
+  4. [src/pptx/jszip/charts/workbook/cell-address.ts:14-17](../../src/pptx/jszip/charts/workbook/cell-address.ts#L14-L17)
 - **Duplication:** Converting Excel column letters to 1-based indices (e.g. `'AA'` → `27`) and vice versa is implemented four times. In `ranges.ts`, the conversion enforces Excel's 16,384 column limit, whereas `column-name.ts` and `spreadsheet.ts` have no bounds checks.
-- **Refactoring:** Export canonical helpers from [src/pptx/jszip/spreadsheet.ts](../src/pptx/jszip/spreadsheet.ts):
+- **Refactoring:** Export canonical helpers from [src/pptx/jszip/spreadsheet.ts](../../src/pptx/jszip/spreadsheet.ts):
   - `columnNameToNumber(column: string): number`
   - `columnNumberToName(index: number): string`
     Delete `src/pptx/jszip/charts/workbook/column-name.ts` and replace local conversions across all callers.
 
 ### R3. Unify repetitive DAA and TMA presentation report boilerplate
 
-- **Location:** [src/routes/pptx/daa/report.ts](../src/routes/pptx/daa/report.ts), [src/routes/pptx/tma/report.ts](../src/routes/pptx/tma/report.ts).
+- **Location:** [src/routes/pptx/daa/report.ts](../../src/routes/pptx/daa/report.ts), [src/routes/pptx/tma/report.ts](../../src/routes/pptx/tma/report.ts).
 - **Duplication:** Both reports define identical request schemas (`TEXT_ME: documentTextSchema`), identical query readers (`req.query`), and identical structure, differing only in template filename and service class.
 - **Refactoring:** If custom template POCs are retained, create a lightweight helper `definePresentationDemo({ name, templateFile, serviceClass })` to remove duplicate route wiring.
 
 ### R4. Fix naming typo and clock consistency in TMX service
 
-- **Location:** [src/services/jszip/tmx-poc-presentation-service.ts:23](../src/services/jszip/tmx-poc-presentation-service.ts#L23), [src/services/jszip/tmx-poc-presentation-service.ts:61](../src/services/jszip/tmx-poc-presentation-service.ts#L61).
+- **Location:** [src/services/jszip/tmx-poc-presentation-service.ts:23](../../src/services/jszip/tmx-poc-presentation-service.ts#L23), [src/services/jszip/tmx-poc-presentation-service.ts:61](../../src/services/jszip/tmx-poc-presentation-service.ts#L61).
 - **Issue:** `subtitile` is misspelled in `templateSettings.objects.subtitile` and local variable names.
 - **Refactoring:** Rename `subtitile` to `subtitle`. Ensure date derivations consistently use UTC arithmetic (`getUTCDate()`, `setUTCDate()`) from a single captured `now` instance.
 
@@ -266,7 +266,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### O1. Chromium disconnect deadlock in readiness checks
 
-- **Location:** [src/services/pdf/web-page-pdf.ts:44-48](../src/services/pdf/web-page-pdf.ts#L44-L48), [src/runtime.ts:31-39](../src/runtime.ts#L31-L39).
+- **Location:** [src/services/pdf/web-page-pdf.ts:44-48](../../src/services/pdf/web-page-pdf.ts#L44-L48), [src/runtime.ts:31-39](../../src/runtime.ts#L31-L39).
 - **The Problem:**
   - When Chromium crashes or disconnects, `browser.on('disconnected')` sets `#state = RendererState.Disconnected` and `#browserPromise = undefined`.
   - The readiness endpoint `/internal/ready` checks `pdf.stats.state === RendererState.Ready`. Disconnection immediately causes readiness to return `ready: false` (HTTP 503).
@@ -287,7 +287,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### O2. Shutdown deadline terminates active renders
 
-- **Location:** [src/runtime.ts:55](../src/runtime.ts#L55), [src/config/environment.ts:53](../src/config/environment.ts#L53).
+- **Location:** [src/runtime.ts:55](../../src/runtime.ts#L55), [src/config/environment.ts:53](../../src/config/environment.ts#L53).
 - **The Problem:** `shutdown()` sets a fixed hard exit timer:
   ```ts
   const deadline = setTimeout(() => process.exit(1), 15000).unref();
@@ -301,7 +301,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### O3. Unbounded JSON response reading in `DataApiClient`
 
-- **Location:** [src/services/data-api/request.ts:30](../src/services/data-api/request.ts#L30).
+- **Location:** [src/services/data-api/request.ts:30](../../src/services/data-api/request.ts#L30).
 - **The Problem:** `body = await response.json()` buffers and parses the entire upstream response body into memory without capping bytes read. If an upstream service returns a malformed 100 MB JSON payload, Node.js will deserialize the entire stream synchronously before `LRUCache.maxSize` or Zod schema validation can reject it, risking Out-Of-Memory process termination.
 - **Actionable Fix:** Read the response body using a stream reader that counts received bytes and aborts if content exceeds a safe limit (e.g. 5 MB):
   ```ts
@@ -311,7 +311,7 @@ Checks performed on 2026-10-17 using Node.js 24.15.0:
 
 ### O4. Broken Azure package test script
 
-- **Location:** [package.json:15](../package.json#L15).
+- **Location:** [package.json:15](../../package.json#L15).
 - **The Problem:** `"test:azure": "tsx --test test/deployment/azure-package.ts"`. The `test/deployment/` directory does not exist. Running `npm run test:azure` immediately exits with code 1.
 - **Actionable Fix:** Either restore `test/deployment/azure-package.ts` to test the built `output/azure/generator-api.zip`, or remove the script and its documentation references from `docs/azure.md` and `development.md`.
 
@@ -407,14 +407,14 @@ src/
 ### Phase 1: Immediate Correctness & CI Fixes (Small, High Impact)
 
 1. **Fix Factsheet Query Schema & Lint:**
-   - Resolve unused `defaultLanguage` in [src/routes/pdf/factsheet/[id]/report.ts](../src/routes/pdf/factsheet/[id]/report.ts).
-   - Update [src/routes/pdf/factsheet/[id]/schema.ts](../src/routes/pdf/factsheet/[id]/schema.ts) to accept `language` and `year`.
+   - Resolve unused `defaultLanguage` in [src/routes/pdf/factsheet/[id]/report.ts](../../src/routes/pdf/factsheet/[id]/report.ts).
+   - Update [src/routes/pdf/factsheet/[id]/schema.ts](../../src/routes/pdf/factsheet/[id]/schema.ts) to accept `language` and `year`.
 2. **Fix Template Path Disclosure:**
-   - In [src/services/jszip/template-source.ts](../src/services/jszip/template-source.ts), keep the file path in `cause` and return a generic public error message in `AppError`.
+   - In [src/services/jszip/template-source.ts](../../src/services/jszip/template-source.ts), keep the file path in `cause` and return a generic public error message in `AppError`.
 3. **Format Code:**
    - Run Prettier on the 4 out-of-style files to pass `npm run format:check`.
 4. **Reconcile Endpoint Documentation:**
-   - Update [docs/endpoints.md](endpoints.md) to match current URLs (`/pdf/example`, `/pptx/daa`, `/pptx/tma`, `/pptxgenjs/brief`).
+   - Update [docs/guides/endpoints.md](../guides/endpoints.md) to match current URLs (`/pdf/example`, `/pptx/daa`, `/pptx/tma`, `/pptxgenjs/brief`).
 
 ### Phase 2: Test Suite Restoration (Essential Quality Gate)
 

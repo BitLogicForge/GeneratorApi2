@@ -28,7 +28,7 @@ The following map identifies the main areas of responsibility:
 | Data API endpoint configuration and response types              | `src/data-api/endpoints.ts`, `src/data-api/report-data-schema.ts`                     |
 | Source presentations                                            | `templates/`                                                                          |
 | Tests and examples                                              | `test/`, `examples/`                                                                  |
-| API and deployment documentation                                | `docs/endpoints.md`, `docs/azure.md`, `scripts/`                                      |
+| API and deployment documentation                                | `docs/guides/endpoints.md`, `docs/deployment/azure.md`, `scripts/`                    |
 
 ## Investigating the code
 
@@ -70,7 +70,7 @@ The following map identifies the main areas of responsibility:
   and variable names when documenting configuration.
 - Keep changes within the task's scope. Add dependencies when existing tools
   cannot reasonably solve the problem; avoid incidental formatting of other files.
-- When changing endpoint parameters or behavior, update `docs/endpoints.md` and,
+- When changing endpoint parameters or behavior, update `docs/guides/endpoints.md` and,
   when needed, examples and `README.md`.
 
 ## Verification

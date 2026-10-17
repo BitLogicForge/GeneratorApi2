@@ -1,12 +1,12 @@
 # PowerPoint generation and templates
 
-[Back to overview](../README.md)
+[Back to overview](../../README.md)
 
 ## Edit an existing PowerPoint template
 
 `GET/POST /pptx/jszip/summary` fills the existing
 `templates/summary.pptx` with `title`, `subtitle`, and `customer` replacements,
-using the same contract as the business route. See [the endpoint example](endpoints.md#getpost-pptxjszipsummary).
+using the same contract as the business route. See [the endpoint example](../guides/endpoints.md#getpost-pptxjszipsummary).
 
 `POST /pptx/jszip/business` reads a registered `.pptx` file and modifies its text directly. The included `business` template is `templates/business.pptx`.
 
@@ -18,7 +18,7 @@ curl -X POST http://localhost:3000/pptx/jszip/business \
 
 In PowerPoint, add placeholders such as `{{title}}`, `{{subtitle}}`, and `{{customer}}` to text boxes or table cells. Supply matching strings in the JSON `replacements` object. Placeholders can span formatting runs within a paragraph; replacement text inherits the formatting of the first run. Speaker-note placeholders are also replaced. Replacements are literal text, with XML characters escaped automatically. Missing replacements and unknown keys return 400, so spelling errors do not silently produce incomplete decks.
 
-Declare allowed fields and decoding in the route's `schema.ts`. In `report.ts`, select the trusted template with `templateService('name', 'name.pptx')`, explicitly map validated fields through `prepareInput`, and define the attachment filename there. Export `definePptxReport(report)` through the method files. The shared runtime creates and validates the service automatically; startup and dependency types need no edits. See [the shorter endpoint workflow](development.md#add-a-placeholder-powerpoint-endpoint). The registry accepts trusted server-side paths; the business route selects its fixed template and callers cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
+Declare allowed fields and decoding in the route's `schema.ts`. In `report.ts`, select the trusted template with `templateService('name', 'name.pptx')`, explicitly map validated fields through `prepareInput`, and define the attachment filename there. Export `definePptxReport(report)` through the method files. The shared runtime creates and validates the service automatically; startup and dependency types need no edits. See [the shorter endpoint workflow](../guides/development.md#add-a-placeholder-powerpoint-endpoint). The registry accepts trusted server-side paths; the business route selects its fixed template and callers cannot supply filesystem paths. Include the `templates` directory beside `dist` in your deployment. Each request loads a fresh copy and never changes the original template. The included sample can be recreated with `npx tsx examples/pptx/create-template.ts`.
 
 Only slide and speaker-note text is changed. Untouched ZIP parts, including media, masters, layouts, charts, and relationships, are preserved. This endpoint supports modern `.pptx`, not legacy `.ppt`. Placeholders in masters, layouts, chart data, or across paragraphs are not supported. Replacement strings are single-paragraph text; layout and text-box sizing remain the template author's responsibility. This initial manipulation service does not resize images, update chart data, or add/remove slides. It shares the existing PowerPoint queue and concurrency limit.
 
@@ -32,6 +32,6 @@ Reusable template helpers live in `src/pptx/jszip`: `objects.ts` finds uniquely 
 
 ## JSZip template utilities
 
-See [the JSZip utility reference](../src/pptx/jszip/README.md),
-[small examples](../examples/pptx/jszip/README.md), and run
+See [the JSZip utility reference](../../src/pptx/jszip/README.md),
+[small examples](../../examples/pptx/jszip/README.md), and run
 `npm run example:fill-template` for a complete duplicate → fill → remove example.

@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PowerPointTemplateService } from '@/services/jszip/power-point-template-service';
@@ -9,7 +11,17 @@ import type { PptxReport } from './pptx.ts';
 export function templateFile(filename: string) {
   if (!/^[A-Za-z0-9_-]+\.pptx$/.test(filename))
     throw new Error('Use a template filename without directories');
-  return fileURLToPath(new URL(`../../templates/${filename}`, import.meta.url));
+  const fromCwd = resolve(process.cwd(), 'templates', filename);
+  if (existsSync(fromCwd)) return fromCwd;
+  let current = dirname(fileURLToPath(import.meta.url));
+  while (true) {
+    const candidate = join(current, 'templates', filename);
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return fromCwd;
 }
 
 /** Template loading and generation only; each route owns its public contract. */

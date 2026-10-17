@@ -182,9 +182,9 @@ Run `npm run format` to format files and `npm run lint` for code lint, type chec
 
 ## Verification and production build
 
-Distant source imports use `@/` for `src/`, for example `import { loadConfig } from '@/config'`. Tests can use `@examples/` for example workflows. Aliases omit file extensions and work in `tsx` through TypeScript path mappings; `scripts/rewrite-imports.mjs` rewrites them to relative `.js` imports during normal and Azure builds.
+Distant source imports use `@/` for `src/`, for example `import { loadConfig } from '@/config'`. Tests can use `@examples/` for example workflows. Aliases omit file extensions and work in `tsx` through TypeScript path mappings; `esbuild` resolves them during the production build.
 
-Local TypeScript imports use `.ts` extensions. `rewriteRelativeImportExtensions` rewrites them to `.js` in compiled output. `npm run typecheck` also runs `npm run check:imports`, which rejects relative `.js` imports in TypeScript files. JavaScript build outputs and actual `.mjs` tooling scripts retain their extensions.
+Local TypeScript imports use `.ts` extensions. `npm run typecheck` also runs `npm run check:imports`, which rejects relative `.js` imports in TypeScript files. Production builds use `esbuild` (`npm run build`) to bundle source modules into `dist/` with code splitting, leaving `tsc` strictly for type checking (`npm run typecheck`). JavaScript build outputs and actual `.mjs` tooling scripts retain their extensions.
 
 Run `npm run lint` to check code correctness and promise handling with Oxlint, TypeScript types, unused code and dependencies with Knip, and formatting with Prettier. Use `npm run lint:code` to run only the code-pattern checks. These commands do not modify files. Oxlint uses TypeScript-aware rules compatible with the project's TypeScript 7 compiler; its configuration lives in `.oxlintrc.json`. Node test registrations are exempt from floating-promise warnings because the test runner tracks their completion; other promises in tests remain checked.
 

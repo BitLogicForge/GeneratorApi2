@@ -53,7 +53,7 @@ The following map identifies the main areas of responsibility:
 
 - Preserve the existing TypeScript ESM style, including `.ts` extensions in local
   TypeScript source imports. For distant modules, use `@/` (the `src/` directory)
-  or `@examples/` without extensions. The build rewrites imports to `.js` in
+  or `@examples/` without extensions. The build compiles to `.js` in
   `dist`. Leave formatting to Prettier.
 - Keep routing, validation, and document generation separate. Use service
   injection through `createApp` and contracts in `src/http/types.ts` so HTTP

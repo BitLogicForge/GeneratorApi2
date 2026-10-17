@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
+# App Service startup command: bash scripts/start-azure.sh
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 export NODE_ENV=production
 export HOST="${HOST:-0.0.0.0}"

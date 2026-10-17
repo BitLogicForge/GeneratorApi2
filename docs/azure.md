@@ -27,8 +27,8 @@ Configure the App Service with the following settings:
 | Setting                               | Value                        | Purpose                                                   |
 | ------------------------------------- | ---------------------------- | --------------------------------------------------------- |
 | `NODE_ENV`                            | `production`                 | Production mode                                           |
-| `HOST`                                | `0.0.0.0`                    | Listen on all interfaces                                  |
-| `PORT`                                | `3000`                       | Port routed by App Service                                |
+| `API_HOST`                            | `0.0.0.0`                    | Listen on all interfaces                                  |
+| `API_PORT`                            | `3000`                       | Port routed by App Service                                |
 | `WEBSITES_ENABLE_APP_SERVICE_STORAGE` | `true`                       | Preserves `/home/playwright` browser cache across reboots |
 | `PLAYWRIGHT_BROWSERS_PATH`            | `/home/playwright`           | Browser storage location                                  |
 | `WEBSITE_WARMUP_PATH`                 | `/internal/ready`            | Warmup probe path                                         |

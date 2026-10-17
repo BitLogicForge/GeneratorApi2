@@ -7,7 +7,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const c = readEnvironment(env);
   return {
     pdfPrint: resolvePdfPrintSettings(),
-    host: c.HOST,
+    host: c.API_HOST,
     dataApi: {
       endpoints: dataApiEndpoints,
       baseUrl: c.DATA_API_BASE_URL,
@@ -20,7 +20,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       },
     },
     defaultLanguage: 'en',
-    port: c.PORT,
+    port: c.API_PORT,
     baseUrl: c.baseUrl,
     concurrency: c.PDF_CONCURRENCY,
     timeout: c.RENDER_TIMEOUT_MS,

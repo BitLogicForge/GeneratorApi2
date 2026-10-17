@@ -93,7 +93,7 @@ Pass text fields directly. Encode `query` and `replacements` as JSON objects, `s
 
 Large presentations or replacement text may exceed URL limits imposed by browsers, proxies, or hosting servers; use POST with JSON for those larger requests.
 
-For testing from outside Docker, set `HOST=0.0.0.0` and publish port 3000. The included devcontainer publishes it to your computer's `127.0.0.1:3000`; rebuild the devcontainer to apply this setting. See [Docker access instructions](getting-started.md#access-from-outside-docker).
+For testing from outside Docker, set `API_HOST=0.0.0.0` and publish port 3000. The included devcontainer publishes it to your computer's `127.0.0.1:3000`; rebuild the devcontainer to apply this setting. See [Docker access instructions](getting-started.md#access-from-outside-docker).
 
 ## Endpoint list
 

@@ -6,8 +6,8 @@ import { dataApiCacheDefaults } from './defaults.ts';
 export function readEnvironment(env: NodeJS.ProcessEnv) {
   const c = z
     .object({
-      HOST: z.string().trim().min(1).default('0.0.0.0'),
-      PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+      API_HOST: z.string().trim().min(1).default('0.0.0.0'),
+      API_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
       WEBAPP_BASE_URL: z.url().default('http://localhost:3001'),
       DATA_API_BASE_URL: z.preprocess(
         (value) => (value === '' ? undefined : value),

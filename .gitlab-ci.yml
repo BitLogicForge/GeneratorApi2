@@ -112,8 +112,8 @@ build:
     SLOT_ARGS: ''
     APP_SETTINGS: >-
       NODE_ENV=production
-      HOST=0.0.0.0
-      PORT=3000
+      API_HOST=0.0.0.0
+      API_PORT=3000
       WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
       PLAYWRIGHT_BROWSERS_PATH=/home/playwright
       WEBSITE_WARMUP_PATH=/internal/ready

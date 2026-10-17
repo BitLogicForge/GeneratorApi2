@@ -74,9 +74,8 @@ For slot deployments (e.g. `dev`), add `--slot dev` to the commands.
 
 The pipeline defined in [.gitlab-ci.yml](../.gitlab-ci.yml) automates this workflow:
 
-1. **`verify` stage:** Runs linting, tests, and compiles the code to `dist/` with `npm run build`.
-2. **`build` stage (`build_zip`):** Installs production dependencies and packages `output/azure/generator-api.zip`.
-3. **`deploy` stage (`deploy_main` / `deploy_dev`):** Deploys the ZIP package directly to Azure Web App production or the dev slot using `az webapp deploy`.
+1. **`build` stage:** Runs linting and tests, compiles with `npm run build`, prunes dev-dependencies (`npm prune --omit=dev`), and packages `output/azure/generator-api.zip`.
+2. **`deploy` stage (`deploy_main` / `deploy_dev`):** Deploys the ZIP package directly to Azure Web App production or the dev slot using `az webapp deploy`.
 
 Configure the following secrets in GitLab **Settings > CI/CD > Variables**:
 

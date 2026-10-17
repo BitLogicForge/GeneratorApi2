@@ -15,7 +15,6 @@ variables:
   npm_config_fund: 'false'
 
 stages:
-  - verify
   - build
   - deploy
 
@@ -30,29 +29,17 @@ workflow:
     name: '$NODE_IMAGE'
     entrypoint: ['']
 
-verify:
+build:
   extends: .node_job
-  stage: verify
+  stage: build
+  before_script:
+    - which zip >/dev/null 2>&1 || (apt-get update && apt-get install -y --no-install-recommends zip)
   script:
     - npm ci
     - npm run lint
     - npm test
     - npm run build
-  artifacts:
-    paths:
-      - dist/
-    expire_in: 1 week
-
-build_zip:
-  extends: .node_job
-  stage: build
-  needs:
-    - job: verify
-      artifacts: true
-  before_script:
-    - which zip >/dev/null 2>&1 || (apt-get update && apt-get install -y --no-install-recommends zip)
-  script:
-    - npm ci --omit=dev
+    - npm prune --omit=dev
     - chmod +x scripts/start-azure.sh
     - mkdir -p "$(dirname "$ZIP_PACKAGE")"
     - zip -q -r "$ZIP_PACKAGE" dist package.json package-lock.json scripts/start-azure.sh templates node_modules
@@ -73,7 +60,7 @@ build_zip:
   extends: .azure_job
   stage: deploy
   needs:
-    - job: build_zip
+    - job: build
       artifacts: true
   variables:
     SLOT_ARGS: ''

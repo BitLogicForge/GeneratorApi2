@@ -1,4 +1,4 @@
-import { columnNumberToName } from '@/pptx/jszip/spreadsheet';
+import { columnNumberToName } from './columns.ts';
 
 import type { Element } from '@xmldom/xmldom';
 import type { WorksheetBounds } from './types.ts';

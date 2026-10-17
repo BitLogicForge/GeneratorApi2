@@ -12,7 +12,7 @@ export default definePdfReport({
   externalOrigin: externalPage.origin,
   prepareInput: ({ query }) => ({
     ...mapPdfRoute(externalPage.pathname, query, {}),
-    filename: 'onet',
+    filename: 'example',
   }),
   print: { landscape: false },
 });

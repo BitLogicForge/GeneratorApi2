@@ -1,9 +1,7 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { spreadsheet } from '@/pptx/jszip/package/namespaces';
-import {
-  columnNameToNumber,
-  columnNumberToName,
-} from '@/pptx/jszip/spreadsheet';
+
+import { columnNameToNumber, columnNumberToName } from './workbook/columns.ts';
 
 import type { Document, Element } from '@xmldom/xmldom';
 

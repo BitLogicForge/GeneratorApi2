@@ -1,75 +1,63 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { spreadsheet } from '@/pptx/jszip/package/namespaces';
 
-import type { Document } from '@xmldom/xmldom';
+import { columnNameToNumber } from './charts/workbook/columns.ts';
 
-export const MAX_WORKSHEET_COLUMNS = 16384;
-export const MAX_WORKSHEET_ROWS = 1048576;
+import type { Document, Element } from '@xmldom/xmldom';
 
-/** Converts an Excel column name (e.g. 'A', 'Z', 'AA', 'XFD') to a 1-based column index. */
-export function columnNameToNumber(column: string): number {
-  if (!/^[A-Z]+$/.test(column)) throw invalidTemplate();
-  let number = 0;
-  for (let i = 0; i < column.length; i++) {
-    number = number * 26 + column.charCodeAt(i) - 64;
-  }
-  if (number < 1 || number > MAX_WORKSHEET_COLUMNS) throw invalidTemplate();
-  return number;
-}
-
-/** Converts a 1-based column index to an Excel column name (e.g. 1 -> 'A', 27 -> 'AA'). */
-export function columnNumberToName(value: number): string {
-  if (!Number.isInteger(value) || value < 1 || value > MAX_WORKSHEET_COLUMNS) {
-    throw invalidTemplate();
-  }
-  let name = '';
-  let current = value;
-  while (current > 0) {
-    current--;
-    name = String.fromCharCode(65 + (current % 26)) + name;
-    current = Math.floor(current / 26);
-  }
-  return name;
-}
-
-/** Creates missing rows/cells while retaining existing cell styles. */
-export function setWorksheetCell(
+function findOrCreateRow(
   sheet: Document,
-  address: string,
-  value: string | number,
-) {
-  const match = /^([A-Z]+)(\d+)$/.exec(address);
-  const data = sheet.getElementsByTagNameNS(spreadsheet, 'sheetData')[0];
-  if (!match || !data) throw invalidTemplate();
-  const rowNumber = Number(match[2]);
+  data: Element,
+  rowNumber: number,
+): Element {
   const rows = Array.from(data.getElementsByTagNameNS(spreadsheet, 'row'));
-  let row = rows.find((item) => Number(item.getAttribute('r')) === rowNumber);
-  if (!row) {
-    row = sheet.createElementNS(spreadsheet, 'row');
-    row.setAttribute('r', String(rowNumber));
-    data.insertBefore(
-      row,
-      rows.find((item) => Number(item.getAttribute('r')) > rowNumber) ?? null,
-    );
-  }
+  const existing = rows.find(
+    (item) => Number(item.getAttribute('r')) === rowNumber,
+  );
+  if (existing) return existing;
+
+  const row = sheet.createElementNS(spreadsheet, 'row');
+  row.setAttribute('r', String(rowNumber));
+  const nextRow =
+    rows.find((item) => Number(item.getAttribute('r')) > rowNumber) ?? null;
+  data.insertBefore(row, nextRow);
+  return row;
+}
+
+function findOrCreateCell(
+  sheet: Document,
+  row: Element,
+  address: string,
+  column: string,
+): Element {
   const cells = Array.from(row.getElementsByTagNameNS(spreadsheet, 'c'));
-  let cell = cells.find((item) => item.getAttribute('r') === address);
-  if (!cell) {
-    cell = sheet.createElementNS(spreadsheet, 'c');
-    cell.setAttribute('r', address);
-    const style = Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'c'))
-      .find((item) => item.getAttribute('r') === `${match[1]}2`)
-      ?.getAttribute('s');
-    if (style) cell.setAttribute('s', style);
-    row.insertBefore(
-      cell,
-      cells.find(
-        (item) =>
-          columnNameToNumber(item.getAttribute('r')!.replace(/\d+$/, '')) >
-          columnNameToNumber(match[1]),
-      ) ?? null,
-    );
-  }
+  const existing = cells.find((item) => item.getAttribute('r') === address);
+  if (existing) return existing;
+
+  const cell = sheet.createElementNS(spreadsheet, 'c');
+  cell.setAttribute('r', address);
+
+  const style = Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'c'))
+    .find((item) => item.getAttribute('r') === `${column}2`)
+    ?.getAttribute('s');
+  if (style) cell.setAttribute('s', style);
+
+  const targetCol = columnNameToNumber(column);
+  const nextCell =
+    cells.find(
+      (item) =>
+        columnNameToNumber(item.getAttribute('r')!.replace(/\d+$/, '')) >
+        targetCol,
+    ) ?? null;
+  row.insertBefore(cell, nextCell);
+  return cell;
+}
+
+function writeCellValue(
+  sheet: Document,
+  cell: Element,
+  value: string | number,
+): void {
   while (cell.firstChild) cell.removeChild(cell.firstChild);
   if (typeof value === 'number') {
     cell.removeAttribute('t');
@@ -84,4 +72,19 @@ export function setWorksheetCell(
     inline.appendChild(text);
     cell.appendChild(inline);
   }
+}
+
+/** Creates missing rows/cells while retaining existing cell styles. */
+export function setWorksheetCell(
+  sheet: Document,
+  address: string,
+  value: string | number,
+) {
+  const match = /^([A-Z]+)(\d+)$/.exec(address);
+  const data = sheet.getElementsByTagNameNS(spreadsheet, 'sheetData')[0];
+  if (!match || !data) throw invalidTemplate();
+
+  const row = findOrCreateRow(sheet, data, Number(match[2]));
+  const cell = findOrCreateCell(sheet, row, address, match[1]);
+  writeCellValue(sheet, cell, value);
 }

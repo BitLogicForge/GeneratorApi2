@@ -1,9 +1,10 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
+
 import {
   columnNameToNumber,
   MAX_WORKSHEET_COLUMNS,
   MAX_WORKSHEET_ROWS,
-} from '@/pptx/jszip/spreadsheet';
+} from './columns.ts';
 
 import type { Element } from '@xmldom/xmldom';
 

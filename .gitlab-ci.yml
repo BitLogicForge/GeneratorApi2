@@ -10,6 +10,9 @@ variables:
   DEV_BRANCH: 'dev'
   NODE_IMAGE: 'node:22-bookworm-slim'
   AZURE_CLI_IMAGE: 'mcr.microsoft.com/azure-cli:latest'
+  ZIP_PACKAGE: 'output/azure/generator-api.zip'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
 
 stages:
   - verify
@@ -31,7 +34,7 @@ verify:
   extends: .node_job
   stage: verify
   script:
-    - npm ci --no-audit --no-fund
+    - npm ci
     - npm run lint
     - npm test
     - npm run build
@@ -49,13 +52,13 @@ build_zip:
   before_script:
     - which zip >/dev/null 2>&1 || (apt-get update && apt-get install -y --no-install-recommends zip)
   script:
-    - npm ci --omit=dev --no-audit --no-fund
+    - npm ci --omit=dev
     - chmod +x scripts/start-azure.sh
-    - mkdir -p output/azure
-    - zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scripts/start-azure.sh templates node_modules
+    - mkdir -p "$(dirname "$ZIP_PACKAGE")"
+    - zip -q -r "$ZIP_PACKAGE" dist package.json package-lock.json scripts/start-azure.sh templates node_modules
   artifacts:
     paths:
-      - output/azure/generator-api.zip
+      - '$ZIP_PACKAGE'
     expire_in: 1 week
 
 .azure_job:
@@ -72,70 +75,35 @@ build_zip:
   needs:
     - job: build_zip
       artifacts: true
+  variables:
+    SLOT_ARGS: ''
+    APP_SETTINGS: >-
+      NODE_ENV=production
+      HOST=0.0.0.0
+      PORT=3000
+      WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
+      PLAYWRIGHT_BROWSERS_PATH=/home/playwright
+      WEBSITE_WARMUP_PATH=/internal/ready
+      WEBSITE_WARMUP_STATUSES=200
+  script:
+    - TARGET="--resource-group $AZURE_RESOURCE_GROUP --name $AZURE_WEBAPP_NAME $SLOT_ARGS"
+    - az webapp config set $TARGET --startup-file 'bash scripts/start-azure.sh' --output none
+    - az webapp config appsettings set $TARGET --settings $APP_SETTINGS --output none
+    - az webapp deploy $TARGET --src-path "$ZIP_PACKAGE" --type zip --async false
+    - az webapp restart $TARGET
 
 deploy_main:
   extends: .azure_deploy
   rules:
-    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_BRANCH == $PRODUCTION_BRANCH'
-  environment:
-    name: production
+    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH'
+  environment: production
   resource_group: azure-production
-  script:
-    - >-
-      az webapp config set
-      --resource-group "$AZURE_RESOURCE_GROUP"
-      --name "$AZURE_WEBAPP_NAME"
-      --startup-file 'bash scripts/start-azure.sh'
-      --output none
-    - >-
-      az webapp config appsettings set
-      --resource-group "$AZURE_RESOURCE_GROUP"
-      --name "$AZURE_WEBAPP_NAME"
-      --settings NODE_ENV=production HOST=0.0.0.0 PORT=3000
-      WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
-      PLAYWRIGHT_BROWSERS_PATH=/home/playwright
-      WEBSITE_WARMUP_PATH=/internal/ready WEBSITE_WARMUP_STATUSES=200
-      --output none
-    - >-
-      az webapp deploy
-      --resource-group "$AZURE_RESOURCE_GROUP"
-      --name "$AZURE_WEBAPP_NAME"
-      --src-path output/azure/generator-api.zip
-      --type zip
-      --async false
-    - az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME"
 
 deploy_dev:
   extends: .azure_deploy
+  variables:
+    SLOT_ARGS: '--slot $AZURE_DEV_SLOT'
   rules:
-    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_BRANCH == $DEV_BRANCH'
-  environment:
-    name: dev
+    - if: '$CI_COMMIT_BRANCH == $DEV_BRANCH'
+  environment: dev
   resource_group: azure-dev
-  script:
-    - >-
-      az webapp config set
-      --resource-group "$AZURE_RESOURCE_GROUP"
-      --name "$AZURE_WEBAPP_NAME"
-      --slot "$AZURE_DEV_SLOT"
-      --startup-file 'bash scripts/start-azure.sh'
-      --output none
-    - >-
-      az webapp config appsettings set
-      --resource-group "$AZURE_RESOURCE_GROUP"
-      --name "$AZURE_WEBAPP_NAME"
-      --slot "$AZURE_DEV_SLOT"
-      --settings NODE_ENV=production HOST=0.0.0.0 PORT=3000
-      WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
-      PLAYWRIGHT_BROWSERS_PATH=/home/playwright
-      WEBSITE_WARMUP_PATH=/internal/ready WEBSITE_WARMUP_STATUSES=200
-      --output none
-    - >-
-      az webapp deploy
-      --resource-group "$AZURE_RESOURCE_GROUP"
-      --name "$AZURE_WEBAPP_NAME"
-      --slot "$AZURE_DEV_SLOT"
-      --src-path output/azure/generator-api.zip
-      --type zip
-      --async false
-    - az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --slot "$AZURE_DEV_SLOT"

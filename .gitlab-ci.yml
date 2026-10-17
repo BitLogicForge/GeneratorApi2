@@ -18,11 +18,11 @@ stages:
   - build
   - deploy
 
-workflow:
+workflow: # Define the workflow for the pipeline
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH'
-    - when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' # Run for merge request events
+    - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH' # Run for production or dev branch commits
+    - when: never # Do not run for any other cases
 
 .node_job:
   image:

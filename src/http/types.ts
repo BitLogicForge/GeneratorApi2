@@ -2,14 +2,11 @@ import type { Config } from '@/config';
 import type { ReadinessState, RendererState } from '@/observability/constants';
 import type { GenerationQueues } from '@/queue/generation-queue';
 import type { ReportServices } from '@/reports/services';
-import type { PptxRenderInput } from '@/services/jszip/contracts';
 import type { PdfRenderInput } from '@/services/pdf/contracts';
-import type { BriefInput } from '@/services/pptxgenjs/contracts';
 import type { createObservability } from './observability.ts';
 
 export interface AppOptions {
   reports?: ReportServices;
-  templateReportDemo?: { generate(text?: string): Promise<Buffer> };
   pdf: {
     generate(input: PdfRenderInput, externalOrigin?: string): Promise<Buffer>;
     readonly stats?: {
@@ -19,12 +16,6 @@ export interface AppOptions {
       disconnects: number;
       active: number;
     };
-  };
-  presentations?: {
-    generate(template: string, input: BriefInput): Promise<Buffer>;
-  };
-  templatePresentations?: {
-    generate(template: string, input: PptxRenderInput): Promise<Buffer>;
   };
   config?: Pick<Config, 'defaultLanguage'>;
   queues?: GenerationQueues;

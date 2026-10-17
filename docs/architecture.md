@@ -35,7 +35,7 @@ Each PPTX folder declares its public fields and decoding in `schema.ts`, then it
 
 `templateService` registers a trusted template file with `PowerPointTemplateService`; route-local definitions own the public schema and mapping. Request parameters never select filesystem paths. Custom report factories receive validated config and a shared typed `DataApiClient`. Services return buffers and do not handle Express requests/responses.
 
-`createApp` retains service injection for HTTP tests. Existing engine-specific service options remain compatible; new reports use the generic typed override API. Renderer contracts live in service modules and do not import HTTP route schemas.
+`createApp` retains service injection for HTTP tests. PowerPoint report services are injected and overridden using the generic typed `reports.override(report, fakeService)` API. Renderer contracts live in service modules and do not import HTTP route schemas.
 
 ## Configuration
 

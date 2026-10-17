@@ -29,10 +29,6 @@ export const report = {
     const service = new PowerPointGenerationService();
     return { generate: (input) => service.generate(template, input) };
   },
-  injectedService: ({ presentations }) =>
-    presentations && {
-      generate: (input) => presentations.generate(template, input),
-    },
 } satisfies PptxReport<z.infer<typeof requestSchema>, BriefInput>;
 
 export default definePptxReport(report);

@@ -1,5 +1,9 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { spreadsheet } from '@/pptx/jszip/package/namespaces';
+import {
+  columnNameToNumber,
+  columnNumberToName,
+} from '@/pptx/jszip/spreadsheet';
 
 import type { Document, Element } from '@xmldom/xmldom';
 
@@ -11,27 +15,9 @@ export function createChartRange(
   rowCount: number,
 ) {
   const lastRow = firstRow + rowCount - 1;
-  if (
-    !/^[A-Z]+$/.test(firstColumn) ||
-    !Number.isInteger(firstRow) ||
-    firstRow < 2
-  )
-    throw invalidTemplate();
-  const columnNumber = Array.from(firstColumn).reduce(
-    (total, letter) => total * 26 + letter.charCodeAt(0) - 64,
-    0,
-  );
-  const columnName = (number: number): string => {
-    if (number < 1 || number > 16384) throw invalidTemplate();
-    let name = '';
-    while (number > 0) {
-      number--;
-      name = String.fromCharCode(65 + (number % 26)) + name;
-      number = Math.floor(number / 26);
-    }
-    return name;
-  };
-  const categoryColumn = columnName(columnNumber - 1);
+  if (!Number.isInteger(firstRow) || firstRow < 2) throw invalidTemplate();
+  const columnNumber = columnNameToNumber(firstColumn);
+  const categoryColumn = columnNumberToName(columnNumber - 1);
   const resizeFormula = (formula: Element | undefined, column: string) => {
     if (!formula) throw invalidTemplate();
     const prefix = [sheetName, `'${sheetName.replaceAll("'", "''")}'`]
@@ -50,5 +36,11 @@ export function createChartRange(
     }
     formula.textContent = `${prefix}${lastRow}`;
   };
-  return { lastRow, categoryColumn, columnNumber, columnName, resizeFormula };
+  return {
+    lastRow,
+    categoryColumn,
+    columnNumber,
+    columnName: columnNumberToName,
+    resizeFormula,
+  };
 }

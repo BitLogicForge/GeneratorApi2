@@ -1,6 +1,8 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { drawing } from '@/pptx/jszip/package/namespaces';
 
+import { replaceRunRange } from './replace-run-range.ts';
+
 import type { Element } from '@xmldom/xmldom';
 
 /** Literal replacement within each paragraph, including text split across formatted runs. */
@@ -27,18 +29,13 @@ export function replaceParagraphText(
     )
       positions.push(start);
     for (const start of positions.reverse()) {
-      const end = start + search.length;
-      let offset = 0;
-      for (const [index, node] of nodes.entries()) {
-        const nodeStart = offset;
-        offset += original[index].length;
-        if (offset <= start || nodeStart >= end) continue;
-        const current = node.textContent ?? '';
-        node.textContent =
-          current.slice(0, Math.max(0, start - nodeStart)) +
-          (start >= nodeStart ? replacement : '') +
-          current.slice(Math.min(original[index].length, end - nodeStart));
-      }
+      replaceRunRange(
+        nodes,
+        original,
+        start,
+        start + search.length,
+        replacement,
+      );
       count++;
     }
   }

@@ -16,10 +16,7 @@ export function templateFile(filename: string) {
 export function templateService(
   name: string,
   filename: string,
-): Pick<
-  PptxReport<unknown, PptxRenderInput>,
-  'createService' | 'injectedService'
-> {
+): Pick<PptxReport<unknown, PptxRenderInput>, 'createService'> {
   return {
     createService: () => {
       const service = new PowerPointTemplateService({
@@ -30,9 +27,5 @@ export function templateService(
         validate: () => service.validate(),
       };
     },
-    injectedService: ({ templatePresentations }) =>
-      templatePresentations && {
-        generate: (input) => templatePresentations.generate(name, input),
-      },
   };
 }

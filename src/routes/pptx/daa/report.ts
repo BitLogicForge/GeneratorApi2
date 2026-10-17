@@ -18,7 +18,6 @@ export const report = {
     input: TEXT_ME,
   }),
   createService: () => new DaaPocPresentationService(templateFile(sourceFile)),
-  injectedService: ({ templateReportDemo }) => templateReportDemo,
 } satisfies PptxReport<z.infer<typeof requestSchema>, string>;
 
 export default definePptxReport(report);

@@ -1,11 +1,11 @@
 import { definePptxReport } from '@/reports/pptx';
 import { templateFile } from '@/reports/template';
+import { TmxPocPresentationService } from '@/services/jszip/tmx-poc-presentation-service';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
-import type { PptxReport } from '@/reports/pptx';
-import { TmxPocPresentationService } from '@/services/jszip/tmx-poc-presentation-service';
 import type { z } from 'zod';
+import type { PptxReport } from '@/reports/pptx';
 
 const sourceFile = 'Tmp1.pptx';
 
@@ -18,7 +18,6 @@ export const report = {
     input: TEXT_ME,
   }),
   createService: () => new TmxPocPresentationService(templateFile(sourceFile)),
-  injectedService: ({ templateReportDemo }) => templateReportDemo,
 } satisfies PptxReport<z.infer<typeof requestSchema>, string>;
 
 export default definePptxReport(report);

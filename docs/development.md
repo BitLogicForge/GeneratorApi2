@@ -172,7 +172,7 @@ const app = createApp({ reports, pdf: fakePdf });
 await reports.initialize();
 ```
 
-Import `createReportServices` from `@/reports/services` and `report` from the report module. The PDF service remains directly injectable. Existing `presentations`, `templatePresentations`, and `templateReportDemo` injections remain supported for compatibility. New reports should use `reports.override`. A test can pass discovered routes as the second argument to `createApp` to exercise a new report in isolation.
+Import `createReportServices` from `@/reports/services` and `report` from the report module. The PDF service remains directly injectable. Override PowerPoint report services using `reports.override(report, fakeService)`. A test can pass discovered routes as the second argument to `createApp` to exercise a new report in isolation.
 
 Adding a report requires its definition, method re-exports, optional service/template, and documentation; add tests when requested. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
 

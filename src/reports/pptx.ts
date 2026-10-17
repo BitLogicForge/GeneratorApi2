@@ -7,7 +7,7 @@ import type { Request } from 'express';
 import type { ZodType } from 'zod';
 import type { RouteFactory } from '@/http/file-routes/types';
 import type { RouteDependencies } from '@/http/types';
-import type { ReportService, ServiceDefinition } from './services.ts';
+import type { ServiceDefinition } from './services.ts';
 
 export interface PptxReport<
   Input,
@@ -21,10 +21,6 @@ export interface PptxReport<
   jsonFields?: readonly string[];
   readRequestInput?: (request: Request<Record<string, string>>) => unknown;
   notConfiguredMessage?: string;
-  // Compatibility with existing createApp service injections.
-  injectedService?: (
-    dependencies: RouteDependencies,
-  ) => ReportService<RenderInput> | undefined;
 }
 
 /** Defines request validation, generation, and lifecycle together with the report. */
@@ -32,9 +28,7 @@ export function definePptxReport<Input, RenderInput>(
   definition: PptxReport<Input, RenderInput>,
 ): RouteFactory {
   return (dependencies) => {
-    const service =
-      definition.injectedService?.(dependencies) ??
-      dependencies.reports?.get(definition);
+    const service = dependencies.reports?.get(definition);
     return async (req, res) => {
       const raw = definition.readRequestInput
         ? definition.readRequestInput(req)

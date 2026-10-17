@@ -6,20 +6,21 @@ This deployment packages the compiled application, presentation templates, and p
 
 ## Packaging workflow
 
-GitLab CI handles package creation in the `build_zip` job: it compiles the application, installs production dependencies (`npm ci --omit=dev`), and archives `dist/`, `package.json`, `package-lock.json`, `templates/`, `scripts/start-azure.sh`, and `node_modules/` into `output/azure/generator-api.zip`.
+GitLab CI handles package creation in the `build` job: it compiles the application, installs production dependencies (`npm ci --omit=dev`), extracts CA certificates from the build container into `certs/`, and archives `dist/`, `package.json`, `package-lock.json`, `templates/`, `scripts/start-azure.sh`, `certs/`, and `node_modules/` into `output/azure/generator-api.zip`.
 
 To package manually on Linux or in the devcontainer:
 
 ```bash
 npm run build
 npm ci --omit=dev
+bash scripts/collect-certs.sh certs
 mkdir -p output/azure
-zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scripts/start-azure.sh templates node_modules
+zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scripts/start-azure.sh templates node_modules certs
 ```
 
 ## Runtime configuration and startup
 
-The package starts through [scripts/start-azure.sh](../scripts/start-azure.sh), which installs Chromium and its Linux libraries into `/home/playwright` on first run and starts `node dist/index.js`.
+The package starts through [scripts/start-azure.sh](../scripts/start-azure.sh). It configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries into `/home/playwright` on first run, and finally starts `node dist/index.js`.
 
 Configure the App Service with the following settings:
 

@@ -6,3 +6,4 @@
 /dist
 *.tsbuildinfo
 /.cache/ms-playwright
+/certs

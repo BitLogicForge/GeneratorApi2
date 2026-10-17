@@ -161,7 +161,7 @@ For agent tasks, follow the [verification policy in AGENTS.md](../AGENTS.md#veri
 2. When document verification is requested, inspect PDF forwarding/appearance or relevant PPTX ZIP/XML content. For chart changes, check the embedded workbook and editability too.
 3. Update `docs/endpoints.md` and add an output example when useful.
 4. For TypeScript changes, run `npm run typecheck`, `npm run lint:code`, and `npm run knip`; check formatting of changed files. Run `npm run build` when compilation, import rewriting, or execution from `dist/` changes. Use `npm test` only when the requested verification requires the full suite.
-5. Restart after adding/moving method files. GitLab compiles `dist/` before ACR packages the image; template `.pptx` files are included automatically.
+5. Restart after adding/moving method files. GitLab compiles `dist/` before packaging the ZIP; template `.pptx` files are included automatically.
 
 For report tests, use the generic service container rather than adding a property to `AppOptions`:
 
@@ -192,7 +192,7 @@ Use `npm run deps:check` to preview dependency updates within the declared versi
 
 Run `npm run knip` to find unused files, exports, and dependencies. Knip analyzes source code, tests, examples, and build scripts; its configuration lives in `knip.json`. The GitLab build runs this check before packaging the app.
 
-For Linux Azure App Service, use the root Dockerfile with your prebuilt Node.js/Chromium image. GitLab compiles the API and passes `dist/` as an artifact to the ACR build job. The image includes compiled code, production dependencies, and templates; `npm run smoke:container` verifies readiness and real document downloads during the image build. See [Azure deployment](azure.md) for settings and the legacy ZIP packaging option.
+For Linux Azure App Service, GitLab compiles the API (`npm run build`), packages the ZIP with production dependencies (`npm run build:azure`), and deploys it with `az webapp deploy`. See [Azure deployment](azure.md) for configuration and settings.
 
 Format all supported project files with `npm run format`. Use `npm run format:check` to check formatting without modifying files. Dependencies, builds, generated output, and PowerPoint template files are excluded.
 

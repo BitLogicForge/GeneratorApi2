@@ -1,5 +1,7 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
+  chmod,
   cp,
   lstat,
   mkdir,
@@ -22,6 +24,11 @@ if (process.platform !== 'linux')
   );
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const distDir = join(root, 'dist');
+if (!existsSync(distDir)) {
+  throw new Error('dist/ directory not found. Run "npm run build" first.');
+}
+
 const output = join(root, 'output', 'azure', 'generator-api.zip');
 const staging = await mkdtemp(join(tmpdir(), 'generator-api-azure-'));
 
@@ -37,6 +44,9 @@ try {
     await mkdir(dirname(join(staging, name)), { recursive: true });
     await cp(join(root, name), join(staging, name), { recursive: true });
   }
+
+  await chmod(join(staging, 'scripts', 'start-azure.sh'), 0o755);
+
   execFileSync('npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
     cwd: staging,
     stdio: 'inherit',

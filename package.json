@@ -32,7 +32,11 @@
     "example:pptx:chart": "tsx examples/pptx/jszip/chart.ts",
     "example:pptx:table": "tsx examples/pptx/jszip/table.ts",
     "example:pptx:duplicate-slide": "tsx examples/pptx/jszip/duplicate-slide.ts",
-    "example:pptx:remove-slide": "tsx examples/pptx/jszip/remove-slide.ts"
+    "example:pptx:remove-slide": "tsx examples/pptx/jszip/remove-slide.ts",
+    "example:pptx:placeholders": "tsx examples/pptx/jszip/placeholders.ts",
+    "example:pptx:brief": "tsx examples/pptx/generate-brief.ts",
+    "example:data-to-pptx": "tsx --env-file-if-exists=.env examples/data-api/data-to-pptx.ts",
+    "example:render-pdf": "tsx --env-file-if-exists=.env examples/pdf/render.ts"
   },
   "keywords": [],
   "author": "",

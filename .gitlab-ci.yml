@@ -46,8 +46,13 @@ build_zip:
   needs:
     - job: verify
       artifacts: true
+  before_script:
+    - which zip >/dev/null 2>&1 || (apt-get update && apt-get install -y --no-install-recommends zip)
   script:
-    - npm run build:azure
+    - npm ci --omit=dev --no-audit --no-fund
+    - chmod +x scripts/start-azure.sh
+    - mkdir -p output/azure
+    - zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scripts/start-azure.sh templates node_modules
   artifacts:
     paths:
       - output/azure/generator-api.zip

@@ -6,24 +6,24 @@
 
 `src/index.ts` launches `src/runtime.ts`. Report-specific construction lives beside the route, so new reports do not change startup wiring.
 
-| Area                                                         | Files                                                                |
-| ------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Startup, shared infrastructure, readiness, shutdown          | `src/runtime.ts`                                                     |
-| Middleware, request IDs, HTTP assembly                       | `src/app.ts`                                                         |
-| Human-editable shared defaults                               | `src/config/defaults.ts`                                             |
-| Environment validation and configuration assembly            | `src/config/environment.ts`, `src/config/index.ts`                   |
-| Report helpers and owned service lifecycle                   | `src/reports/pdf.ts`, `pptx.ts`, `template.ts`, `services.ts`        |
-| PDF URL/language settings, parameter mapping, and validation | `src/routes/pdf/**/{report,schema}.ts`                               |
-| URLs and endpoint-specific definitions                       | `src/routes/**/{get,post}.ts`, `report.ts`                           |
-| Discovery, ordering, duplicate detection                     | `src/http/file-routes/`                                              |
-| Injected contracts, decoding, downloads, errors              | `src/http/`, `src/errors.ts`                                         |
-| Queues, timeouts, cancellation                               | `src/queue/generation-queue.ts`                                      |
-| Chromium and PDF contracts                                   | `src/services/pdf/`                                                  |
-| PowerPoint generation and template services/contracts        | `src/services/pptxgenjs/`, `src/services/jszip/`                     |
-| Designs and XML/workbook utilities                           | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                             |
-| Typed upstream API registry/client                           | `src/data-api/`, `src/services/data-api-client.ts`                   |
-| Source decks, examples, tests                                | `templates/`, `examples/`, `test/`                                   |
-| Azure deployment and ZIP packaging                           | `scripts/build-azure.mjs`, `.gitlab-ci.yml`, [Azure guide](azure.md) |
+| Area                                                         | Files                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| Startup, shared infrastructure, readiness, shutdown          | `src/runtime.ts`                                              |
+| Middleware, request IDs, HTTP assembly                       | `src/app.ts`                                                  |
+| Human-editable shared defaults                               | `src/config/defaults.ts`                                      |
+| Environment validation and configuration assembly            | `src/config/environment.ts`, `src/config/index.ts`            |
+| Report helpers and owned service lifecycle                   | `src/reports/pdf.ts`, `pptx.ts`, `template.ts`, `services.ts` |
+| PDF URL/language settings, parameter mapping, and validation | `src/routes/pdf/**/{report,schema}.ts`                        |
+| URLs and endpoint-specific definitions                       | `src/routes/**/{get,post}.ts`, `report.ts`                    |
+| Discovery, ordering, duplicate detection                     | `src/http/file-routes/`                                       |
+| Injected contracts, decoding, downloads, errors              | `src/http/`, `src/errors.ts`                                  |
+| Queues, timeouts, cancellation                               | `src/queue/generation-queue.ts`                               |
+| Chromium and PDF contracts                                   | `src/services/pdf/`                                           |
+| PowerPoint generation and template services/contracts        | `src/services/pptxgenjs/`, `src/services/jszip/`              |
+| Designs and XML/workbook utilities                           | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                      |
+| Typed upstream API registry/client                           | `src/data-api/`, `src/services/data-api-client.ts`            |
+| Source decks, examples, tests                                | `templates/`, `examples/`, `test/`                            |
+| Azure deployment and ZIP packaging                           | `.gitlab-ci.yml`, [Azure guide](azure.md)                     |
 
 ## Request and report flow
 

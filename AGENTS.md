@@ -103,7 +103,6 @@ When the user requests tests, select the smallest relevant scope:
 - For one module, use `npx --no-install tsx --test test/http/api.test.ts`,
   substituting the relevant file. Use `npm test` when the requested verification
   needs coverage across shared logic, routing, or contracts.
-- For Azure packaging, use `npm run test:azure`; see `docs/azure.md`.
 - Add a test for observable behavior when requested. Do not add tests that merely
   reproduce the implementation or assert private helper structure.
 - PDF rendering tests require Chromium and its system libraries.

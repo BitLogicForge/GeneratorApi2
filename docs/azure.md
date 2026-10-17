@@ -6,20 +6,15 @@ This deployment packages the compiled application, presentation templates, and p
 
 ## Packaging workflow
 
-The packaging script ([scripts/build-azure.mjs](../scripts/build-azure.mjs)) packages the compiled output (`dist/`), `templates/`, `package.json`, and the Azure startup script ([scripts/start-azure.sh](../scripts/start-azure.sh)). It installs production dependencies (`npm ci --omit=dev`) into an isolated staging directory and creates the ZIP.
+GitLab CI handles package creation in the `build_zip` job: it compiles the application, installs production dependencies (`npm ci --omit=dev`), and archives `dist/`, `package.json`, `package-lock.json`, `templates/`, `scripts/start-azure.sh`, and `node_modules/` into `output/azure/generator-api.zip`.
 
-To package locally on Linux or in the devcontainer:
+To package manually on Linux or in the devcontainer:
 
 ```bash
-npm ci
 npm run build
-npm run build:azure
-```
-
-To verify the generated package:
-
-```bash
-npm run test:azure
+npm ci --omit=dev
+mkdir -p output/azure
+zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scripts/start-azure.sh templates node_modules
 ```
 
 ## Runtime configuration and startup
@@ -80,7 +75,7 @@ For slot deployments (e.g. `dev`), add `--slot dev` to the commands.
 The pipeline defined in [.gitlab-ci.yml](../.gitlab-ci.yml) automates this workflow:
 
 1. **`verify` stage:** Runs linting, tests, and compiles the code to `dist/` with `npm run build`.
-2. **`build` stage (`build_zip`):** Packages `output/azure/generator-api.zip` with `npm run build:azure`.
+2. **`build` stage (`build_zip`):** Installs production dependencies and packages `output/azure/generator-api.zip`.
 3. **`deploy` stage (`deploy_main` / `deploy_dev`):** Deploys the ZIP package directly to Azure Web App production or the dev slot using `az webapp deploy`.
 
 Configure the following secrets in GitLab **Settings > CI/CD > Variables**:

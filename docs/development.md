@@ -192,7 +192,7 @@ Use `npm run deps:check` to preview dependency updates within the declared versi
 
 Run `npm run knip` to find unused files, exports, and dependencies. Knip analyzes source code, tests, examples, and build scripts; its configuration lives in `knip.json`. The GitLab build runs this check before packaging the app.
 
-For Linux Azure App Service, GitLab compiles the API (`npm run build`), packages the ZIP with production dependencies (`npm run build:azure`), and deploys it with `az webapp deploy`. See [Azure deployment](azure.md) for configuration and settings.
+For Linux Azure App Service, GitLab compiles the API (`npm run build`), packages the ZIP with production dependencies, and deploys it with `az webapp deploy`. See [Azure deployment](azure.md) for configuration and settings.
 
 Format all supported project files with `npm run format`. Use `npm run format:check` to check formatting without modifying files. Dependencies, builds, generated output, and PowerPoint template files are excluded.
 

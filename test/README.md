@@ -13,7 +13,6 @@ fixture helpers and the explicit artifact/Azure checks are excluded.
 | `pptx/jszip/`  | Template placeholders, charts, paragraphs, tables, slides and the complete workflow |
 | `tooling/`     | Import rules, build aliases and Git hooks                                           |
 | `integration/` | Explicit document artifact generation                                               |
-| `deployment/`  | Explicit Azure package smoke test                                                   |
 
 Run only the JSZip tests with `npm run test:jszip`. To focus on one utility:
 
@@ -25,5 +24,4 @@ The JSZip folder groups tests by functionality. `fixtures.ts` holds shared templ
 loading/chart lookup; `workflow.test.ts` checks duplication followed by chart filling
 and removal. Existing contract and formatting checks remain in the individual files.
 
-`npm run test:azure` requires the package created by `npm run build:azure`.
 Real PDF tests require Chromium and its system libraries.

@@ -38,21 +38,28 @@ workflow:
     name: '$NODE_IMAGE'
     entrypoint: ['']
   before_script:
-    - npm ci --cache .npm --prefer-offline
+    - scripts/ci-section.sh npm_ci "Installing dependencies" npm ci --cache .npm --prefer-offline
 
 lint:
   extends: .node_job
   stage: test
   needs: []
   script:
-    - npm run lint
+    - scripts/ci-section.sh oxlint "Running Oxlint (code rules)" npm run lint:code
+    - scripts/ci-section.sh typecheck "Running TypeScript typecheck" npm run typecheck
+    - scripts/ci-section.sh knip "Running Knip (unused exports & dependencies)" npm run knip
+    - scripts/ci-section.sh format "Checking Prettier formatting" npm run format:check
 
 test:
   extends: .node_job
   stage: test
   needs: []
   script:
-    - npm test
+    - npx tsx --test --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=junit.xml "test/**/*.test.ts"
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
 
 build:
   extends: .node_job
@@ -60,13 +67,11 @@ build:
   needs: []
   before_script:
     - which zip >/dev/null 2>&1 || (apt-get update && apt-get install -y --no-install-recommends zip)
-    - npm ci --cache .npm --prefer-offline
+    - scripts/ci-section.sh npm_ci "Installing dependencies" npm ci --cache .npm --prefer-offline
   script:
-    - npm run build
-    - npm prune --omit=dev
-    - chmod +x scripts/start-azure.sh
-    - mkdir -p "$(dirname "$ZIP_PACKAGE")"
-    - zip -q -r "$ZIP_PACKAGE" dist package.json package-lock.json scripts/start-azure.sh templates node_modules
+    - scripts/ci-section.sh compile "Compiling bundle with esbuild" npm run build
+    - scripts/ci-section.sh prune "Pruning development dependencies" npm prune --omit=dev
+    - scripts/ci-section.sh zip "Creating deployment ZIP archive" bash -c 'chmod +x scripts/start-azure.sh && mkdir -p "$(dirname "$ZIP_PACKAGE")" && zip -q -r "$ZIP_PACKAGE" dist package.json package-lock.json scripts/start-azure.sh templates node_modules'
   artifacts:
     paths:
       - '$ZIP_PACKAGE'

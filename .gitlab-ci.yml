@@ -1,19 +1,25 @@
-# Edit these values for your Azure deployment.
-# Keep AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, and AZURE_TENANT_ID
-# in GitLab Settings > CI/CD > Variables.
+# MARK: Variables
+
 variables:
+  # Azure App Service targets
   AZURE_SUBSCRIPTION_ID: 'YOUR_SUBSCRIPTION_ID'
   AZURE_RESOURCE_GROUP: 'YOUR_RESOURCE_GROUP'
   AZURE_WEBAPP_NAME: 'YOUR_WEBAPP_NAME'
   AZURE_DEV_SLOT: 'dev'
+  # Target branches for deployment
   PRODUCTION_BRANCH: 'main'
   DEV_BRANCH: 'dev'
+  # Container images
   NODE_IMAGE: 'node:22-bookworm-slim'
   AZURE_CLI_IMAGE: 'mcr.microsoft.com/azure-cli:latest'
+  # Deployment package location
   ZIP_PACKAGE: 'output/azure/generator-api.zip'
+  # Suppress npm audit and funding messages in CI logs
   npm_config_audit: 'false'
   npm_config_fund: 'false'
 
+# MARK: Default Cache
+# Cache npm dependencies across jobs based on package-lock.json checksum
 default:
   cache:
     key:
@@ -22,17 +28,22 @@ default:
     paths:
       - .npm/
 
+# MARK: Stages
 stages:
   - test
   - build
   - deploy
 
+# MARK: Workflow Rules
+# Trigger pipeline on merge requests and target branches; prevent redundant runs
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == $PRODUCTION_BRANCH || $CI_COMMIT_BRANCH == $DEV_BRANCH'
     - when: never
 
+# MARK: Template: Node.js
+# Base job template for Node.js tasks with cached dependency installation
 .node_job:
   image:
     name: '$NODE_IMAGE'
@@ -40,6 +51,8 @@ workflow:
   before_script:
     - scripts/ci-section.sh npm_ci "Installing dependencies" npm ci --cache .npm --prefer-offline
 
+# MARK: Test: Lint
+# Static checks: Oxlint, TypeScript typecheck, Knip (unused exports), Prettier formatting
 lint:
   extends: .node_job
   stage: test
@@ -50,6 +63,8 @@ lint:
     - scripts/ci-section.sh knip "Running Knip (unused exports & dependencies)" npm run knip
     - scripts/ci-section.sh format "Checking Prettier formatting" npm run format:check
 
+# MARK: Test: Unit Tests
+# Executes node:test suite via tsx and exports JUnit XML report for GitLab CI
 test:
   extends: .node_job
   stage: test
@@ -68,6 +83,8 @@ test:
     reports:
       junit: junit.xml
 
+# MARK: Build: ZIP Package
+# Compiles bundle, prunes dev dependencies, bundles certs, and archives deployment ZIP
 build:
   extends: .node_job
   stage: build
@@ -92,6 +109,8 @@ build:
       - '$ZIP_PACKAGE'
     expire_in: 1 week
 
+# MARK: Templates: Azure Deploy
+# Base job: Authenticate Azure CLI using Service Principal credentials
 .azure_job:
   image:
     name: '$AZURE_CLI_IMAGE'
@@ -100,6 +119,7 @@ build:
     - az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID" --output none
     - az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 
+# Deployment template: Configure App Service settings, deploy ZIP, and restart
 .azure_deploy:
   extends: .azure_job
   stage: deploy
@@ -124,6 +144,8 @@ build:
     - scripts/ci-section.sh az_deploy "Deploying ZIP package to Azure Web App" az webapp deploy $TARGET --src-path "$ZIP_PACKAGE" --type zip --async false
     - scripts/ci-section.sh az_restart "Restarting Azure Web App" az webapp restart $TARGET
 
+# MARK: Deploy: Production
+# Deploys main branch to production Azure Web App slot
 deploy_main:
   extends: .azure_deploy
   rules:
@@ -131,6 +153,8 @@ deploy_main:
   environment: production
   resource_group: azure-production
 
+# MARK: Deploy: Dev Slot
+# Deploys dev branch to staging/dev slot of Azure Web App
 deploy_dev:
   extends: .azure_deploy
   variables:

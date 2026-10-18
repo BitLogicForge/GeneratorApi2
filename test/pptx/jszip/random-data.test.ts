@@ -46,7 +46,9 @@ test('random-data generators reject invalid dimensions', () => {
 test('DAA fills its table and all chart series without changing the source', async () => {
   const path = templateFile('daa.pptx');
   const before = await readFile(path);
-  const output = await new DaaPocPresentationService(path, () => 42).generate();
+  const output = await new DaaPocPresentationService(path, () => 42).generate({
+    TEXT_ME: 'Generated report',
+  });
   const zip = await JSZip.loadAsync(output);
   const { objects } = await findNamedObjects(zip, ['TAB100', 'GGO']);
   const table = objects.get('TAB100')!;

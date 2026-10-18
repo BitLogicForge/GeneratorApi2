@@ -27,7 +27,7 @@ export interface PptxReport<
 }
 
 /** Defines request validation, generation, and lifecycle together with the report. */
-export function definePptxReport<Input, RenderInput>(
+export function definePptxReport<Input, RenderInput = Input>(
   definition: PptxReport<Input, RenderInput>,
 ): RouteFactory {
   return (dependencies) => {

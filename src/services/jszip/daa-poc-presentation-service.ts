@@ -9,6 +9,8 @@ import { createRandomDataGenerator } from '@/utils/random-data';
 
 import { TemplateSource } from './template-source.ts';
 
+import type { DaaRequestInput } from '@/routes/pptx/daa/schema';
+
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 const templateSettings = {
   objects: {
@@ -45,7 +47,7 @@ export class DaaPocPresentationService {
   }
 
   /** Populates named template objects with demo data while retaining native editable tables and charts. */
-  async generate(text = 'Generated report'): Promise<Buffer> {
+  async generate(input: DaaRequestInput): Promise<Buffer> {
     const zip = await JSZip.loadAsync(await this.source.load());
     const { slides, objects } = await findNamedObjects(zip, objectNames);
     const table = objects.get(templateSettings.objects.table)!;
@@ -56,7 +58,7 @@ export class DaaPocPresentationService {
     fillTable(table.element, tableData, {
       startRow: templateSettings.table.startRow,
     });
-    fillTextShape(textShape.element, text);
+    fillTextShape(textShape.element, input.TEXT_ME);
     const chartData = this.generateChartData(templateSettings.chart.rows);
     await fillCategoryChart(zip, chart, chartData, {
       categories: chartData.map(

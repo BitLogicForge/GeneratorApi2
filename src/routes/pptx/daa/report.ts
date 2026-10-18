@@ -5,20 +5,15 @@ import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
-import type { z } from 'zod';
-import type { PptxReport } from '@/reports/pptx';
-
 const sourceFile = 'daa.pptx';
 
-const report = {
+export default definePptxReport({
   schema: requestSchema,
   notConfiguredMessage: ReportErrorMessage.TemplateReportDemoNotConfigured,
   readRequestInput,
-  prepareInput: ({ TEXT_ME }) => ({
+  prepareInput: (input) => ({
     filename: 'demo-report',
-    input: TEXT_ME,
+    input,
   }),
   createService: () => new DaaPocPresentationService(templateFile(sourceFile)),
-} satisfies PptxReport<z.infer<typeof requestSchema>, string>;
-
-export default definePptxReport(report);
+});

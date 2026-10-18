@@ -12,6 +12,8 @@ import { createRandomDataGenerator } from '@/utils/random-data';
 
 import { TemplateSource } from './template-source.ts';
 
+import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
+
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 const templateSettings = {
   objects: {
@@ -43,7 +45,8 @@ export class TmxPocPresentationService {
   }
 
   /** Populates named template objects with demo data while retaining native editable tables and charts. */
-  async generate(text = 'Generated report'): Promise<Buffer> {
+  async generate(input: TmaRequestInput): Promise<Buffer> {
+    console.debug({ PP1: input.PP1, PP2: input.PP2 });
     const zip = await JSZip.loadAsync(await this.source.load());
     const { slides, objects } = await findNamedObjects(zip, objectNames);
     const chartA = objects.get(templateSettings.objects.chartA)!;
@@ -54,7 +57,7 @@ export class TmxPocPresentationService {
 
     const now = new Date();
 
-    fillTextShape(text0.element, text);
+    fillTextShape(text0.element, input.TEXT_ME);
     fillTextShape(text1.element, 'CHART A');
     fillTextShape(text2.element, 'CHART B');
 

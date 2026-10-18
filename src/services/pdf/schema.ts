@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { pdfPrintSettings } from '@/config/defaults';
-import { hasControlCharacters } from '@/validation/control-characters';
+import { hasControlCharacters } from '@/utils/control-characters';
 import { filenameSchema } from '@/validation/schema';
 
 const pdfPrintSettingsSchema = z

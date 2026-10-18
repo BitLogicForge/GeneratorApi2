@@ -2,7 +2,7 @@ import { chromium, errors } from 'playwright';
 
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
-import { buildUrl } from '@/url';
+import { buildUrl } from '@/utils/url';
 
 import { navigationBoundary } from './navigation-boundary.ts';
 import { renderPagePdf } from './render-page.ts';

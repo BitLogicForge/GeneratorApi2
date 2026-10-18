@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { formatDateTime } from '@/date-time';
+import { formatDateTime } from '@/utils/date-time';
 import { filenameSchema } from '@/validation/schema';
 
 test('date/time formatting uses UTC and zero-padded dates and minutes', () => {

@@ -2,14 +2,14 @@ import { randomInt } from 'node:crypto';
 
 import JSZip from 'jszip';
 
-import { formatDateTime } from '@/date-time';
 import { fillCategoryChart } from '@/pptx/jszip/charts';
 import { findNamedObjects } from '@/pptx/jszip/objects';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
+import { formatDateTime } from '@/utils/date-time';
+import { createRandomDataGenerator } from '@/utils/random-data';
 
-import { createRandomDataGenerator } from './random-data.ts';
 import { TemplateSource } from './template-source.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.

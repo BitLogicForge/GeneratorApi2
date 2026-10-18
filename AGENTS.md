@@ -7,7 +7,7 @@ webapp PDFs (Playwright) and editable PowerPoint presentations (PptxGenJS and
 JSZip) with Zod validation.
 
 - **Runtime & HTTP**: `src/index.ts`, `src/runtime.ts`, `src/app.ts`, `src/http/`, `src/errors.ts`, `src/observability/`
-- **Config & Queues**: `src/config/`, `src/queue/generation-queue.ts`
+- **Config, Queues & Utils**: `src/config/`, `src/queue/generation-queue.ts`, `src/utils/`, `src/validation/`
 - **Routes & Reports**: `src/routes/router.ts`, `src/routes/**/{report,schema}.ts`, `src/reports/`
 - **PDF & Data API**: `src/services/pdf/`, `src/services/data-api-client.ts`, `src/services/data-api/`, `src/data-api/`
 - **PPTX**: `src/services/jszip/`, `src/services/pptxgenjs/`, `src/pptx/jszip/`, `src/pptx/pptxgenjs/`, `templates/`

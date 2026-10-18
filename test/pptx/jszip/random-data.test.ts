@@ -14,7 +14,7 @@ import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 import { templateFile } from '@/reports/template';
 import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
-import { createRandomDataGenerator } from '@/services/jszip/random-data';
+import { createRandomDataGenerator } from '@/utils/random-data';
 
 test('a configured generator supports different row counts with independent random cells', () => {
   for (const columns of [1, 3, 4]) {

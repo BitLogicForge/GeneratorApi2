@@ -1,5 +1,5 @@
 import { AppError } from '@/errors';
-import { buildUrl } from '@/url';
+import { buildUrl } from '@/utils/url';
 
 import {
   createDataApiUrlSchema,

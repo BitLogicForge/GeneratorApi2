@@ -20,7 +20,3 @@ export const pptxRenderSchema = z
   .strict();
 
 export type PptxRenderInput = z.infer<typeof pptxRenderSchema>;
-
-export const positiveDimensionSchema = z
-  .number()
-  .refine((val) => Number.isSafeInteger(val) && val >= 1);

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { mapQuery } from '@/url';
+import { mapQuery } from '@/utils/url';
 import { documentIdSchema } from '@/validation/schema';
 
 // Public query parameters for this endpoint. Unknown and repeated values are rejected.

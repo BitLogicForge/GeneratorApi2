@@ -61,8 +61,8 @@ router.post('/pdf/sales', salesHandler);
 ### URL Placeholders & Query Renaming
 
 - Use `params` in `prepareInput` for path placeholders expanded by `buildUrl`
-  (`src/url.ts`), e.g. `route: '/onepager/:id', params: { id }`.
-- Use `mapQuery(query, externalQueryNames)` from `@/url` when public query
+  (`src/utils/url.ts`), e.g. `route: '/onepager/:id', params: { id }`.
+- Use `mapQuery(query, externalQueryNames)` from `@/utils/url` when public query
   parameter names differ from upstream webapp query names (see
   `src/routes/pdf/onepager/schema.ts`).
 

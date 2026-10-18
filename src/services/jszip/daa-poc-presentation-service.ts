@@ -5,8 +5,8 @@ import { findNamedObjects } from '@/pptx/jszip/objects';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
+import { createRandomDataGenerator } from '@/utils/random-data';
 
-import { createRandomDataGenerator } from './random-data.ts';
 import { TemplateSource } from './template-source.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.

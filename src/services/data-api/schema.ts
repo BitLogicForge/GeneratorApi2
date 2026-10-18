@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { hasControlCharacters } from '@/validation/control-characters';
+import { hasControlCharacters } from '@/utils/control-characters';
 
 export const dataApiPathSchema = z
   .string()

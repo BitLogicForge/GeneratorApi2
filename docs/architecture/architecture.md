@@ -16,6 +16,7 @@
 | PowerPoint services                  | `src/services/jszip/`, `src/services/pptxgenjs/`                                                                                               |
 | OpenXML & PptxGenJS utilities        | `src/pptx/jszip/`, `src/pptx/pptxgenjs/`                                                                                                       |
 | Upstream Data API client & schemas   | `src/services/data-api-client.ts`, `src/services/data-api/`, `src/data-api/`                                                                   |
+| Shared utilities & validation        | `src/utils/`, `src/validation/`                                                                                                                |
 
 ## Request Lifecycle
 

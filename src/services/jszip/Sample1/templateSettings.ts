@@ -1,10 +1,19 @@
-import type { TemplateSettings } from '../template-settings';
+import type { TemplateSettings } from '../template-settings.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 export const templateSettings = {
   tables: {
     x2Tab1: {
       name: 'X2_TAB1',
+      slide: 2,
+      options: {
+        startRow: 1,
+        resizeRows: true,
+      },
+    },
+    x2Tab1Copy: {
+      name: 'X2_TAB1',
+      slide: 3,
       options: {
         startRow: 1,
         resizeRows: true,
@@ -40,6 +49,11 @@ export const templateSettings = {
   charts: {
     x2Chart1: {
       name: 'X2_CHART1',
+      slide: 2,
+    },
+    x2Chart1Copy: {
+      name: 'X2_CHART1',
+      slide: 3,
     },
     x3Chart1: {
       name: 'X3_CHART1',
@@ -63,6 +77,11 @@ export const templateSettings = {
     },
     x2Title: {
       name: 'X2_TITLE',
+      slide: 2,
+    },
+    x2TitleCopy: {
+      name: 'X2_TITLE',
+      slide: 3,
     },
     x3Title: {
       name: 'X3_TITLE',

@@ -1,5 +1,6 @@
 import { TemplateSource } from './template-source.ts';
 
+import type JSZip from 'jszip';
 import type { ReportService } from '@/reports/services';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
@@ -10,10 +11,13 @@ export abstract class PresentationService<
   RawData,
   PreparedData,
 > implements ReportService<Input> {
-  private readonly source: TemplateSource<Settings>;
+  protected readonly source: TemplateSource<Settings>;
 
   constructor(path: string, settings: Settings) {
-    this.source = new TemplateSource(path, settings);
+    this.source = new TemplateSource(path, {
+      settings,
+      prepareTemplate: (zip) => this.prepareTemplate(zip),
+    });
   }
 
   async validate(): Promise<void> {
@@ -28,6 +32,9 @@ export abstract class PresentationService<
     await this.renderDeck(deck, prepared);
     return deck.toBuffer();
   }
+
+  /** Modifies the template archive (e.g. duplicating slides) before binding handles. */
+  protected prepareTemplate(_zip: JSZip): Promise<void> | void {}
 
   /** Step 1: Fetches raw data for the presentation. */
   protected abstract fetchData(input: Input): Promise<RawData> | RawData;

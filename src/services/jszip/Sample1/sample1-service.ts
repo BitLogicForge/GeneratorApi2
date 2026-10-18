@@ -1,3 +1,4 @@
+import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
 import { formatDateTime, generateTimeSeriesDates } from '@/utils/date-time';
 import {
   generateRandomData,
@@ -9,11 +10,13 @@ import {
 import { PresentationService } from '../presentation-service.ts';
 import { templateSettings } from './templateSettings.ts';
 
+import type JSZip from 'jszip';
 import type { Sample1RequestInput } from '@/routes/pptx/sample1/schema';
 import type { TemplateDeck } from '../template-settings.ts';
 
 const demoData = {
   timeseries: { rows: 9 },
+  timeseriesCopy: { rows: 9 },
   pie1: { rows: 5, colorColumn: 0 },
   pie2: { rows: 8, colorColumn: 0 },
   table4: { rows: 6, columns: 3 },
@@ -23,6 +26,7 @@ const demoData = {
 interface RawData {
   // date YYYY-MM-DD and value
   timeseries: { labels: string[]; values: number[][] };
+  timeseriesCopy: { labels: string[]; values: number[][] };
   pie1: { labels: string[]; values: number[][] };
   pie2: { labels: string[]; values: number[][] };
   table4: { values: number[][] };
@@ -33,6 +37,7 @@ interface PreparedData {
   //text fields
   x1Title: string;
   x2Title: string;
+  x2TitleCopy: string;
   x3Title: string;
   x4Title: string;
   x1Sub: string;
@@ -42,6 +47,13 @@ interface PreparedData {
     data: (number | string)[][];
   };
   chart1: {
+    data: number[][];
+    categories: string[];
+  };
+  tab1Copy: {
+    data: (number | string)[][];
+  };
+  chart1Copy: {
     data: number[][];
     categories: string[];
   };
@@ -86,6 +98,10 @@ export class Sample1Service extends PresentationService<
         labels: generateTimeSeriesDates(demoData.timeseries.rows),
         values: generateRandomData(demoData.timeseries.rows, 1),
       },
+      timeseriesCopy: {
+        labels: generateTimeSeriesDates(demoData.timeseriesCopy.rows),
+        values: generateRandomData(demoData.timeseriesCopy.rows, 1),
+      },
       pie1: {
         labels: generateRandomData(demoData.pie1.rows, 1, 'string').flat(),
         values: generateRandomData(demoData.pie1.rows, 1),
@@ -111,6 +127,7 @@ export class Sample1Service extends PresentationService<
     return {
       x1Title: 'Page 1 Title',
       x2Title: 'Page 2',
+      x2TitleCopy: 'Page 2 (Duplicate)',
       x3Title: 'Page 3',
       x4Title: 'Page 4',
       x1Sub: formatDateTime(),
@@ -121,6 +138,13 @@ export class Sample1Service extends PresentationService<
       chart1: {
         data: raw.timeseries.values,
         categories: raw.timeseries.labels,
+      },
+      tab1Copy: {
+        data: zipLabelsAndValues(raw.timeseriesCopy),
+      },
+      chart1Copy: {
+        data: raw.timeseriesCopy.values,
+        categories: raw.timeseriesCopy.labels,
       },
       tab2: {
         data: zipLegendLabelsAndValues(raw.pie1, demoData.pie1.colorColumn),
@@ -145,7 +169,12 @@ export class Sample1Service extends PresentationService<
     };
   }
 
-  /** Step 3: Populates the PowerPoint template with prepared values. */
+  /** Step 3: Prepares the template archive before binding handles by duplicating slide 2. */
+  protected override async prepareTemplate(zip: JSZip): Promise<void> {
+    await duplicateSlide(zip, 2);
+  }
+
+  /** Step 4: Populates the PowerPoint template with prepared values. */
   protected async renderDeck(
     deck: TemplateDeck<typeof templateSettings>,
     prepared: PreparedData,
@@ -157,10 +186,12 @@ export class Sample1Service extends PresentationService<
     deck.texts.x1Sub.fill(prepared.x1Sub);
     deck.texts.x1Text.fill(prepared.x1Text);
     deck.texts.x2Title.fill(prepared.x2Title);
+    deck.texts.x2TitleCopy.fill(prepared.x2TitleCopy);
     deck.texts.x3Title.fill(prepared.x3Title);
     deck.texts.x4Title.fill(prepared.x4Title);
 
     deck.tables.x2Tab1.fill(prepared.tab1.data, { resizeRows: true });
+    deck.tables.x2Tab1Copy.fill(prepared.tab1Copy.data, { resizeRows: true });
     deck.tables.x3Tab1.fill(prepared.tab2.data, {
       resizeRows: true,
       cellColors: prepared.tab2.cellColors,
@@ -172,6 +203,9 @@ export class Sample1Service extends PresentationService<
 
     await deck.charts.x2Chart1.fill(prepared.chart1.data, {
       categories: prepared.chart1.categories,
+    });
+    await deck.charts.x2Chart1Copy.fill(prepared.chart1Copy.data, {
+      categories: prepared.chart1Copy.categories,
     });
     await deck.charts.x3Chart1.fill(prepared.chart2.data, {
       categories: prepared.chart2.categories,

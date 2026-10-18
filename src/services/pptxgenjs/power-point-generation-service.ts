@@ -2,25 +2,25 @@ import pptxgen from 'pptxgenjs';
 
 import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
-import { briefTemplate } from '@/pptx/pptxgenjs/templates/brief';
+import { briefLayout } from '@/pptx/pptxgenjs/layouts/brief';
 import { ReportErrorMessage } from '@/reports/constants';
 
-import type { PresentationTemplate } from '@/pptx/pptxgenjs/types';
+import type { PresentationLayout } from '@/pptx/pptxgenjs/types';
 import type { BriefInput } from './schema.ts';
 
 export class PowerPointGenerationService {
-  private readonly templates: Map<string, PresentationTemplate>;
-  constructor(templates: Record<string, PresentationTemplate> = { brief: briefTemplate }) {
-    this.templates = new Map(Object.entries(templates));
+  private readonly layouts: Map<string, PresentationLayout>;
+  constructor(layouts: Record<string, PresentationLayout> = { brief: briefLayout }) {
+    this.layouts = new Map(Object.entries(layouts));
   }
   /** Runs a registered design on a fresh deck to keep request content and metadata isolated. */
-  async generate(template: string, input: BriefInput) {
-    const render = this.templates.get(template);
+  async generate(layout: string, input: BriefInput) {
+    const render = this.layouts.get(layout);
     if (!render)
       throw new AppError(
         404,
         ErrorCode.UnknownTemplate,
-        ReportErrorMessage.PresentationTemplateNotFound,
+        ReportErrorMessage.PresentationLayoutNotFound,
       );
     const deck = new pptxgen();
     deck.layout = 'LAYOUT_WIDE';

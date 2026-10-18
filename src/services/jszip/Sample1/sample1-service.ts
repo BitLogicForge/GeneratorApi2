@@ -92,7 +92,7 @@ export class Sample1Service extends PresentationService<
     // Placeholder for future Data API call.
     return {
       slides2: Array.from({ length: demoData.slide2Instances }, (_, index) => ({
-        title: index === 0 ? 'Page 2' : `Page 2 (Duplicate ${index})`,
+        title: index === 0 ? 'Slide 2' : `Slide 2 (Duplicate ${index})`,
         timeseries: {
           labels: generateTimeSeriesDates(demoData.timeseriesRows),
           values: generateRandomData(demoData.timeseriesRows, 1),
@@ -121,7 +121,7 @@ export class Sample1Service extends PresentationService<
     const pie2Colors = generateRandomData(raw.pie2.labels.length, 1, 'color').flat();
 
     return {
-      x1Title: 'Page 1 Title',
+      x1Title: 'Slide 1 Title',
       slides2: raw.slides2.map((item) => ({
         title: item.title,
         tab1: {
@@ -132,8 +132,8 @@ export class Sample1Service extends PresentationService<
           categories: item.timeseries.labels,
         },
       })),
-      x3Title: 'Page 3',
-      x4Title: 'Page 4',
+      x3Title: 'Slide 3',
+      x4Title: 'Slide 4',
       x1Sub: formatDateTime(),
       x1Text: input.someText,
       tab2: {
@@ -164,7 +164,7 @@ export class Sample1Service extends PresentationService<
     deck: TemplateDeck<typeof templateSettings>,
     prepared: PreparedData,
   ): Promise<void> {
-    // Page 1
+    // Slide 1
     deck.texts.x1Title.fill(prepared.x1Title);
     const x1TitleCopy = deck.texts.x1Title.clone();
     x1TitleCopy.move({ dy: -2 });
@@ -172,14 +172,14 @@ export class Sample1Service extends PresentationService<
     deck.texts.x1Sub.fill(prepared.x1Sub);
     deck.texts.x1Text.fill(prepared.x1Text);
 
-    // Page 2 & duplicates
+    // Slide 2 & duplicates
     const duplicates = await deck.duplicateSlide(2, prepared.slides2.length - 1);
-    const page2Slides: SlideHandle<typeof templateSettings>[] = [
+    const slide2Copies: SlideHandle<typeof templateSettings>[] = [
       await deck.getSlide(2),
       ...duplicates,
     ];
 
-    for (const [index, slide] of page2Slides.entries()) {
+    for (const [index, slide] of slide2Copies.entries()) {
       const slideData = prepared.slides2[index];
       if (!slideData) continue;
       slide.texts.x2Title.fill(slideData.title);
@@ -189,7 +189,7 @@ export class Sample1Service extends PresentationService<
       });
     }
 
-    // Page 3 & Page 4
+    // Slide 3 & Slide 4
     deck.texts.x3Title.fill(prepared.x3Title);
     deck.texts.x4Title.fill(prepared.x4Title);
 

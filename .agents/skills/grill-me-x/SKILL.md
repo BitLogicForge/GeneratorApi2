@@ -20,12 +20,15 @@ Reply in the language the user used in their prompt. Keep technical terms and co
 ## 2. The Grilling Workflow
 
 ### Phase 1: Map the Risk
+
 On the first turn:
+
 1. State in 1-2 sentences what you understand the core goal to be.
 2. Briefly list the 3-4 highest-risk areas of the plan (do not ask about all of them yet).
 3. Ask your **first question** targeting the biggest foundational risk or ambiguity.
 
 ### Phase 2: Walk the Decision Tree
+
 Work through the design branch by branch across these lenses (prioritizing TypeScript & full-stack traps):
 
 - **Scope & YAGNI**: What is the simplest version that solves the actual problem? Are we building abstractions for scenarios that do not exist yet?
@@ -36,10 +39,12 @@ Work through the design branch by branch across these lenses (prioritizing TypeS
 - **Backwards Compatibility**: Does this break existing callers, stored data, URL state, or active sessions?
 
 Keep each turn tight:
+
 - **Critique / Acknowledge (1-2 sentences)**: Validate if the previous answer holds water, or expose the new trap it introduces.
 - **Next Question**: Ask the next sharpest question on the current branch, or pivot to the next risk area.
 
 ### Phase 3: Convergence & Locked Spec
+
 Stop grilling when all high/medium-risk branches are resolved, OR when the user says "enough" / "podsumuj" / "let's build it". Output a concise **Locked Design Spec** using this structure:
 
 - **Goal & Scope**: 1-2 sentences on what is being built and what is out of scope.

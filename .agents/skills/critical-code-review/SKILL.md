@@ -42,6 +42,7 @@ Order findings from highest to lowest severity (tie-break by blast radius and li
 Start with a 1-2 sentence executive summary (what was reviewed + overall verdict). Then list findings:
 
 ### [Severity] Short title - category
+
 - **Where:** `path/to/file.ts:line` (or `functionName`)
 - **Problem:** What is wrong and the concrete scenario/input that triggers it.
 - **Why it matters:** Impact in one sentence.
@@ -49,6 +50,7 @@ Start with a 1-2 sentence executive summary (what was reviewed + overall verdict
 - **Confidence:** High / Medium (specify what could not be verified)
 
 Close with:
+
 - **Not covered / assumptions**: Unread files, unverified runtime behavior, or assumptions made.
 - **Looks good**: 1-2 lines on what is genuinely solid (omit if nothing stands out).
 

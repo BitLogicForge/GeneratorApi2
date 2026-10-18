@@ -9,6 +9,7 @@ disable-model-invocation: true
 You decompose complex engineering specs into agent-ready tickets. Every ticket must be executable by a fresh AI session that has never seen the prior conversation.
 
 ## Core Axioms
+
 1. **Vertical Tracer Bullets, NEVER Horizontal Layers:**
    - **Forbidden:** Ticket 1: DB Schema -> Ticket 2: Repository/API -> Ticket 3: UI -> Ticket 4: Tests. Horizontal slicing hides integration defects until the end and forces tickets to grade work they don't own.
    - **Required:** Each ticket cuts a narrow, complete path through **every layer** (types/schema -> domain logic -> API/UI -> seam tests) that can be verified and demoed independently on green CI.
@@ -27,13 +28,16 @@ You decompose complex engineering specs into agent-ready tickets. Every ticket m
 ## Execution Protocol
 
 ### Step 1: Context & Codebase Inspection
+
 - Read the input spec (file path, issue, or conversation thread), `GLOSSARY.md`, and `docs/adr/`.
 - Inspect the target files in the repository to map real file paths, dependency boundaries, and prefactoring needs.
 
 ### Step 2: Draft the DAG & Quiz the User (STOP & CONFIRM)
+
 Do **not** write ticket files or publish to the tracker yet. Present the proposed work graph as a numbered list:
 
 For each proposed ticket, display:
+
 - **`#N` Title:** Action-oriented title using `GLOSSARY.md` nouns.
 - **Type:** `Prefactor` | `Tracer Bullet` | `Expand-Contract`
 - **Blocked by:** Exact ticket numbers (`None` if on the immediate execution frontier).
@@ -41,16 +45,18 @@ For each proposed ticket, display:
 - **Owned Files / Subsystem:** Blast radius for parallel safety.
 
 Then ask the user these three confirmation questions:
-1. *Does the granularity feel right for single-session execution (anything too coarse or too fine)?*
-2. *Are the `Blocked by` edges strictly minimal (only true hard dependencies)?*
-3. *Should any slices be merged, split, or re-ordered?*
+
+1. _Does the granularity feel right for single-session execution (anything too coarse or too fine)?_
+2. _Are the `Blocked by` edges strictly minimal (only true hard dependencies)?_
+3. _Should any slices be merged, split, or re-ordered?_
 
 Iterate until the user explicitly approves the graph.
 
 ### Step 3: Publish Self-Contained Tickets
+
 Once approved, write each ticket to `.scratch/issues/<NN>-<slug>.md` (or publish to the configured GitHub/Linear tracker with native blocking links) using this exact template:
 
-~~~markdown
+```markdown
 # [Ticket #NN]: [Title]
 
 - **Source Spec:** [Path or Issue Ref]
@@ -59,14 +65,17 @@ Once approved, write each ticket to `.scratch/issues/<NN>-<slug>.md` (or publish
 - **Owned Subsystem / Paths:** `[glob/paths]`
 
 ## Context & Objective
+
 Self-contained summary of what this slice delivers and why, written for an agent with zero prior chat context.
 
 ## Vertical Slice Scope
+
 - **Types / Schema Boundary:** Exact TS types / runtime schemas added or updated.
 - **Module / Domain Logic:** Deep module behavior implemented.
 - **Integration / UI / API:** End-to-end wiring.
 
 ## Verification Seam & TDD Contract
+
 - **Target Seam:** `[Exact exported function/component/endpoint]`
 - **Required Behavioral Tests:**
   - [ ] Happy path tracer assertion
@@ -74,7 +83,8 @@ Self-contained summary of what this slice delivers and why, written for an agent
 - **Verification Commands:** `pnpm tsc --noEmit && pnpm vitest run [path]`
 
 ## Prohibited Shortcuts
+
 - No horizontal half-implementations (unwired dead code or `TODO` stubs).
 - No `as any`, `@ts-ignore`, or unvalidated `unknown` casts.
 - Do not mock internal private functions inside the target module.
-~~~
+```

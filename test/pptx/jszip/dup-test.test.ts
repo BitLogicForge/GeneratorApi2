@@ -69,9 +69,9 @@ test('Sample1Service generates presentation with duplicated slide 2 into output 
   const slide6Xml = await zip.file('ppt/slides/slide6.xml')!.async('string');
   const slide7Xml = await zip.file('ppt/slides/slide7.xml')!.async('string');
   const slide8Xml = await zip.file('ppt/slides/slide8.xml')!.async('string');
-  assert.match(slide2Xml, /Page 2/);
-  assert.match(slide5Xml, /Page 2 \(Duplicate 1\)/);
-  assert.match(slide6Xml, /Page 2 \(Duplicate 2\)/);
-  assert.match(slide7Xml, /Page 2 \(Duplicate 3\)/);
-  assert.match(slide8Xml, /Page 2 \(Duplicate 4\)/);
+  assert.match(slide2Xml, /Slide 2/);
+  assert.match(slide5Xml, /Slide 2 \(Duplicate 1\)/);
+  assert.match(slide6Xml, /Slide 2 \(Duplicate 2\)/);
+  assert.match(slide7Xml, /Slide 2 \(Duplicate 3\)/);
+  assert.match(slide8Xml, /Slide 2 \(Duplicate 4\)/);
 });

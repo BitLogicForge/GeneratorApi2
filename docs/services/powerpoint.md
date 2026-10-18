@@ -6,7 +6,7 @@
 
 1. **Programmatic Generation (`src/services/pptxgenjs/`, `src/pptx/pptxgenjs/`)**:
    `PowerPointGenerationService` builds new decks from scratch with PptxGenJS
-   (such as the `brief` template used by `/pptxgenjs/brief`).
+   (such as the `brief` layout used by `/pptxgenjs/brief`).
 2. **Template Placeholder Replacement (`src/services/jszip/power-point-template-service.ts`)**:
    Registered via `templateService(name, filename)` (`src/reports/template.ts`),
    replacing `{{key}}` tokens across slide and speaker-note paragraphs while

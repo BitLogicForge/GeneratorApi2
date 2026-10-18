@@ -9,7 +9,7 @@ import type { PptxReport } from '@/reports/pptx';
 import type { BriefInput } from '@/services/pptxgenjs/schema';
 
 // Server-owned generated design.
-const template = 'brief';
+const layout = 'brief';
 
 const report = {
   schema: requestSchema,
@@ -27,7 +27,7 @@ const report = {
   }),
   createService: () => {
     const service = new PowerPointGenerationService();
-    return { generate: (input) => service.generate(template, input) };
+    return { generate: (input) => service.generate(layout, input) };
   },
 } satisfies PptxReport<z.infer<typeof requestSchema>, BriefInput>;
 

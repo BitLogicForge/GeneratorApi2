@@ -1,6 +1,6 @@
-import { XMLSerializer } from '@xmldom/xmldom';
 import { randomInt, randomUUID } from 'node:crypto';
 import { posix } from 'node:path';
+import { XMLSerializer } from '@xmldom/xmldom';
 
 import { PackagePath, RelationshipType, TargetMode } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';

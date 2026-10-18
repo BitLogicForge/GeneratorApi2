@@ -15,5 +15,6 @@ export default definePptxReport({
     filename: 'demo-report',
     input,
   }),
-  createService: () => new DaaPocPresentationService(templateFile(sourceFile)),
+  createService: ({ dataApi }) =>
+    new DaaPocPresentationService(templateFile(sourceFile), { dataApi }),
 });

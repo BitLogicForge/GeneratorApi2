@@ -1,9 +1,10 @@
 import { createRandomDataGenerator } from '@/utils/random-data';
 
-import { TemplateSource } from './template-source.ts';
+import { PresentationService } from './presentation-service.ts';
 
 import type { DaaRequestInput } from '@/routes/pptx/daa/schema';
-import type { TemplateSettings } from './template-settings.ts';
+import type { PresentationServiceOptions } from './presentation-service.ts';
+import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 const templateSettings = {
@@ -32,41 +33,70 @@ const demoData = {
   chart: { rows: 20, series: 3, categoryPrefix: 'A' },
 } as const;
 
-export class DaaPocPresentationService {
-  private readonly source: TemplateSource<typeof templateSettings>;
+interface DaaRawData {
+  table: number[][];
+  chart: number[][];
+}
+
+interface DaaPreparedData {
+  text: string;
+  table: number[][];
+  chart: {
+    data: number[][];
+    categories: string[];
+  };
+}
+
+export class DaaPocPresentationService extends PresentationService<
+  typeof templateSettings,
+  DaaRequestInput,
+  DaaRawData,
+  DaaPreparedData
+> {
   private readonly generateTableData: (rows: number) => number[][];
   private readonly generateChartData: (rows: number) => number[][];
 
-  constructor(path: string, nextNumber?: () => number) {
-    this.generateTableData = createRandomDataGenerator(
-      demoData.table.columns,
-      nextNumber,
-    );
-    this.generateChartData = createRandomDataGenerator(
-      demoData.chart.series,
-      nextNumber,
-    );
-    this.source = new TemplateSource(path, templateSettings);
+  constructor(path: string, options: PresentationServiceOptions = {}) {
+    super(path, templateSettings, options);
+    this.generateTableData = createRandomDataGenerator(demoData.table.columns);
+    this.generateChartData = createRandomDataGenerator(demoData.chart.series);
   }
 
-  async validate() {
-    await this.source.load();
+  /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */
+  protected fetchData(_input: DaaRequestInput): DaaRawData {
+    // Placeholder for future Data API call via `this.dataApi`.
+    return {
+      table: this.generateTableData(demoData.table.rows),
+      chart: this.generateChartData(demoData.chart.rows),
+    };
   }
 
-  /** Populates named template objects with demo data while retaining native editable tables and charts. */
-  async generate(input: DaaRequestInput): Promise<Buffer> {
-    const deck = await this.source.open();
-    const tableData = this.generateTableData(demoData.table.rows);
-    const chartData = this.generateChartData(demoData.chart.rows);
+  /** Step 2: Transforms request parameters and raw API data into presentation-ready values. */
+  protected prepareData(
+    input: DaaRequestInput,
+    raw: DaaRawData,
+  ): DaaPreparedData {
+    return {
+      text: input.TEXT_ME,
+      table: raw.table,
+      chart: {
+        data: raw.chart,
+        categories: raw.chart.map(
+          (_, index) => `${demoData.chart.categoryPrefix}${index + 1}`,
+        ),
+      },
+    };
+  }
 
-    deck.tables.table.fill(tableData);
-    deck.texts.text.fill(input.TEXT_ME);
-    await deck.charts.chart.fill(chartData, {
-      categories: chartData.map(
-        (_, index) => `${demoData.chart.categoryPrefix}${index + 1}`,
-      ),
+  /** Step 3: Populates the PowerPoint template with prepared values. */
+  protected async renderDeck(
+    deck: TemplateDeck<typeof templateSettings>,
+    prepared: DaaPreparedData,
+  ): Promise<void> {
+    deck.tables.table.fill(prepared.table);
+    deck.texts.text.fill(prepared.text);
+    await deck.charts.chart.fill(prepared.chart.data, {
+      categories: prepared.chart.categories,
     });
-
-    return deck.toBuffer();
   }
 }

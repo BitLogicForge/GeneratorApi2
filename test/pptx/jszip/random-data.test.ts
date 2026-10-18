@@ -46,7 +46,7 @@ test('random-data generators reject invalid dimensions', () => {
 test('DAA fills its table and all chart series without changing the source', async () => {
   const path = templateFile('daa.pptx');
   const before = await readFile(path);
-  const output = await new DaaPocPresentationService(path, () => 42).generate({
+  const output = await new DaaPocPresentationService(path).generate({
     TEXT_ME: 'Generated report',
   });
   const zip = await JSZip.loadAsync(output);
@@ -57,11 +57,12 @@ test('DAA fills its table and all chart series without changing the source', asy
   for (const row of rows.slice(1)) {
     const cells = Array.from(row.getElementsByTagNameNS(drawing, 'tc'));
     assert.equal(cells.length, 4);
-    for (const cell of cells)
-      assert.equal(
+    for (const cell of cells) {
+      const value = Number(
         cell.getElementsByTagNameNS(drawing, 't')[0].textContent,
-        '42',
       );
+      assert.ok(Number.isInteger(value) && value >= 1 && value <= 100);
+    }
   }
   const object = objects.get('GGO');
   const reference = object.element.getElementsByTagNameNS(chartNs, 'chart')[0];
@@ -81,7 +82,12 @@ test('DAA fills its table and all chart series without changing the source', asy
         .getElementsByTagNameNS(chartNs, 'v'),
     );
     assert.equal(values.length, 20);
-    assert.ok(values.every((value) => value.textContent === '42'));
+    assert.ok(
+      values.every((node) => {
+        const value = Number(node.textContent);
+        return Number.isInteger(value) && value >= 1 && value <= 100;
+      }),
+    );
   }
   assert.deepEqual(await readFile(path), before);
 });

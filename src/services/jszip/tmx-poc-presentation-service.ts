@@ -3,10 +3,11 @@ import { randomInt } from 'node:crypto';
 import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
 import { createRandomDataGenerator } from '@/utils/random-data';
 
-import { TemplateSource } from './template-source.ts';
+import { PresentationService } from './presentation-service.ts';
 
 import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
-import type { TemplateSettings } from './template-settings.ts';
+import type { PresentationServiceOptions } from './presentation-service.ts';
+import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 const templateSettings = {
@@ -49,53 +50,106 @@ const demoData = {
   chartB: { rows: 4 },
 } as const;
 
-export class TmxPocPresentationService {
-  private readonly source: TemplateSource<typeof templateSettings>;
+interface TmaRawData {
+  asOf: Date;
+  chartA: number[][];
+  chartB: number[][];
+}
+
+interface TmaPreparedData {
+  texts: {
+    text0: string;
+    text1: string;
+    text2: string;
+    subtitle: string;
+  };
+  chartA: {
+    data: number[][];
+    categories: string[];
+  };
+  chartB: {
+    data: number[][];
+    colors: string[];
+  };
+}
+
+export class TmxPocPresentationService extends PresentationService<
+  typeof templateSettings,
+  TmaRequestInput,
+  TmaRawData,
+  TmaPreparedData
+> {
   private readonly generateData: (rows: number) => number[][];
 
-  constructor(path: string, nextNumber?: () => number) {
-    this.generateData = createRandomDataGenerator(1, nextNumber);
-    this.source = new TemplateSource(path, templateSettings);
+  constructor(path: string, options: PresentationServiceOptions = {}) {
+    super(path, templateSettings, options);
+    this.generateData = createRandomDataGenerator(1);
   }
 
-  async validate() {
-    await this.source.load();
+  /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */
+  protected fetchData(input: TmaRequestInput): TmaRawData {
+    console.debug({
+      PP1: input.PP1,
+      PP2: input.PP2,
+      dataApiConfigured: Boolean(this.dataApi),
+    });
+    // Placeholder for future Data API call via `this.dataApi`.
+    return {
+      asOf: new Date(),
+      chartA: this.generateData(demoData.chartA.rows),
+      chartB: this.generateData(demoData.chartB.rows),
+    };
   }
 
-  /** Populates named template objects with demo data while retaining native editable tables and charts. */
-  async generate(input: TmaRequestInput): Promise<Buffer> {
-    console.debug({ PP1: input.PP1, PP2: input.PP2 });
-    const deck = await this.source.open();
-    const now = new Date();
-
-    deck.texts.text0.fill(input.TEXT_ME);
-    deck.texts.text1.fill('CHART A');
-    deck.texts.text2.fill('CHART B');
-    deck.texts.subtitle.fill(formatDateTime(now));
-
-    const chartDataA = this.generateData(demoData.chartA.rows);
-    //dates YYYY-MM-DD from today backwards
-    const chartRowsNames = Array.from(
-      { length: demoData.chartA.rows },
-      (_, index) => {
-        const date = new Date(now);
-        date.setUTCDate(date.getUTCDate() - index);
-        return formatDateTime(date, { format: DateTimeFormat.Date });
-      },
-    );
-
-    await deck.charts.chartA.fill(chartDataA, {
-      categories: chartRowsNames,
+  /** Step 2: Transforms request parameters and raw API data into presentation-ready values. */
+  protected prepareData(
+    input: TmaRequestInput,
+    raw: TmaRawData,
+  ): TmaPreparedData {
+    // Dates YYYY-MM-DD from asOf backwards.
+    const categories = Array.from({ length: raw.chartA.length }, (_, index) => {
+      const date = new Date(raw.asOf);
+      date.setUTCDate(date.getUTCDate() - index);
+      return formatDateTime(date, { format: DateTimeFormat.Date });
     });
 
-    const chartDataB = this.generateData(demoData.chartB.rows);
-    const colors = chartDataB.map(() =>
+    const colors = raw.chartB.map(() =>
       randomInt(0x1000000).toString(16).padStart(6, '0'),
     );
-    await deck.charts.chartB.fill(chartDataB, {
-      colors,
-    });
 
-    return deck.toBuffer();
+    return {
+      texts: {
+        text0: input.TEXT_ME,
+        text1: 'CHART A',
+        text2: 'CHART B',
+        subtitle: formatDateTime(raw.asOf),
+      },
+      chartA: {
+        data: raw.chartA,
+        categories,
+      },
+      chartB: {
+        data: raw.chartB,
+        colors,
+      },
+    };
+  }
+
+  /** Step 3: Populates the PowerPoint template with prepared values. */
+  protected async renderDeck(
+    deck: TemplateDeck<typeof templateSettings>,
+    prepared: TmaPreparedData,
+  ): Promise<void> {
+    deck.texts.text0.fill(prepared.texts.text0);
+    deck.texts.text1.fill(prepared.texts.text1);
+    deck.texts.text2.fill(prepared.texts.text2);
+    deck.texts.subtitle.fill(prepared.texts.subtitle);
+
+    await deck.charts.chartA.fill(prepared.chartA.data, {
+      categories: prepared.chartA.categories,
+    });
+    await deck.charts.chartB.fill(prepared.chartB.data, {
+      colors: prepared.chartB.colors,
+    });
   }
 }

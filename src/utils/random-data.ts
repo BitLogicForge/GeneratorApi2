@@ -49,15 +49,42 @@ export function generateRandomData<T extends RandomDataType = 'number'>(
   );
 }
 
-/** Pairs parallel `labels` and `values` arrays into `[label, value]` table rows. */
+/** Pairs parallel `labels` and `values` arrays into `[label, ...values]` table rows. */
 export function zipLabelsAndValues<T extends number | string>(series: {
   labels: readonly string[];
-  values: readonly T[];
+  values: readonly (T | readonly T[])[];
 }): (string | T)[][] {
-  return series.labels.map((label, index) => [label, series.values[index]]);
+  return series.labels.map((label, index) => {
+    const value = series.values[index];
+    return Array.isArray(value) ? [label, ...value] : [label, value];
+  });
 }
 
-/** Wraps a flat array of values into single-series `[value]` rows for chart filling. */
-export function toSingleSeriesData<T>(values: readonly T[]): T[][] {
-  return values.map((value) => [value]);
+/** Builds table rows with a legend `marker` inserted at `colorColumn` (0-based, default `0`). */
+export function zipLegendLabelsAndValues<T extends number | string>(
+  series: {
+    labels: readonly string[];
+    values: readonly (T | readonly T[])[];
+  },
+  colorColumn = 0,
+  marker = 'g',
+): (string | T)[][] {
+  return zipLabelsAndValues(series).map((row) => {
+    const copy = [...row];
+    copy.splice(colorColumn, 0, marker);
+    return copy;
+  });
+}
+
+/** Creates a `cellColors` matrix that colors `colorColumn` (0-based, default `0`) of each row. */
+export function toColumnCellColors(
+  colors: readonly string[],
+  columnCount = 3,
+  colorColumn = 0,
+): (string | undefined)[][] {
+  return colors.map((color) =>
+    Array.from({ length: columnCount }, (_, index) =>
+      index === colorColumn ? color : undefined,
+    ),
+  );
 }

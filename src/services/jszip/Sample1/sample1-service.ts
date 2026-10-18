@@ -1,8 +1,9 @@
 import { formatDateTime, generateTimeSeriesDates } from '@/utils/date-time';
 import {
   generateRandomData,
-  toSingleSeriesData,
+  toColumnCellColors,
   zipLabelsAndValues,
+  zipLegendLabelsAndValues,
 } from '@/utils/random-data';
 
 import { PresentationService } from '../presentation-service.ts';
@@ -13,17 +14,17 @@ import type { TemplateDeck } from '../template-settings.ts';
 
 const demoData = {
   timeseries: { rows: 9 },
-  pie1: { rows: 5 },
-  pie2: { rows: 8 },
+  pie1: { rows: 5, colorColumn: 0 },
+  pie2: { rows: 8, colorColumn: 0 },
   table4: { rows: 6, columns: 3 },
   table5: { rows: 7, columns: 5 },
 } as const;
 
 interface RawData {
   // date YYYY-MM-DD and value
-  timeseries: { labels: string[]; values: number[] };
-  pie1: { labels: string[]; values: number[] };
-  pie2: { labels: string[]; values: number[] };
+  timeseries: { labels: string[]; values: number[][] };
+  pie1: { labels: string[]; values: number[][] };
+  pie2: { labels: string[]; values: number[][] };
   table4: { values: number[][] };
   table5: { values: number[][] };
 }
@@ -46,15 +47,21 @@ interface PreparedData {
   };
   tab2: {
     data: (number | string)[][];
+    cellColors: (string | undefined)[][];
   };
   chart2: {
     data: number[][];
     categories: string[];
+    colors: string[];
   };
-  tab3: (number | string)[][];
+  tab3: {
+    data: (number | string)[][];
+    cellColors: (string | undefined)[][];
+  };
   chart3: {
     data: number[][];
     categories: string[];
+    colors: string[];
   };
 
   table4: (number | string)[][];
@@ -77,15 +84,15 @@ export class Sample1Service extends PresentationService<
     return {
       timeseries: {
         labels: generateTimeSeriesDates(demoData.timeseries.rows),
-        values: generateRandomData(demoData.timeseries.rows, 1).flat(),
+        values: generateRandomData(demoData.timeseries.rows, 1),
       },
       pie1: {
         labels: generateRandomData(demoData.pie1.rows, 1, 'string').flat(),
-        values: generateRandomData(demoData.pie1.rows, 1).flat(),
+        values: generateRandomData(demoData.pie1.rows, 1),
       },
       pie2: {
         labels: generateRandomData(demoData.pie2.rows, 1, 'string').flat(),
-        values: generateRandomData(demoData.pie2.rows, 1).flat(),
+        values: generateRandomData(demoData.pie2.rows, 1),
       },
       table4: {
         values: generateRandomData(
@@ -107,31 +114,56 @@ export class Sample1Service extends PresentationService<
     input: Sample1RequestInput,
     raw: RawData,
   ): PreparedData {
+    const pie1Colors = generateRandomData(
+      raw.pie1.labels.length,
+      1,
+      'color',
+    ).flat();
+    const pie2Colors = generateRandomData(
+      raw.pie2.labels.length,
+      1,
+      'color',
+    ).flat();
+
     return {
-      x1Title: "Page 1 Title",
-      x2Title: "Page 2",
-      x3Title: "Page 3",
-      x4Title: "Page 4",
+      x1Title: 'Page 1 Title',
+      x2Title: 'Page 2',
+      x3Title: 'Page 3',
+      x4Title: 'Page 4',
       x1Sub: formatDateTime(),
       x1Text: input.someText,
       tab1: {
         data: zipLabelsAndValues(raw.timeseries),
       },
       chart1: {
-        data: toSingleSeriesData(raw.timeseries.values),
+        data: raw.timeseries.values,
         categories: raw.timeseries.labels,
       },
       tab2: {
-        data: zipLabelsAndValues(raw.pie1),
+        data: zipLegendLabelsAndValues(raw.pie1, demoData.pie1.colorColumn),
+        cellColors: toColumnCellColors(
+          pie1Colors,
+          3,
+          demoData.pie1.colorColumn,
+        ),
       },
       chart2: {
-        data: toSingleSeriesData(raw.pie1.values),
+        data: raw.pie1.values,
         categories: raw.pie1.labels,
+        colors: pie1Colors,
       },
-      tab3: zipLabelsAndValues(raw.pie2),
+      tab3: {
+        data: zipLegendLabelsAndValues(raw.pie2, demoData.pie2.colorColumn),
+        cellColors: toColumnCellColors(
+          pie2Colors,
+          3,
+          demoData.pie2.colorColumn,
+        ),
+      },
       chart3: {
-        data: toSingleSeriesData(raw.pie2.values),
+        data: raw.pie2.values,
         categories: raw.pie2.labels,
+        colors: pie2Colors,
       },
       table4: raw.table4.values,
       table5: raw.table5.values,
@@ -151,17 +183,25 @@ export class Sample1Service extends PresentationService<
     deck.texts.x4Title.fill(prepared.x4Title);
 
     deck.tables.x2Tab1.fill(prepared.tab1.data, { resizeRows: true });
-    deck.tables.x3Tab1.fill(prepared.tab2.data, { resizeRows: true });
-    deck.tables.x3Tab2.fill(prepared.tab3, { resizeRows: true });
+    deck.tables.x3Tab1.fill(prepared.tab2.data, {
+      resizeRows: true,
+      cellColors: prepared.tab2.cellColors,
+    });
+    deck.tables.x3Tab2.fill(prepared.tab3.data, {
+      resizeRows: true,
+      cellColors: prepared.tab3.cellColors,
+    });
 
     await deck.charts.x2Chart1.fill(prepared.chart1.data, {
       categories: prepared.chart1.categories,
     });
     await deck.charts.x3Chart1.fill(prepared.chart2.data, {
       categories: prepared.chart2.categories,
+      colors: prepared.chart2.colors,
     });
     await deck.charts.x3Chart2.fill(prepared.chart3.data, {
       categories: prepared.chart3.categories,
+      colors: prepared.chart3.colors,
     });
     deck.tables.x4Tab1.fill(prepared.table4, { resizeRows: true });
     deck.tables.x4Tab2.fill(prepared.table5, { resizeRows: true });

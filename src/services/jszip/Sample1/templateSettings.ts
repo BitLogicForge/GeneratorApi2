@@ -14,7 +14,6 @@ export const templateSettings = {
       name: 'X3_TAB1',
       options: {
         startRow: 1,
-        startColumn: 1,
         resizeRows: true,
       },
     },
@@ -22,7 +21,6 @@ export const templateSettings = {
       name: 'X3_TAB2',
       options: {
         startRow: 1,
-        startColumn: 1,
         resizeRows: true,
       },
     },

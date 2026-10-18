@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { dataApiCacheDefaults } from './defaults.ts';
+import { dataApiCacheDefaults, queueDefaults } from './defaults.ts';
 
 const webappBaseUrlSchema = z.url().refine((value) => {
   try {
@@ -70,15 +70,30 @@ export const environmentSchema = z
       .min(1)
       .max(268435456)
       .default(dataApiCacheDefaults.maxBytes),
-    PDF_CONCURRENCY: z.coerce.number().int().min(1).max(10).default(2),
-    PPTX_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(4),
-    QUEUE_MAX_PENDING: z.coerce.number().int().min(0).max(2000).default(200),
+    PDF_CONCURRENCY: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .default(queueDefaults.concurrency),
+    PPTX_CONCURRENCY: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(20)
+      .default(queueDefaults.presentationConcurrency),
+    QUEUE_MAX_PENDING: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(2000)
+      .default(queueDefaults.maxPending),
     QUEUE_WAIT_TIMEOUT_MS: z.coerce
       .number()
       .int()
       .min(1000)
       .max(180000)
-      .default(120000),
+      .default(queueDefaults.waitTimeoutMs),
     RENDER_TIMEOUT_MS: z.coerce
       .number()
       .int()

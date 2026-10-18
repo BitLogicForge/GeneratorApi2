@@ -18,7 +18,16 @@ export interface AppOptions {
       active: number;
     };
   };
-  config?: Pick<Config, 'defaultLanguage'>;
+  config?: Pick<Config, 'defaultLanguage'> &
+    Partial<
+      Pick<
+        Config,
+        | 'concurrency'
+        | 'presentationConcurrency'
+        | 'maxPending'
+        | 'waitTimeoutMs'
+      >
+    >;
   queues?: GenerationQueues;
   logger?: Pick<Console, 'error'> & Partial<Pick<Console, 'info'>>;
   readiness?: () => ReadinessState;

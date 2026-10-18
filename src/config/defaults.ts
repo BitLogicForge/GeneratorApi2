@@ -7,6 +7,13 @@ export const dataApiCacheDefaults = {
   maxBytes: 16 * 1024 * 1024,
 };
 
+export const queueDefaults = {
+  concurrency: 2,
+  presentationConcurrency: 4,
+  maxPending: 200,
+  waitTimeoutMs: 120000,
+};
+
 export const pdfPrintSettings: PdfPrintSettings = {
   format: 'A4',
   landscape: false,

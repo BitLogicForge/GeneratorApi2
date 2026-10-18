@@ -1,3 +1,4 @@
+import { queueDefaults } from '@/config';
 import { AppError } from '@/errors';
 
 import { queueOptionsSchema } from './schema.ts';
@@ -13,16 +14,20 @@ interface PendingJob {
 
 /** FIFO admission control. Active tasks keep their slot until they actually finish. */
 export class GenerationQueue {
+  private readonly options: QueueOptions;
   private active = 0;
   private pending: PendingJob[] = [];
   private accepting = true;
+  private drainPromise: Promise<void> | undefined;
+  private resolveDrain: (() => void) | undefined;
 
-  constructor(private readonly options: QueueOptions) {
+  constructor(options: QueueOptions) {
     const result = queueOptionsSchema.safeParse(options);
     if (!result.success) {
       const key = result.error.issues[0].path[0] ?? 'options';
       throw new Error(`Invalid queue option: ${String(key)}`);
     }
+    this.options = result.data;
   }
 
   get stats() {
@@ -83,6 +88,7 @@ export class GenerationQueue {
             .finally(() => {
               this.active--;
               this.pump();
+              if (this.active === 0) this.resolveDrain?.();
             });
         },
       };
@@ -111,12 +117,16 @@ export class GenerationQueue {
   }
 
   /** Reject waiting jobs during shutdown; already running tasks are allowed to finish. */
-  close() {
+  close(): Promise<void> {
     this.accepting = false;
     for (const job of this.pending.splice(0)) {
       job.cleanup();
       job.reject(new AppError(503, 'QUEUE_CLOSED', 'Server is shutting down'));
     }
+    if (this.active === 0) return Promise.resolve();
+    return (this.drainPromise ??= new Promise<void>((resolve) => {
+      this.resolveDrain = resolve;
+    }));
   }
 }
 
@@ -125,25 +135,22 @@ export interface GenerationQueues {
   presentations: GenerationQueue;
 }
 export function createGenerationQueues(
-  options: {
-    pdfConcurrency?: number;
-    presentationConcurrency?: number;
-    maxPending?: number;
-    waitTimeoutMs?: number;
-  } = {},
+  options: Partial<typeof queueDefaults> = {},
 ): GenerationQueues {
   const common = {
-    maxPending: options.maxPending ?? 200,
-    waitTimeoutMs: options.waitTimeoutMs ?? 120000,
+    maxPending: options.maxPending ?? queueDefaults.maxPending,
+    waitTimeoutMs: options.waitTimeoutMs ?? queueDefaults.waitTimeoutMs,
   };
   return {
     pdf: new GenerationQueue({
       ...common,
-      concurrency: options.pdfConcurrency ?? 2,
+      concurrency: options.concurrency ?? queueDefaults.concurrency,
     }),
     presentations: new GenerationQueue({
       ...common,
-      concurrency: options.presentationConcurrency ?? 4,
+      concurrency:
+        options.presentationConcurrency ??
+        queueDefaults.presentationConcurrency,
     }),
   };
 }

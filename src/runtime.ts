@@ -10,12 +10,7 @@ import { WebPagePdfService } from './services/pdf/web-page-pdf.ts';
 export function startServer() {
   const config = loadConfig();
   const pdf = new WebPagePdfService(config);
-  const queues = createGenerationQueues({
-    pdfConcurrency: config.concurrency,
-    presentationConcurrency: config.presentationConcurrency,
-    maxPending: config.maxPending,
-    waitTimeoutMs: config.waitTimeoutMs,
-  });
+  const queues = createGenerationQueues(config);
   const reports = createReportServices(config);
   let stopping = false;
   // Warm Chromium once; probes only inspect state. Failed launches can retry on a PDF request.
@@ -37,17 +32,21 @@ export function startServer() {
   function shutdown() {
     if (stopping) return;
     stopping = true;
-    queues.pdf.close();
-    queues.presentations.close();
+    const drained = Promise.all([
+      queues.pdf.close(),
+      queues.presentations.close(),
+    ]);
     const deadline = setTimeout(() => process.exit(1), 15000).unref();
     server.close(() => {
-      Promise.all([pdf.close(), reports.close()]).then(
-        () => clearTimeout(deadline),
-        (error: unknown) => {
-          console.error(error);
-          process.exitCode = 1;
-        },
-      );
+      drained
+        .then(() => Promise.all([pdf.close(), reports.close()]))
+        .then(
+          () => clearTimeout(deadline),
+          (error: unknown) => {
+            console.error(error);
+            process.exitCode = 1;
+          },
+        );
     });
   }
   process.on('SIGTERM', shutdown);

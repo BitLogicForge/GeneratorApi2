@@ -19,7 +19,7 @@ export function createApp(
 ) {
   const {
     config = options.reports?.config ?? loadConfig({}),
-    queues = createGenerationQueues(),
+    queues = createGenerationQueues(config),
     logger = console,
   } = options;
   const observability = createObservability(logger);

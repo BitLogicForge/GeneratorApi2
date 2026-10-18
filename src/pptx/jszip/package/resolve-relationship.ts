@@ -1,3 +1,4 @@
+import { TargetMode } from './constants.ts';
 import { invalidTemplate } from './invalid-template.ts';
 import { packageNs } from './namespaces.ts';
 import { readXml } from './read-xml.ts';
@@ -5,13 +6,14 @@ import { relsPath } from './relationship-path.ts';
 import { targetPath } from './target-path.ts';
 
 import type JSZip from 'jszip';
+import type { RelationshipType } from './constants.ts';
 
 /** Follows a typed internal package relationship so callers need no hardcoded chart or workbook paths. */
 export const resolveRelationship = async (
   archive: JSZip,
   owner: string,
   id: string | null,
-  type: string,
+  type: RelationshipType,
 ) => {
   const relationships = await readXml(archive, relsPath(owner));
   const relation = Array.from(
@@ -20,7 +22,7 @@ export const resolveRelationship = async (
   if (
     !id ||
     !relation ||
-    relation.getAttribute('TargetMode') === 'External' ||
+    relation.getAttribute('TargetMode') === TargetMode.External ||
     !relation.getAttribute('Type')?.endsWith(`/${type}`)
   )
     throw invalidTemplate();

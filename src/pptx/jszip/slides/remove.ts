@@ -1,3 +1,4 @@
+import { PackagePath } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
@@ -29,6 +30,6 @@ export async function removeSlide(
     )
       node.parentNode!.removeChild(node);
   }
-  writeXml(zip, 'ppt/presentation.xml', presentation.document);
-  writeXml(zip, 'ppt/_rels/presentation.xml.rels', presentation.relationships);
+  writeXml(zip, PackagePath.Presentation, presentation.document);
+  writeXml(zip, PackagePath.PresentationRels, presentation.relationships);
 }

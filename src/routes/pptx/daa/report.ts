@@ -1,3 +1,4 @@
+import { ErrorMessage } from '@/constants';
 import { definePptxReport } from '@/reports/pptx';
 import { templateFile } from '@/reports/template';
 import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
@@ -11,7 +12,7 @@ const sourceFile = 'daa.pptx';
 
 const report = {
   schema: requestSchema,
-  notConfiguredMessage: 'Template report demo not configured',
+  notConfiguredMessage: ErrorMessage.TemplateReportDemoNotConfigured,
   readRequestInput,
   prepareInput: ({ TEXT_ME }) => ({
     filename: 'demo-report',

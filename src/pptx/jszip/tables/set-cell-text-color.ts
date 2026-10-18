@@ -1,3 +1,4 @@
+import { DRAWING_FILL_TAGS } from '@/pptx/jszip/package/constants';
 import { drawing } from '@/pptx/jszip/package/namespaces';
 
 import type { Element } from '@xmldom/xmldom';
@@ -14,14 +15,7 @@ export function setCellTextColor(cell: Element, color: string) {
     for (const child of Array.from(properties.childNodes)) {
       if (
         child.namespaceURI === drawing &&
-        [
-          'noFill',
-          'solidFill',
-          'gradFill',
-          'blipFill',
-          'pattFill',
-          'grpFill',
-        ].includes(child.localName ?? '')
+        (DRAWING_FILL_TAGS as readonly string[]).includes(child.localName ?? '')
       )
         properties.removeChild(child);
     }

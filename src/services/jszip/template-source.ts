@@ -2,7 +2,9 @@ import { readFile } from 'node:fs/promises';
 
 import JSZip from 'jszip';
 
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
+import { PackagePath } from '@/pptx/jszip/package/constants';
 
 /** Retains validated source bytes; callers must load their own mutable archive. */
 export class TemplateSource {
@@ -19,7 +21,7 @@ export class TemplateSource {
       const message = error instanceof Error ? error.message : String(error);
       const failure = new AppError(
         error instanceof AppError ? error.status : 500,
-        error instanceof AppError ? error.code : 'INVALID_TEMPLATE',
+        error instanceof AppError ? error.code : ErrorCode.InvalidTemplate,
         `Template "${this.path}": ${message}`,
       );
       failure.cause = error;
@@ -31,13 +33,20 @@ export class TemplateSource {
   private async read(): Promise<Buffer> {
     const source = await readFile(this.path);
     if (source.length > 20 * 1024 * 1024)
-      throw new AppError(500, 'INVALID_TEMPLATE', 'Template exceeds 20 MB');
-    const zip = await JSZip.loadAsync(source);
-    if (!zip.file('[Content_Types].xml') || !zip.file('ppt/presentation.xml'))
       throw new AppError(
         500,
-        'INVALID_TEMPLATE',
-        'Template must be a valid PPTX presentation',
+        ErrorCode.InvalidTemplate,
+        ErrorMessage.TemplateExceedsMaxSize,
+      );
+    const zip = await JSZip.loadAsync(source);
+    if (
+      !zip.file(PackagePath.ContentTypes) ||
+      !zip.file(PackagePath.Presentation)
+    )
+      throw new AppError(
+        500,
+        ErrorCode.InvalidTemplate,
+        ErrorMessage.TemplateInvalidPptx,
       );
     await this.validateArchive(zip);
     return source;

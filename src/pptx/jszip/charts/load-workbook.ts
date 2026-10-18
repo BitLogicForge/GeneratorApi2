@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 
+import { PackagePath, RelationshipType } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import {
   chartNs,
@@ -22,20 +23,20 @@ export async function loadChartWorkbook(
     zip,
     chartPath,
     externalData?.getAttributeNS(relationshipNs, 'id') ?? null,
-    'package',
+    RelationshipType.Package,
   );
   const embedded = zip.file(workbookPath);
   if (!embedded) throw invalidTemplate();
   const workbook = await JSZip.loadAsync(await embedded.async('nodebuffer'));
-  const workbookDocument = await readXml(workbook, 'xl/workbook.xml');
+  const workbookDocument = await readXml(workbook, PackagePath.Workbook);
   const sheetReference = Array.from(
     workbookDocument.getElementsByTagNameNS(spreadsheet, 'sheet'),
   ).find((item) => item.getAttribute('name') === sheetName);
   const sheetPath = await resolveRelationship(
     workbook,
-    'xl/workbook.xml',
+    PackagePath.Workbook,
     sheetReference?.getAttributeNS(relationshipNs, 'id') ?? null,
-    'worksheet',
+    RelationshipType.Worksheet,
   );
   const sheet = await readXml(workbook, sheetPath);
   const dateSystem = workbookDocument

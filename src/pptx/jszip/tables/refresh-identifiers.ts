@@ -1,22 +1,22 @@
 import { randomInt } from 'node:crypto';
 
-import type { Element } from '@xmldom/xmldom';
+import { officeDrawingNs } from '@/pptx/jszip/package/namespaces';
 
-const namespace = 'http://schemas.microsoft.com/office/drawing/2014/main';
+import type { Element } from '@xmldom/xmldom';
 
 /** Gives cloned Office table row/column identifiers new collision-free values. */
 export function createTableIdentifierRefresher(table: Element) {
   const used = new Set(
     ['rowId', 'colId'].flatMap((name) =>
-      Array.from(table.getElementsByTagNameNS(namespace, name)).map((node) =>
-        node.getAttribute('val'),
+      Array.from(table.getElementsByTagNameNS(officeDrawingNs, name)).map(
+        (node) => node.getAttribute('val'),
       ),
     ),
   );
   return (clone: Element) => {
     for (const name of ['rowId', 'colId']) {
       for (const node of Array.from(
-        clone.getElementsByTagNameNS(namespace, name),
+        clone.getElementsByTagNameNS(officeDrawingNs, name),
       )) {
         let value: string;
         do {

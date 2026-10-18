@@ -1,10 +1,13 @@
+import {
+  CacheControlValue,
+  ContentType,
+  HttpHeader,
+  HttpMethod,
+} from './constants.ts';
+
 import type { Response } from 'express';
 import type { GenerationQueue } from '@/queue/generation-queue';
-
-const contentTypes = {
-  pdf: 'application/pdf',
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-};
+import type { ExportFormat } from './constants.ts';
 
 /** Sends HEAD metadata without rendering; queues GET/POST downloads and cancels disconnected waits. */
 export async function sendDownload(
@@ -12,14 +15,14 @@ export async function sendDownload(
   queue: GenerationQueue,
   generate: () => Promise<Buffer>,
   filename: string,
-  format: keyof typeof contentTypes,
+  format: ExportFormat,
 ) {
   const setDownloadHeaders = () =>
     res
-      .set('Cache-Control', 'no-store')
+      .set(HttpHeader.CacheControl, CacheControlValue.NoStore)
       .attachment(`${filename}.${format}`)
-      .type(contentTypes[format]);
-  if (res.req.method === 'HEAD') {
+      .type(ContentType[format]);
+  if (res.req.method === HttpMethod.Head) {
     setDownloadHeaders().end();
     return;
   }

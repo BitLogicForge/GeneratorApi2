@@ -1,5 +1,6 @@
 import pptxgen from 'pptxgenjs';
 
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 import { briefTemplate } from '@/pptx/pptxgenjs/templates/brief';
 
@@ -19,8 +20,8 @@ export class PowerPointGenerationService {
     if (!render)
       throw new AppError(
         404,
-        'UNKNOWN_TEMPLATE',
-        'Presentation template not found',
+        ErrorCode.UnknownTemplate,
+        ErrorMessage.PresentationTemplateNotFound,
       );
     const deck = new pptxgen();
     deck.layout = 'LAYOUT_WIDE';

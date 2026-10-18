@@ -1,5 +1,6 @@
 import { loadChartWorkbook } from '@/pptx/jszip/charts/load-workbook';
 import { resizeWorkbookTables } from '@/pptx/jszip/charts/resize-workbook-tables';
+import { RelationshipType } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { chartNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
@@ -86,7 +87,7 @@ export async function fillCategoryChart(
     zip,
     chartObject.path,
     relId,
-    'chart',
+    RelationshipType.Chart,
   );
   const chart = await readXml(zip, chartPath);
 

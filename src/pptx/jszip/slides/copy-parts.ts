@@ -2,6 +2,11 @@ import { posix } from 'node:path';
 
 import { XMLSerializer } from '@xmldom/xmldom';
 
+import {
+  PackagePath,
+  RelationshipType,
+  TargetMode,
+} from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { contentNs, packageNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
@@ -10,8 +15,14 @@ import { targetPath } from '@/pptx/jszip/package/target-path';
 
 import type JSZip from 'jszip';
 
+const COPIED_SLIDE_PART_TYPES: readonly string[] = [
+  RelationshipType.Chart,
+  RelationshipType.Package,
+  RelationshipType.NotesSlide,
+];
+
 export async function copySlideParts(zip: JSZip, sourcePath: string) {
-  const contentTypes = await readXml(zip, '[Content_Types].xml');
+  const contentTypes = await readXml(zip, PackagePath.ContentTypes);
   const copies = new Map<string, string>();
   const staged = new Map<string, string | Buffer>();
   const allocate = (path: string) => {
@@ -51,13 +62,14 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
       for (const relation of Array.from(
         relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
       )) {
-        if (relation.getAttribute('TargetMode') === 'External') continue;
+        if (relation.getAttribute('TargetMode') === TargetMode.External)
+          continue;
         const target = targetPath(path, relation.getAttribute('Target') ?? '');
         const type = relation.getAttribute('Type')?.split('/').at(-1);
         // Notes point back to their owning slide. Other slide hyperlinks stay unchanged.
         const outputTarget =
           copies.get(target) ??
-          (['chart', 'package', 'notesSlide'].includes(type ?? '')
+          (COPIED_SLIDE_PART_TYPES.includes(type ?? '')
             ? await copy(target)
             : target);
         relation.setAttribute(

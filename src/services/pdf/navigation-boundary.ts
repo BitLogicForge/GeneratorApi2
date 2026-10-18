@@ -1,3 +1,4 @@
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 
 import type { BrowserContext, Page } from 'playwright';
@@ -15,8 +16,8 @@ export async function navigationBoundary(
   const blocked = () =>
     new AppError(
       502,
-      'NAVIGATION_BLOCKED',
-      'Webapp navigation left the configured origin or opened another page',
+      ErrorCode.NavigationBlocked,
+      ErrorMessage.NavigationBlocked,
     );
   // Popups can start navigating before a page-specific CDP session can attach.
   await context.route('**/*', async (route) => {

@@ -1,4 +1,5 @@
 import { queueDefaults } from '@/config';
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 
 import { queueOptionsSchema } from './schema.ts';
@@ -44,22 +45,26 @@ export class GenerationQueue {
   run<T>(task: () => Promise<T>, signal?: AbortSignal): Promise<T> {
     if (!this.accepting)
       return Promise.reject(
-        new AppError(503, 'QUEUE_CLOSED', 'Server is shutting down'),
+        new AppError(
+          503,
+          ErrorCode.QueueClosed,
+          ErrorMessage.ServerShuttingDown,
+        ),
       );
     if (signal?.aborted)
       return Promise.reject(
-        new AppError(499, 'REQUEST_CANCELLED', 'Request was cancelled'),
+        new AppError(
+          499,
+          ErrorCode.RequestCancelled,
+          ErrorMessage.RequestCancelled,
+        ),
       );
     if (
       this.active >= this.options.concurrency &&
       this.pending.length >= this.options.maxPending
     ) {
       return Promise.reject(
-        new AppError(
-          503,
-          'QUEUE_FULL',
-          'Generation queue is full; retry shortly',
-        ),
+        new AppError(503, ErrorCode.QueueFull, ErrorMessage.QueueFull),
       );
     }
     return new Promise<T>((resolve, reject) => {
@@ -72,7 +77,13 @@ export class GenerationQueue {
         reject(error);
       };
       const onAbort = () =>
-        remove(new AppError(499, 'REQUEST_CANCELLED', 'Request was cancelled'));
+        remove(
+          new AppError(
+            499,
+            ErrorCode.RequestCancelled,
+            ErrorMessage.RequestCancelled,
+          ),
+        );
       const job: PendingJob = {
         reject,
         cleanup: () => {
@@ -101,8 +112,8 @@ export class GenerationQueue {
             remove(
               new AppError(
                 503,
-                'QUEUE_WAIT_TIMEOUT',
-                'Generation queue wait timed out; retry shortly',
+                ErrorCode.QueueWaitTimeout,
+                ErrorMessage.QueueWaitTimeout,
               ),
             ),
           this.options.waitTimeoutMs,
@@ -121,7 +132,13 @@ export class GenerationQueue {
     this.accepting = false;
     for (const job of this.pending.splice(0)) {
       job.cleanup();
-      job.reject(new AppError(503, 'QUEUE_CLOSED', 'Server is shutting down'));
+      job.reject(
+        new AppError(
+          503,
+          ErrorCode.QueueClosed,
+          ErrorMessage.ServerShuttingDown,
+        ),
+      );
     }
     if (this.active === 0) return Promise.resolve();
     return (this.drainPromise ??= new Promise<void>((resolve) => {

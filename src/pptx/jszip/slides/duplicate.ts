@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 
+import { PackagePath } from '@/pptx/jszip/package/constants';
 import { packageNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 
@@ -49,8 +50,8 @@ export async function duplicateSlide(
   source.element.parentNode!.insertBefore(slideId, source.element.nextSibling);
   for (const [path, bytes] of staged)
     zip.file(path, bytes, { createFolders: false });
-  writeXml(zip, '[Content_Types].xml', contentTypes);
-  writeXml(zip, 'ppt/presentation.xml', presentation.document);
-  writeXml(zip, 'ppt/_rels/presentation.xml.rels', presentation.relationships);
+  writeXml(zip, PackagePath.ContentTypes, contentTypes);
+  writeXml(zip, PackagePath.Presentation, presentation.document);
+  writeXml(zip, PackagePath.PresentationRels, presentation.relationships);
   return output;
 }

@@ -1,11 +1,10 @@
+import { TABLE_MERGE_ATTRIBUTES } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { drawing, presentationNs } from '@/pptx/jszip/package/namespaces';
 
 import { createTableIdentifierRefresher } from './refresh-identifiers.ts';
 
 import type { Element } from '@xmldom/xmldom';
-
-const MERGE_ATTRIBUTES = ['rowSpan', 'gridSpan', 'hMerge', 'vMerge'];
 
 export function resizeTableRows(
   element: Element,
@@ -22,7 +21,9 @@ export function resizeTableRows(
   )
     throw invalidTemplate();
   for (const cell of Array.from(table.getElementsByTagNameNS(drawing, 'tc'))) {
-    if (MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute)))
+    if (
+      TABLE_MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute))
+    )
       throw invalidTemplate();
   }
   const oldHeight = rows.reduce(

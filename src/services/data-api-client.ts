@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { LRUCache } from 'lru-cache';
 
 import { dataApiCacheDefaults } from '@/config';
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 
 import { requestDataApi } from './data-api/request.ts';
@@ -67,15 +68,15 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
     if (!this.config.baseUrl)
       throw new AppError(
         503,
-        'DATA_API_NOT_CONFIGURED',
-        'Configure DATA_API_BASE_URL before fetching report data',
+        ErrorCode.DataApiNotConfigured,
+        ErrorMessage.DataApiNotConfigured,
       );
     const definition = this.config.endpoints[endpoint];
     if (!definition)
       throw new AppError(
         400,
-        'UNKNOWN_DATA_API_ENDPOINT',
-        'Data API endpoint not configured',
+        ErrorCode.UnknownDataApiEndpoint,
+        ErrorMessage.UnknownDataApiEndpoint,
       );
     const url = buildDataApiUrl(
       this.config.baseUrl,

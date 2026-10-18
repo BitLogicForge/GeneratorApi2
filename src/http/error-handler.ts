@@ -1,37 +1,47 @@
 import { ZodError } from 'zod';
 
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 import { LogEvent } from '@/observability/constants';
 
+import { HttpHeader, ParserErrorType } from './constants.ts';
+
 import type { ErrorRequestHandler } from 'express';
 
-const parserErrors = new Map([
+const parserErrors = new Map<
+  string,
+  { status: number; code: ErrorCode; message: string }
+>([
   [
-    'entity.too.large',
+    ParserErrorType.EntityTooLarge,
     {
       status: 413,
-      code: 'BODY_TOO_LARGE',
-      message: 'Request body is too large',
+      code: ErrorCode.BodyTooLarge,
+      message: ErrorMessage.BodyTooLarge,
     },
   ],
   [
-    'entity.parse.failed',
-    { status: 400, code: 'INVALID_JSON', message: 'Invalid JSON body' },
-  ],
-  [
-    'charset.unsupported',
+    ParserErrorType.EntityParseFailed,
     {
-      status: 415,
-      code: 'UNSUPPORTED_CHARSET',
-      message: 'Unsupported JSON charset',
+      status: 400,
+      code: ErrorCode.InvalidJson,
+      message: ErrorMessage.InvalidJson,
     },
   ],
   [
-    'encoding.unsupported',
+    ParserErrorType.CharsetUnsupported,
     {
       status: 415,
-      code: 'UNSUPPORTED_CONTENT_ENCODING',
-      message: 'Unsupported content encoding',
+      code: ErrorCode.UnsupportedCharset,
+      message: ErrorMessage.UnsupportedCharset,
+    },
+  ],
+  [
+    ParserErrorType.EncodingUnsupported,
+    {
+      status: 415,
+      code: ErrorCode.UnsupportedContentEncoding,
+      message: ErrorMessage.UnsupportedContentEncoding,
     },
   ],
 ]);
@@ -47,18 +57,18 @@ export function createErrorHandler(
     const publicError = validation
       ? {
           status: 400,
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request parameters',
+          code: ErrorCode.ValidationError,
+          message: ErrorMessage.InvalidRequestParameters,
         }
       : error instanceof AppError
         ? error
         : (parserErrors.get(error?.type) ?? {
             status: 500,
-            code: 'INTERNAL_ERROR',
-            message: 'Document generation failed',
+            code: ErrorCode.InternalError,
+            message: ErrorMessage.DocumentGenerationFailed,
           });
     const { status, code, message } = publicError;
-    if (status === 503) res.set('Retry-After', '5');
+    if (status === 503) res.set(HttpHeader.RetryAfter, '5');
     if (status >= 500)
       logger.error({
         event: LogEvent.RequestFailed,

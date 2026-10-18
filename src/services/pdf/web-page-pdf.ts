@@ -1,5 +1,6 @@
 import { chromium, errors } from 'playwright';
 
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
 import { buildUrl } from '@/utils/url';
@@ -76,11 +77,11 @@ export class WebPagePdfService {
     if (url.origin !== origin)
       throw new AppError(
         400,
-        'INVALID_ROUTE',
-        'Route must belong to the configured webapp',
+        ErrorCode.InvalidRoute,
+        ErrorMessage.InvalidRoute,
       );
     if (this.#active >= this.config.concurrency)
-      throw new AppError(503, 'RENDER_BUSY', 'Renderer is busy; retry shortly');
+      throw new AppError(503, ErrorCode.RenderBusy, ErrorMessage.RenderBusy);
     this.#active++;
     let context: BrowserContext | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -104,8 +105,8 @@ export class WebPagePdfService {
               reject(
                 new AppError(
                   504,
-                  'RENDER_TIMEOUT',
-                  'Webapp rendering timed out',
+                  ErrorCode.RenderTimeout,
+                  ErrorMessage.RenderTimeout,
                 ),
               ),
             this.config.timeout,
@@ -114,7 +115,11 @@ export class WebPagePdfService {
       ]);
     } catch (error) {
       if (error instanceof errors.TimeoutError)
-        throw new AppError(504, 'RENDER_TIMEOUT', 'Webapp rendering timed out');
+        throw new AppError(
+          504,
+          ErrorCode.RenderTimeout,
+          ErrorMessage.RenderTimeout,
+        );
       throw error;
     } finally {
       clearTimeout(timer);

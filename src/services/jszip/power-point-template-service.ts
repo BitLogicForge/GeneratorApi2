@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 import { replacePlaceholders } from '@/pptx/jszip/placeholders';
 
@@ -32,8 +33,8 @@ export class PowerPointTemplateService {
     if (!source)
       throw new AppError(
         404,
-        'UNKNOWN_TEMPLATE',
-        'PowerPoint file template not found',
+        ErrorCode.UnknownTemplate,
+        ErrorMessage.PowerPointFileTemplateNotFound,
       );
     const zip = await JSZip.loadAsync(await source.load());
     await replacePlaceholders(zip, input.replacements);

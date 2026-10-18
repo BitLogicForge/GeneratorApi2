@@ -1,3 +1,4 @@
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 import { buildUrl } from '@/utils/url';
 
@@ -18,8 +19,8 @@ export function buildDataApiUrl(
   if (!dataApiPathSchema.safeParse(path).success)
     throw new AppError(
       400,
-      'INVALID_DATA_API_PATH',
-      'Use a relative data API path',
+      ErrorCode.InvalidDataApiPath,
+      ErrorMessage.InvalidDataApiRelativePath,
     );
   const base = new URL(baseUrl);
   base.pathname = `${base.pathname.replace(/\/$/, '')}/`;
@@ -27,14 +28,14 @@ export function buildDataApiUrl(
   if (!createDataApiUrlSchema(base).safeParse(url).success)
     throw new AppError(
       400,
-      'INVALID_DATA_API_PATH',
-      'Path must stay within the configured data API',
+      ErrorCode.InvalidDataApiPath,
+      ErrorMessage.InvalidDataApiPrefixPath,
     );
   if (!dataApiQuerySchema.safeParse(query).success)
     throw new AppError(
       400,
-      'INVALID_DATA_API_QUERY',
-      'Numeric query values must be finite',
+      ErrorCode.InvalidDataApiQuery,
+      ErrorMessage.InvalidDataApiQuery,
     );
   return url;
 }

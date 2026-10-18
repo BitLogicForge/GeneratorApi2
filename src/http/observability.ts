@@ -1,5 +1,7 @@
 import { LogEvent } from '@/observability/constants';
 
+import { ExportFormat, UNMATCHED_ROUTE } from './constants.ts';
+
 import type { RequestHandler } from 'express';
 
 /** Aggregates only registered route patterns; never URLs or payloads. */
@@ -23,11 +25,11 @@ export function createObservability(logger: {
       if (recorded) return;
       recorded = true;
       const route =
-        typeof req.route?.path === 'string' ? req.route.path : 'unmatched';
-      const format = route.includes('pptx')
-        ? 'pptx'
-        : route.includes('pdf')
-          ? 'pdf'
+        typeof req.route?.path === 'string' ? req.route.path : UNMATCHED_ROUTE;
+      const format = route.includes(ExportFormat.Pptx)
+        ? ExportFormat.Pptx
+        : route.includes(ExportFormat.Pdf)
+          ? ExportFormat.Pdf
           : null;
       const status = res.writableFinished ? res.statusCode : 499;
       const event = {

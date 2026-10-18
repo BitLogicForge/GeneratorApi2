@@ -1,3 +1,4 @@
+import { CacheControlValue, HttpHeader } from '@/http/constants';
 import {
   ManagedExternally,
   RendererState,
@@ -36,7 +37,7 @@ function evaluateReadiness({
 const ready: RouteFactory = (dependencies) => (_req, res) => {
   const state = evaluateReadiness(dependencies);
   res
-    .set('Cache-Control', 'no-store')
+    .set(HttpHeader.CacheControl, CacheControlValue.NoStore)
     .status(state.ready ? 200 : 503)
     .json(state);
 };

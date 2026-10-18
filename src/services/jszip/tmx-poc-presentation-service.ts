@@ -7,7 +7,7 @@ import { findNamedObjects } from '@/pptx/jszip/objects';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
-import { formatDateTime } from '@/utils/date-time';
+import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
 import { createRandomDataGenerator } from '@/utils/random-data';
 
 import { TemplateSource } from './template-source.ts';
@@ -68,7 +68,7 @@ export class TmxPocPresentationService {
       (_, index) => {
         const date = new Date(now);
         date.setUTCDate(date.getUTCDate() - index);
-        return formatDateTime(date, { format: 'date' });
+        return formatDateTime(date, { format: DateTimeFormat.Date });
       },
     );
 

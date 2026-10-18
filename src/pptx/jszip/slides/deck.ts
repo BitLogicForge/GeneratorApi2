@@ -1,3 +1,8 @@
+import {
+  PackagePath,
+  RelationshipType,
+  TargetMode,
+} from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import {
   packageNs,
@@ -10,8 +15,8 @@ import { targetPath } from '@/pptx/jszip/package/target-path';
 import type JSZip from 'jszip';
 
 export async function deck(zip: JSZip) {
-  const document = await readXml(zip, 'ppt/presentation.xml');
-  const relationships = await readXml(zip, 'ppt/_rels/presentation.xml.rels');
+  const document = await readXml(zip, PackagePath.Presentation);
+  const relationships = await readXml(zip, PackagePath.PresentationRels);
   const ids = Array.from(
     document.getElementsByTagNameNS(presentationNs, 'sldId'),
   );
@@ -25,12 +30,12 @@ export async function deck(zip: JSZip) {
     );
     if (
       !relation ||
-      !relation.getAttribute('Type')?.endsWith('/slide') ||
-      relation.getAttribute('TargetMode') === 'External'
+      !relation.getAttribute('Type')?.endsWith(`/${RelationshipType.Slide}`) ||
+      relation.getAttribute('TargetMode') === TargetMode.External
     )
       throw invalidTemplate();
     const path = targetPath(
-      'ppt/presentation.xml',
+      PackagePath.Presentation,
       relation.getAttribute('Target') ?? '',
     );
     if (!zip.file(path)) throw invalidTemplate();

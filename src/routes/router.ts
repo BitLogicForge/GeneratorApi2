@@ -13,20 +13,33 @@ import brief from './pptxgenjs/brief/report.ts';
 
 import type { RouteDependencies } from '@/http/types';
 
+const RoutePath = {
+  Health: '/health',
+  InternalMetrics: '/internal/metrics',
+  InternalReady: '/internal/ready',
+  PdfExample: '/pdf/example',
+  PdfFactsheet: '/pdf/factsheet/:id',
+  PdfOnepager: '/pdf/onepager/:id',
+  PdfQuarterly: '/pdf/quarterly',
+  PptxDaa: '/pptx/daa',
+  PptxTma: '/pptx/tma',
+  PptxGenJsBrief: '/pptxgenjs/brief',
+} as const;
+
 /** Registers public URLs explicitly; report factories own validation and downloads. */
 export function createRouter(dependencies: RouteDependencies) {
   const router = Router();
-  router.get('/health', health(dependencies));
-  router.get('/internal/metrics', metrics(dependencies));
-  router.get('/internal/ready', ready(dependencies));
-  router.get('/pdf/example', example(dependencies));
-  router.get('/pdf/factsheet/:id', factsheet(dependencies));
-  router.get('/pdf/onepager/:id', onepager(dependencies));
-  router.get('/pdf/quarterly', quarterly(dependencies));
-  router.get('/pptx/daa', daa(dependencies));
-  router.get('/pptx/tma', tma(dependencies));
+  router.get(RoutePath.Health, health(dependencies));
+  router.get(RoutePath.InternalMetrics, metrics(dependencies));
+  router.get(RoutePath.InternalReady, ready(dependencies));
+  router.get(RoutePath.PdfExample, example(dependencies));
+  router.get(RoutePath.PdfFactsheet, factsheet(dependencies));
+  router.get(RoutePath.PdfOnepager, onepager(dependencies));
+  router.get(RoutePath.PdfQuarterly, quarterly(dependencies));
+  router.get(RoutePath.PptxDaa, daa(dependencies));
+  router.get(RoutePath.PptxTma, tma(dependencies));
   const briefHandler = brief(dependencies);
-  router.get('/pptxgenjs/brief', briefHandler);
-  router.post('/pptxgenjs/brief', briefHandler);
+  router.get(RoutePath.PptxGenJsBrief, briefHandler);
+  router.post(RoutePath.PptxGenJsBrief, briefHandler);
   return router;
 }

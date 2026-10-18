@@ -10,3 +10,6 @@ export const packageNs =
   'http://schemas.openxmlformats.org/package/2006/relationships';
 export const contentNs =
   'http://schemas.openxmlformats.org/package/2006/content-types';
+export const officeDrawingNs =
+  'http://schemas.microsoft.com/office/drawing/2014/main';
+export const xmlNs = 'http://www.w3.org/XML/1998/namespace';

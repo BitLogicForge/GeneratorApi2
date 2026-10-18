@@ -1,3 +1,4 @@
+import { ExportFormat } from '@/http/constants';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
 import {
@@ -57,7 +58,7 @@ export function definePdfReport<Input>(
         dependencies.queues.pdf,
         () => dependencies.pdf.generate(input, externalOrigin),
         input.filename,
-        'pdf',
+        ExportFormat.Pdf,
       );
     };
   };

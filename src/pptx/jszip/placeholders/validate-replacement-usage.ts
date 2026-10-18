@@ -1,3 +1,4 @@
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 
 import type { ReplacementUsage } from './types.ts';
@@ -9,14 +10,14 @@ export function validateReplacementUsage(
   if (missing.size)
     throw new AppError(
       400,
-      'MISSING_REPLACEMENTS',
+      ErrorCode.MissingReplacements,
       `Missing replacements: ${[...missing].join(', ')}`,
     );
   const unused = Object.keys(replacements).filter((key) => !used.has(key));
   if (unused.length)
     throw new AppError(
       400,
-      'UNKNOWN_PLACEHOLDERS',
+      ErrorCode.UnknownPlaceholders,
       `Template does not contain: ${unused.join(', ')}`,
     );
 }

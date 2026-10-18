@@ -1,3 +1,4 @@
+import { RelationshipType } from '@/pptx/jszip/package/constants';
 import { packageNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { relsPath } from '@/pptx/jszip/package/relationship-path';
@@ -15,13 +16,17 @@ export async function findTextParts(zip: JSZip): Promise<Set<string>> {
     for (const relation of Array.from(
       relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
     )) {
-      if (relation.getAttribute('Type')?.endsWith('/notesSlide'))
+      if (
+        relation
+          .getAttribute('Type')
+          ?.endsWith(`/${RelationshipType.NotesSlide}`)
+      )
         files.add(
           await resolveRelationship(
             zip,
             slide,
             relation.getAttribute('Id'),
-            'notesSlide',
+            RelationshipType.NotesSlide,
           ),
         );
     }

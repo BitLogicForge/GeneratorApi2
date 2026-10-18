@@ -1,4 +1,6 @@
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
+import { ExportFormat } from '@/http/constants';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
 import { filenameSchema } from '@/validation/schema';
@@ -36,8 +38,9 @@ export function definePptxReport<Input, RenderInput>(
       if (!service)
         throw new AppError(
           404,
-          'UNKNOWN_TEMPLATE',
-          definition.notConfiguredMessage ?? 'PowerPoint report not configured',
+          ErrorCode.UnknownTemplate,
+          definition.notConfiguredMessage ??
+            ErrorMessage.PowerPointReportNotConfigured,
         );
       const prepared = definition.prepareInput(input, dependencies.config);
       const filename = filenameSchema.parse(prepared.filename);
@@ -46,7 +49,7 @@ export function definePptxReport<Input, RenderInput>(
         dependencies.queues.presentations,
         () => service.generate(prepared.input),
         filename,
-        'pptx',
+        ExportFormat.Pptx,
       );
     };
   };

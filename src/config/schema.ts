@@ -1,12 +1,14 @@
 import { z } from 'zod';
 
+import { HTTP_PROTOCOLS } from '@/services/pdf/constants';
+
 import { dataApiCacheDefaults, queueDefaults } from './defaults.ts';
 
 const webappBaseUrlSchema = z.url().refine((value) => {
   try {
     const base = new URL(value);
     return (
-      ['http:', 'https:'].includes(base.protocol) &&
+      (HTTP_PROTOCOLS as readonly string[]).includes(base.protocol) &&
       !base.username &&
       !base.password
     );
@@ -23,7 +25,7 @@ const dataApiBaseUrlSchema = z.preprocess(
       try {
         const url = new URL(value);
         return (
-          ['http:', 'https:'].includes(url.protocol) &&
+          (HTTP_PROTOCOLS as readonly string[]).includes(url.protocol) &&
           !url.username &&
           !url.password &&
           !url.search &&

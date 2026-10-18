@@ -1,3 +1,4 @@
+import { RelationshipType } from '@/pptx/jszip/package/constants';
 import { relationshipNs, spreadsheet } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
@@ -30,7 +31,7 @@ export async function resizeWorkbookTables(
       workbook,
       sheetPath,
       tablePart.getAttributeNS(relationshipNs, 'id'),
-      'table',
+      RelationshipType.Table,
     );
     const table = await readXml(workbook, tablePath);
     if (resizeWorkbookTable(table, options))

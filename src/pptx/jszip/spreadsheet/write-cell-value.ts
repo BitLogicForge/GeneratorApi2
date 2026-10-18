@@ -1,9 +1,8 @@
-import { spreadsheet } from '@/pptx/jszip/package/namespaces';
+import { spreadsheet, xmlNs } from '@/pptx/jszip/package/namespaces';
 
 import type { Document, Element } from '@xmldom/xmldom';
 
 const NEEDS_SPACE_PRESERVE = /^\s|\s$|\s{2,}/;
-const XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
 
 /** Replaces `<c>` cell contents with a numeric `<v>` or inline string `<is><t>`. */
 export function writeCellValue(
@@ -25,7 +24,7 @@ export function writeCellValue(
   const isNode = sheet.createElementNS(spreadsheet, 'is');
   const tNode = sheet.createElementNS(spreadsheet, 't');
   if (NEEDS_SPACE_PRESERVE.test(value)) {
-    tNode.setAttributeNS(XML_NAMESPACE, 'xml:space', 'preserve');
+    tNode.setAttributeNS(xmlNs, 'xml:space', 'preserve');
   }
   tNode.textContent = value;
   isNode.appendChild(tNode);

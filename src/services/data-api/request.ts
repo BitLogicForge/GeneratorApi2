@@ -1,3 +1,4 @@
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 
 import type { z } from 'zod';
@@ -22,7 +23,7 @@ export async function requestDataApi<T>(
     if (!response.ok)
       throw new AppError(
         502,
-        'DATA_API_HTTP_ERROR',
+        ErrorCode.DataApiHttpError,
         `Data API returned HTTP ${response.status}`,
       );
     let body: unknown;
@@ -32,26 +33,30 @@ export async function requestDataApi<T>(
       if (signal.aborted) throw signal.reason;
       throw new AppError(
         502,
-        'DATA_API_INVALID_RESPONSE',
-        'Data API returned invalid JSON',
+        ErrorCode.DataApiInvalidResponse,
+        ErrorMessage.DataApiInvalidJson,
       );
     }
     const result = schema.safeParse(body);
     if (!result.success)
       throw new AppError(
         502,
-        'DATA_API_INVALID_RESPONSE',
-        'Data API response does not match the expected schema',
+        ErrorCode.DataApiInvalidResponse,
+        ErrorMessage.DataApiInvalidSchema,
       );
     return result.data;
   } catch (error) {
     if (error instanceof AppError) throw error;
     if (signal.aborted)
-      throw new AppError(504, 'DATA_API_TIMEOUT', 'Data API request timed out');
+      throw new AppError(
+        504,
+        ErrorCode.DataApiTimeout,
+        ErrorMessage.DataApiTimeout,
+      );
     throw new AppError(
       502,
-      'DATA_API_UNAVAILABLE',
-      'Unable to fetch data from the configured API',
+      ErrorCode.DataApiUnavailable,
+      ErrorMessage.DataApiUnavailable,
     );
   }
 }

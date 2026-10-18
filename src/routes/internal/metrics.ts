@@ -1,9 +1,11 @@
+import { CacheControlValue, HttpHeader } from '@/http/constants';
+
 import type { RouteFactory } from '@/http/types';
 
 const metrics: RouteFactory =
   ({ queues, pdf, observability }) =>
   (_req, res) => {
-    res.set('Cache-Control', 'no-store').json({
+    res.set(HttpHeader.CacheControl, CacheControlValue.NoStore).json({
       uptimeSeconds: process.uptime(),
       memory: process.memoryUsage(),
       queues: {

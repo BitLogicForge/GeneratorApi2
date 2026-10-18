@@ -1,3 +1,4 @@
+import { TABLE_MERGE_ATTRIBUTES } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { drawing, presentationNs } from '@/pptx/jszip/package/namespaces';
 
@@ -24,7 +25,7 @@ export function resizeTableColumns(
     cellsByRow
       .flat()
       .some((cell) =>
-        ['rowSpan', 'gridSpan', 'hMerge', 'vMerge'].some((attribute) =>
+        TABLE_MERGE_ATTRIBUTES.some((attribute) =>
           cell.hasAttribute(attribute),
         ),
       )

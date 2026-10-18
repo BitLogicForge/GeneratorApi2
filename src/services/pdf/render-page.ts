@@ -1,12 +1,11 @@
+import { ErrorCode, ErrorMessage } from '@/constants';
 import { AppError } from '@/errors';
 
+import { HIDE_IMAGES_CSS } from './constants.ts';
 import { resolvePdfPrintSettings } from './schema.ts';
 
 import type { Page } from 'playwright';
 import type { PdfPrintSettings, PdfRenderInput } from './schema.ts';
-
-const HIDE_IMAGES_CSS =
-  'img, svg, canvas, video, picture, input[type="image"] { visibility: hidden !important; } * , *::before, *::after { background-image: none !important; list-style-image: none !important; border-image-source: none !important; }';
 
 /** Navigates an isolated page, applies print media/style overrides, and prints to PDF. */
 export async function renderPagePdf(
@@ -19,8 +18,8 @@ export async function renderPagePdf(
   if (!response || !response.ok()) {
     throw new AppError(
       502,
-      'UPSTREAM_ERROR',
-      'Webapp returned an unsuccessful response',
+      ErrorCode.UpstreamError,
+      ErrorMessage.UpstreamError,
     );
   }
   if (input.waitForSelector) {

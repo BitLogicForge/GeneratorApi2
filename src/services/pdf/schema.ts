@@ -4,18 +4,11 @@ import { pdfPrintSettings } from '@/config/defaults';
 import { hasControlCharacters } from '@/utils/control-characters';
 import { filenameSchema } from '@/validation/schema';
 
+import { HTTP_PROTOCOLS, PdfFormat, PdfMedia } from './constants.ts';
+
 const pdfPrintSettingsSchema = z
   .object({
-    format: z.enum([
-      'A3',
-      'A4',
-      'A5',
-      'A6',
-      'Letter',
-      'Legal',
-      'Tabloid',
-      'Ledger',
-    ]),
+    format: z.enum(PdfFormat),
     landscape: z.boolean(),
     margin: z
       .object({
@@ -28,7 +21,7 @@ const pdfPrintSettingsSchema = z
     scale: z.number().min(0.1).max(2),
     printBackground: z.boolean(),
     printImages: z.boolean(),
-    media: z.enum(['print', 'screen']),
+    media: z.enum(PdfMedia),
     preferCSSPageSize: z.boolean(),
     displayHeaderFooter: z.boolean(),
     headerTemplate: z.string().max(20000),
@@ -61,7 +54,7 @@ export const pdfOriginSchema = z
   .refine((value) => {
     const url = new URL(value);
     return (
-      ['http:', 'https:'].includes(url.protocol) &&
+      (HTTP_PROTOCOLS as readonly string[]).includes(url.protocol) &&
       !url.username &&
       !url.password &&
       url.pathname === '/' &&
@@ -96,9 +89,7 @@ export const pdfRenderSchema = z
     filename: filenameSchema.default('document'),
     waitForSelector: z.string().min(1).max(300).optional(),
     waitForNetworkIdle: z.boolean().optional(),
-    format: z
-      .enum(['A3', 'A4', 'A5', 'A6', 'Letter', 'Legal', 'Tabloid', 'Ledger'])
-      .default(() => resolvePdfPrintSettings().format),
+    format: z.enum(PdfFormat).default(() => resolvePdfPrintSettings().format),
     landscape: z.boolean().default(() => resolvePdfPrintSettings().landscape),
     print: pdfPrintOverridesSchema.optional(),
   })

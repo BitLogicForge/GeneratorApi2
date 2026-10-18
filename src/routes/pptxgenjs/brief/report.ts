@@ -1,12 +1,12 @@
 import { definePptxReport } from '@/reports/pptx';
-import { briefInputSchema } from '@/services/pptxgenjs/contracts';
 import { PowerPointGenerationService } from '@/services/pptxgenjs/power-point-generation-service';
+import { briefInputSchema } from '@/services/pptxgenjs/schema';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
 import type { z } from 'zod';
 import type { PptxReport } from '@/reports/pptx';
-import type { BriefInput } from '@/services/pptxgenjs/contracts';
+import type { BriefInput } from '@/services/pptxgenjs/schema';
 
 // Server-owned generated design.
 const template = 'brief';

@@ -4,6 +4,11 @@ import { setText } from '@/pptx/jszip/text/set-text';
 
 import { resizeTableColumns } from './resize-columns.ts';
 import { resizeTableRows } from './resize-rows.ts';
+import {
+  createCellColorsSchema,
+  tableOffsetSchema,
+  tableRectangularDataSchema,
+} from './schema.ts';
 import { setCellTextColor } from './set-cell-text-color.ts';
 
 import type { Element } from '@xmldom/xmldom';
@@ -23,38 +28,25 @@ export function fillTable(
 ) {
   const table = element.getElementsByTagNameNS(drawing, 'tbl')[0];
   if (!table) throw invalidTemplate();
-  if (!Number.isInteger(startColumn) || startColumn < 0)
+  if (!tableOffsetSchema.safeParse(startColumn).success)
     throw invalidTemplate();
-  if (cellColors !== undefined) {
-    if (
-      !Array.isArray(cellColors) ||
-      cellColors.length !== data.length ||
-      cellColors.some(
-        (row, index) =>
-          !Array.isArray(row) ||
-          row.length !== data[index].length ||
-          row.some(
-            (color) =>
-              color !== undefined &&
-              (typeof color !== 'string' || !/^[0-9a-f]{6}$/i.test(color)),
-          ),
-      )
-    )
-      throw invalidTemplate(
-        'Table cell colors must match data dimensions and contain six-digit RGB hex colors or undefined',
-      );
+  if (
+    cellColors !== undefined &&
+    !createCellColorsSchema(data).safeParse(cellColors).success
+  ) {
+    throw invalidTemplate(
+      'Table cell colors must match data dimensions and contain six-digit RGB hex colors or undefined',
+    );
   }
   const rows = Array.from(table.getElementsByTagNameNS(drawing, 'tr'));
   if (resizeColumns) {
-    const columnCount = data[0]?.length ?? 0;
-    if (!columnCount || data.some((row) => row.length !== columnCount))
+    if (!tableRectangularDataSchema.safeParse(data).success)
       throw invalidTemplate();
-    resizeTableColumns(element, table, rows, startColumn, columnCount);
+    resizeTableColumns(element, table, rows, startColumn, data[0].length);
   }
   if (resizeRows) resizeTableRows(element, table, rows, startRow, data.length);
   if (
-    !Number.isInteger(startRow) ||
-    startRow < 0 ||
+    !tableOffsetSchema.safeParse(startRow).success ||
     rows.length !== data.length + startRow
   )
     throw invalidTemplate();

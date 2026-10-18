@@ -12,23 +12,23 @@ Supertest verifies HTTP contracts.
 Start with `package.json` and the “Where to look” section in `README.md`.
 The following map identifies the main areas of responsibility:
 
-| Area                                                            | Files                                                                                 |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Startup, dependency wiring, and shutdown                        | `src/index.ts`, `src/runtime.ts`                                                      |
-| Express, middleware, and request IDs                            | `src/app.ts`                                                                          |
-| Configuration and limits                                        | `src/config/`, `src/reports/document/settings.ts`                                     |
-| Input validation and document routes                            | `src/routes/**/{report,schema}.ts`, `src/services/**/contracts.ts`, `src/validation/` |
-| Endpoints                                                       | `src/routes/router.ts` (explicit Express paths and methods)                           |
-| Service contracts, GET decoding, downloads, and errors          | `src/http/`, `src/errors.ts`                                                          |
-| Queues, timeouts, and cancellation of waiting jobs              | `src/queue/generation-queue.ts`                                                       |
-| Chromium and PDF rendering                                      | `src/services/pdf/web-page-pdf.ts`                                                    |
-| Presentation generation and template filling                    | `src/reports/`, `src/services/pptxgenjs/`, `src/services/jszip/`                      |
-| Presentation designs and types                                  | `src/pptx/pptxgenjs/`                                                                 |
-| PPTX XML, relationships, tables, charts, and embedded workbooks | `src/pptx/jszip/`                                                                     |
-| Data API endpoint configuration and response types              | `src/data-api/endpoints.ts`, `src/data-api/report-data-schema.ts`                     |
-| Source presentations                                            | `templates/`                                                                          |
-| Tests and examples                                              | `test/`, `examples/`                                                                  |
-| API and deployment documentation                                | `docs/guides/endpoints.md`, `docs/deployment/azure.md`, `scripts/`                    |
+| Area                                                            | Files                                                                              |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Startup, dependency wiring, and shutdown                        | `src/index.ts`, `src/runtime.ts`                                                   |
+| Express, middleware, and request IDs                            | `src/app.ts`                                                                       |
+| Configuration and limits                                        | `src/config/`, `src/reports/document/settings.ts`                                  |
+| Input validation and document routes                            | `src/routes/**/{report,schema}.ts`, `src/services/**/schema.ts`, `src/validation/` |
+| Endpoints                                                       | `src/routes/router.ts` (explicit Express paths and methods)                        |
+| Service contracts, GET decoding, downloads, and errors          | `src/http/`, `src/errors.ts`                                                       |
+| Queues, timeouts, and cancellation of waiting jobs              | `src/queue/generation-queue.ts`                                                    |
+| Chromium and PDF rendering                                      | `src/services/pdf/web-page-pdf.ts`                                                 |
+| Presentation generation and template filling                    | `src/reports/`, `src/services/pptxgenjs/`, `src/services/jszip/`                   |
+| Presentation designs and types                                  | `src/pptx/pptxgenjs/`                                                              |
+| PPTX XML, relationships, tables, charts, and embedded workbooks | `src/pptx/jszip/`                                                                  |
+| Data API endpoint configuration and response types              | `src/data-api/endpoints.ts`, `src/data-api/report-data-schema.ts`                  |
+| Source presentations                                            | `templates/`                                                                       |
+| Tests and examples                                              | `test/`, `examples/`                                                               |
+| API and deployment documentation                                | `docs/guides/endpoints.md`, `docs/deployment/azure.md`, `scripts/`                 |
 
 ## Investigating the code
 

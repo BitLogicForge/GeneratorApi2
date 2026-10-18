@@ -1,5 +1,5 @@
 import { dataApiEndpoints } from '@/data-api/endpoints';
-import { resolvePdfPrintSettings } from '@/services/pdf/contracts';
+import { resolvePdfPrintSettings } from '@/services/pdf/schema';
 
 import { readEnvironment } from './environment.ts';
 

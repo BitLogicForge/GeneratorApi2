@@ -1,5 +1,5 @@
 import { decodeExportInput } from '@/http/input';
-import { briefInputSchema } from '@/services/pptxgenjs/contracts';
+import { briefInputSchema } from '@/services/pptxgenjs/schema';
 
 import type { Request } from 'express';
 

@@ -4,13 +4,13 @@
 
 ## Configuration: where to edit
 
-| Change                                                                 | File                                              |
-| ---------------------------------------------------------------------- | ------------------------------------------------- |
-| Shared PDF appearance and Data API cache defaults                      | `src/config/defaults.ts`                          |
-| Environment validation and limits                                      | `src/config/environment.ts`                       |
-| Document URL pattern and default language                              | Each PDF route folder's `report.ts`               |
-| A report's inputs, page, filename, print overrides, or service factory | Its `report.ts`                                   |
-| Renderer validation contracts                                          | `src/services/{pdf,jszip,pptxgenjs}/contracts.ts` |
+| Change                                                                 | File                                           |
+| ---------------------------------------------------------------------- | ---------------------------------------------- |
+| Shared PDF appearance and Data API cache defaults                      | `src/config/defaults.ts`                       |
+| Environment validation and limits                                      | `src/config/environment.ts`                    |
+| Document URL pattern and default language                              | Each PDF route folder's `report.ts`            |
+| A report's inputs, page, filename, print overrides, or service factory | Its `report.ts`                                |
+| Renderer validation contracts                                          | `src/services/{pdf,jszip,pptxgenjs}/schema.ts` |
 
 `src/config.ts` keeps the public `loadConfig` imports stable. `src/config/index.ts` assembles validated settings. Neither file needs changes when adding a report. Secrets and deployment hosts remain environment variables.
 
@@ -77,7 +77,7 @@ Create `src/routes/pptx/jszip/sales/schema.ts`:
 
 ```ts
 import { decodeExportInput } from '@/http/input';
-import { pptxRenderSchema } from '@/services/jszip/contracts';
+import { pptxRenderSchema } from '@/services/jszip/schema';
 
 import type { Request } from 'express';
 
@@ -98,13 +98,13 @@ Then create `report.ts`:
 ```ts
 import { definePptxReport } from '@/reports/pptx';
 import { templateService } from '@/reports/template';
-import { pptxRenderSchema } from '@/services/jszip/contracts';
+import { pptxRenderSchema } from '@/services/jszip/schema';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
 import type { z } from 'zod';
 import type { PptxReport } from '@/reports/pptx';
-import type { PptxRenderInput } from '@/services/jszip/contracts';
+import type { PptxRenderInput } from '@/services/jszip/schema';
 
 const template = 'sales';
 const sourceFile = 'sales.pptx';

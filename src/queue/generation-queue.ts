@@ -1,10 +1,10 @@
 import { AppError } from '@/errors';
 
-export interface QueueOptions {
-  concurrency: number;
-  maxPending: number;
-  waitTimeoutMs: number;
-}
+import { queueOptionsSchema } from './schema.ts';
+
+import type { QueueOptions } from './schema.ts';
+
+export type { QueueOptions };
 interface PendingJob {
   start(): void;
   reject(error: Error): void;
@@ -18,13 +18,10 @@ export class GenerationQueue {
   private accepting = true;
 
   constructor(private readonly options: QueueOptions) {
-    for (const [key, value] of Object.entries(options)) {
-      if (
-        !Number.isSafeInteger(value) ||
-        value < (key === 'maxPending' ? 0 : 1)
-      ) {
-        throw new Error(`Invalid queue option: ${key}`);
-      }
+    const result = queueOptionsSchema.safeParse(options);
+    if (!result.success) {
+      const key = result.error.issues[0].path[0] ?? 'options';
+      throw new Error(`Invalid queue option: ${String(key)}`);
     }
   }
 

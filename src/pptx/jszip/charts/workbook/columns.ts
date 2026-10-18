@@ -1,22 +1,28 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 
-export const MAX_WORKSHEET_COLUMNS = 16384;
-export const MAX_WORKSHEET_ROWS = 1048576;
+import {
+  columnNameSchema,
+  columnNumberSchema,
+  MAX_WORKSHEET_COLUMNS,
+  MAX_WORKSHEET_ROWS,
+} from '../schema.ts';
+
+export { MAX_WORKSHEET_COLUMNS, MAX_WORKSHEET_ROWS };
 
 /** Converts an Excel column name (e.g. 'A', 'Z', 'AA', 'XFD') to a 1-based column index. */
 export function columnNameToNumber(column: string): number {
-  if (!/^[A-Z]+$/.test(column)) throw invalidTemplate();
+  if (!columnNameSchema.safeParse(column).success) throw invalidTemplate();
   let number = 0;
   for (let i = 0; i < column.length; i++) {
     number = number * 26 + column.charCodeAt(i) - 64;
   }
-  if (number < 1 || number > MAX_WORKSHEET_COLUMNS) throw invalidTemplate();
+  if (!columnNumberSchema.safeParse(number).success) throw invalidTemplate();
   return number;
 }
 
 /** Converts a 1-based column index to an Excel column name (e.g. 1 -> 'A', 27 -> 'AA'). */
 export function columnNumberToName(value: number): string {
-  if (!Number.isInteger(value) || value < 1 || value > MAX_WORKSHEET_COLUMNS) {
+  if (!columnNumberSchema.safeParse(value).success) {
     throw invalidTemplate();
   }
   let name = '';

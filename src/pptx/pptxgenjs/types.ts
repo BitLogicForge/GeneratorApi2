@@ -1,5 +1,5 @@
 import type pptxgen from 'pptxgenjs';
-import type { BriefInput } from '@/services/pptxgenjs/contracts';
+import type { BriefInput } from '@/services/pptxgenjs/schema';
 
 export type PresentationTemplate = (
   deck: pptxgen,

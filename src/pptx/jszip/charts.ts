@@ -7,6 +7,7 @@ import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 
 import { createChartRange } from './charts/ranges.ts';
+import { validateCategoryChartInput } from './charts/schema.ts';
 import { fillChartSeries } from './charts/series.ts';
 
 import type JSZip from 'jszip';
@@ -27,27 +28,22 @@ export async function fillCategoryChart(
     colors,
   }: CategoryChartOptions = {},
 ) {
-  if (
-    !data.length ||
-    !data[0].length ||
-    data.some(
-      (row) =>
-        row.length !== data[0].length ||
-        row.some((value) => !Number.isFinite(value)),
-    )
-  )
+  const validation = validateCategoryChartInput(data, {
+    sheetName,
+    firstColumn,
+    firstRow,
+    categories,
+    seriesNames,
+    colors,
+  });
+  if (!validation.valid) {
+    if (validation.colorsError) {
+      throw invalidTemplate(
+        'Chart colors require one six-digit RGB hex color per data row',
+      );
+    }
     throw invalidTemplate();
-  if (categories && categories.length !== data.length) throw invalidTemplate();
-  if (seriesNames && seriesNames.length !== data[0].length)
-    throw invalidTemplate();
-  if (
-    colors &&
-    (colors.length !== data.length ||
-      colors.some((color) => !/^[0-9a-f]{6}$/i.test(color)))
-  )
-    throw invalidTemplate(
-      'Chart colors require one six-digit RGB hex color per data row',
-    );
+  }
   const chartReference = chartObject.element.getElementsByTagNameNS(
     chartNs,
     'chart',

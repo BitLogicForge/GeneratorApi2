@@ -1,8 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-import { briefInputSchema } from '@/services/pptxgenjs/contracts';
 import { PowerPointGenerationService } from '@/services/pptxgenjs/power-point-generation-service';
+import { briefInputSchema } from '@/services/pptxgenjs/schema';
 
 const payloadPath = fileURLToPath(new URL('./generated.json', import.meta.url));
 const rawPayload = JSON.parse(await readFile(payloadPath, 'utf8'));

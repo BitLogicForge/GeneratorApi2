@@ -62,6 +62,6 @@ These configurations use [quarterly-portrait.json](quarterly-portrait.json) and 
 | Document external paths and parameter mapping      | Each document route folder's `report.ts` |
 | Document ID/query validation and schemas           | Each document route folder's `schema.ts` |
 | Shared print defaults                              | `src/config/defaults.ts`                 |
-| PDF input and print-setting validation             | `src/services/pdf/contracts.ts`          |
+| PDF input and print-setting validation             | `src/services/pdf/schema.ts`             |
 | Shared report handler                              | `src/reports/pdf.ts`                     |
 | Chromium, navigation boundary, readiness, printing | `src/services/pdf/web-page-pdf.ts`       |

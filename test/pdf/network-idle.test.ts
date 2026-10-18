@@ -10,10 +10,10 @@ import { createApp } from '@/app';
 import { loadConfig } from '@/config';
 import { AppError } from '@/errors';
 import { definePdfReport } from '@/reports/pdf';
-import { pdfRenderSchema } from '@/services/pdf/contracts';
+import { pdfRenderSchema } from '@/services/pdf/schema';
 import { WebPagePdfService } from '@/services/pdf/web-page-pdf';
 
-import type { PdfRenderInput } from '@/services/pdf/contracts';
+import type { PdfRenderInput } from '@/services/pdf/schema';
 
 async function fixture() {
   let completedAt = 0;

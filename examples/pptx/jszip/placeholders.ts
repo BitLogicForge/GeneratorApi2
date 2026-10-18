@@ -6,7 +6,7 @@ import JSZip from 'jszip';
 import pptxgen from 'pptxgenjs';
 
 import { replacePlaceholders } from '@/pptx/jszip/placeholders';
-import { pptxRenderSchema } from '@/services/jszip/contracts';
+import { pptxRenderSchema } from '@/services/jszip/schema';
 
 /** Ensures the business template with {{key}} tokens exists before reading it. */
 async function ensureTemplate(templatePath: string) {

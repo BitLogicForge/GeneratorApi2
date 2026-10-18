@@ -4,12 +4,12 @@ import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
 import { buildUrl } from '@/url';
 
-import { pdfOriginSchema, resolvePdfPrintSettings } from './contracts.ts';
 import { navigationBoundary } from './navigation-boundary.ts';
+import { pdfOriginSchema, resolvePdfPrintSettings } from './schema.ts';
 
 import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
-import type { PdfRenderInput } from './contracts.ts';
+import type { PdfRenderInput } from './schema.ts';
 
 export class WebPagePdfService {
   #browserPromise: Promise<Browser> | undefined;

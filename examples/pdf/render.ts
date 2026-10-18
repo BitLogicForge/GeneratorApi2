@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '@/config';
-import { pdfRenderSchema } from '@/services/pdf/contracts';
+import { pdfRenderSchema } from '@/services/pdf/schema';
 import { WebPagePdfService } from '@/services/pdf/web-page-pdf';
 
 const config = loadConfig();

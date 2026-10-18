@@ -4,23 +4,15 @@ import {
   pdfOriginSchema,
   pdfPrintOverridesSchema,
   pdfRenderSchema,
-} from '@/services/pdf/contracts';
+} from '@/services/pdf/schema';
+
+import { preparedInputSchema } from './schema.ts';
 
 import type { Request } from 'express';
-import type { z, ZodType } from 'zod';
+import type { ZodType } from 'zod';
 import type { RouteDependencies, RouteFactory } from '@/http/types';
-import type { PdfPrintOverrides } from '@/services/pdf/contracts';
-
-// Report print settings have one owner: definition.print.
-const preparedInputSchema = pdfRenderSchema.omit({
-  landscape: true,
-  print: true,
-});
-
-type PreparedPdfInput = z.input<typeof preparedInputSchema> & {
-  landscape?: never;
-  print?: never;
-};
+import type { PdfPrintOverrides } from '@/services/pdf/schema';
+import type { PreparedPdfInput } from './schema.ts';
 
 export interface PdfReport<Input> {
   schema: ZodType<Input>;

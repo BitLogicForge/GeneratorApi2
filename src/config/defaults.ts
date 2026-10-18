@@ -1,4 +1,4 @@
-import type { PdfPrintSettings } from '@/services/pdf/contracts';
+import type { PdfPrintSettings } from '@/services/pdf/schema';
 
 // Shared application defaults. Report-specific settings live beside each report.
 export const dataApiCacheDefaults = {

@@ -2,7 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 
 import { loadConfig } from '@/config';
-import { documentIdSchema } from '@/validation/document-id';
+import { documentIdSchema } from '@/validation/schema';
 
 import { createCustomerRoute } from './routes/customer.ts';
 import { createReportIdsRoute } from './routes/report-ids.ts';

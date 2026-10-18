@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '@/config';
 import { DataApiClient } from '@/services/data-api-client';
-import { documentIdSchema } from '@/validation/document-id';
+import { documentIdSchema } from '@/validation/schema';
 
 const config = loadConfig();
 const id = documentIdSchema.parse(process.argv[2] ?? 'id2222');

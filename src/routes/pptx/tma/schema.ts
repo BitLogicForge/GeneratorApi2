@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { documentTextSchema } from '@/validation/document-text';
+import { documentTextSchema } from '@/validation/schema';
 
 import type { Request } from 'express';
 

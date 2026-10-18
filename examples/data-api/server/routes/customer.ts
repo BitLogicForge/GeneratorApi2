@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { documentIdSchema } from '@/validation/document-id';
+import { documentIdSchema } from '@/validation/schema';
 
 export function createCustomerRoute() {
   const router = Router();

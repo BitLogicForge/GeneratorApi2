@@ -1,6 +1,6 @@
 import { formatDateTime } from '@/date-time';
 import { definePdfReport } from '@/reports/pdf';
-import { filenameSchema } from '@/validation/filename';
+import { filenameSchema } from '@/validation/schema';
 
 import { requestSchema } from './schema.ts';
 

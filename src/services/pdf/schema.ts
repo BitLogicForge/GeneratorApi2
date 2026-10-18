@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { pdfPrintSettings } from '@/config/defaults';
 import { hasControlCharacters } from '@/validation/control-characters';
-import { filenameSchema } from '@/validation/filename';
+import { filenameSchema } from '@/validation/schema';
 
 const pdfPrintSettingsSchema = z
   .object({

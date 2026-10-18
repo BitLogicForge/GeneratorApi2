@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { hexColorSchema } from '@/validation/schema';
+
 import type { CategoryChartOptions } from './types.ts';
 
 export const MAX_WORKSHEET_COLUMNS = 16384;
@@ -23,7 +25,7 @@ const chartDataSchema = z
 
 function createChartColorsSchema(expectedLength: number) {
   return z
-    .array(z.string().regex(/^[0-9a-f]{6}$/i))
+    .array(hexColorSchema)
     .length(
       expectedLength,
       'Chart colors require one six-digit RGB hex color per data row',

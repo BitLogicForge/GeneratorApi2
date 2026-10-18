@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { formatDateTime } from '@/date-time';
-import { filenameSchema } from '@/validation/filename';
+import { filenameSchema } from '@/validation/schema';
 
 test('date/time formatting uses UTC and zero-padded dates and minutes', () => {
   const date = new Date('2024-03-01T01:05:59+02:00');

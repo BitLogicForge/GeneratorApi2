@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-import { documentTextSchema } from '@/validation/document-text';
-import { filenameSchema } from '@/validation/filename';
+import {
+  documentTextSchema,
+  filenameSchema,
+  hexColorSchema,
+} from '@/validation/schema';
 
 // API request fields for the brief presentation.
 export const briefInputSchema = z
@@ -10,10 +13,7 @@ export const briefInputSchema = z
     title: documentTextSchema.min(1).max(100),
     subtitle: documentTextSchema.max(180).default(''),
     author: documentTextSchema.max(100).default('Generator API'),
-    accent: z
-      .string()
-      .regex(/^[0-9a-fA-F]{6}$/)
-      .default('2563EB'),
+    accent: hexColorSchema.default('2563EB'),
     slides: z
       .array(
         z

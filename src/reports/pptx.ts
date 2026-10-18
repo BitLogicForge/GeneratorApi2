@@ -1,7 +1,7 @@
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
-import { filenameSchema } from '@/validation/filename';
+import { filenameSchema } from '@/validation/schema';
 
 import type { Request } from 'express';
 import type { ZodType } from 'zod';

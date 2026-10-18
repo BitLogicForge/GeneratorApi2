@@ -185,7 +185,7 @@ Connects string-keyed services directly to downloads:
 import { AppError } from '@/errors';
 import { sendDownload } from '@/http/download';
 import { extractRequestData } from '@/http/input';
-import { filenameSchema } from '@/validation/filename';
+import { filenameSchema } from '@/validation/schema';
 
 import type { ZodType } from 'zod';
 import type { RouteFactory } from '@/http/file-routes/types';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const hexColorSchema = z.string().regex(/^[0-9a-f]{6}$/i);
+import { hexColorSchema } from '@/validation/schema';
 
 export const tableOffsetSchema = z.number().int().min(0);
 

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
-import { documentTextSchema } from '@/validation/document-text';
-import { filenameSchema } from '@/validation/filename';
+import { documentTextSchema, filenameSchema } from '@/validation/schema';
 
 // Shared renderer contract for placeholder-based PPTX templates.
 export const pptxRenderSchema = z

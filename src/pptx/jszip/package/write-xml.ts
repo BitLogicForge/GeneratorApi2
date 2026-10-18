@@ -1,6 +1,6 @@
 import { XMLSerializer } from '@xmldom/xmldom';
 
-import { documentTextSchema } from '@/validation/document-text';
+import { documentTextSchema } from '@/validation/schema';
 
 import { invalidTemplate } from './invalid-template.ts';
 

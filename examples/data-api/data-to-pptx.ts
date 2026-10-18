@@ -10,7 +10,7 @@ import { writeXml } from '@/pptx/jszip/package/write-xml';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { DataApiClient } from '@/services/data-api-client';
-import { documentIdSchema } from '@/validation/document-id';
+import { documentIdSchema } from '@/validation/schema';
 
 const config = loadConfig();
 const id = documentIdSchema.parse(process.argv[2] ?? 'id2222');

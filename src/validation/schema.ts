@@ -1,5 +1,18 @@
 import { z } from 'zod';
 
+/** Six-character RGB hex color string (e.g. '2563EB', 'ff0000'). */
+export const hexColorSchema = z.hex().length(6);
+
+/** Safe identifier or filename component containing ASCII letters, digits, underscores, or hyphens. */
+const slugOrIdSchema = z
+  .string()
+  .min(1)
+  .max(80)
+  .regex(/^[A-Za-z0-9_-]+$/);
+
+export const documentIdSchema = slugOrIdSchema;
+export const filenameSchema = slugOrIdSchema;
+
 /** XML 1.0 permits tabs, line endings and Unicode scalar values, but not lone surrogates. */
 export const documentTextSchema = z.string().refine((value) => {
   for (const character of value) {

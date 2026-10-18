@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '@/config';
 import { DataApiClient } from '@/services/data-api-client';
-import { documentIdSchema } from '@/validation/document-id';
+import { documentIdSchema } from '@/validation/schema';
 
 import { fetchReportDataChain } from './collect.ts';
 

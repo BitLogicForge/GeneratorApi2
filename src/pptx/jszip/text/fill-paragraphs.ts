@@ -1,14 +1,11 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-import { drawing } from '@/pptx/jszip/package/namespaces';
+import { drawing, presentationNs } from '@/pptx/jszip/package/namespaces';
 
 import type { Element } from '@xmldom/xmldom';
 
 /** Replaces body paragraphs, cloning the last paragraph's bullets and run style when growing. */
 export function fillParagraphs(element: Element, values: string[]): void {
-  const body = element.getElementsByTagNameNS(
-    'http://schemas.openxmlformats.org/presentationml/2006/main',
-    'txBody',
-  )[0];
+  const body = element.getElementsByTagNameNS(presentationNs, 'txBody')[0];
   if (!body || !values.length) throw invalidTemplate();
   const paragraphs = Array.from(body.getElementsByTagNameNS(drawing, 'p'));
   if (!paragraphs.length) throw invalidTemplate();

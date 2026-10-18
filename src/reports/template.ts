@@ -26,7 +26,10 @@ export function templateFile(filename: string) {
   return fromCwd;
 }
 
-/** Template loading and generation only; each route owns its public contract. */
+/**
+ * Template loading and generation only; each route owns its public contract.
+ * @public
+ */
 export function templateService(
   name: string,
   filename: string,

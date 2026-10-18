@@ -17,14 +17,18 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
   const allocate = (path: string) => {
     const extension = posix.extname(path);
     const stem = path.slice(0, -extension.length).replace(/\d+$/, '');
+    const reserved = new Set(copies.values());
     let index = 1;
+    let candidate = `${stem}${index}${extension}`;
     while (
-      zip.file(`${stem}${index}${extension}`) ||
-      staged.has(`${stem}${index}${extension}`) ||
-      Array.from(copies.values()).includes(`${stem}${index}${extension}`)
-    )
+      zip.file(candidate) ||
+      staged.has(candidate) ||
+      reserved.has(candidate)
+    ) {
       index++;
-    return `${stem}${index}${extension}`;
+      candidate = `${stem}${index}${extension}`;
+    }
+    return candidate;
   };
   const copy = async (path: string): Promise<string> => {
     const existing = copies.get(path);

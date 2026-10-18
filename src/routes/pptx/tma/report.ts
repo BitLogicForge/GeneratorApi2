@@ -9,7 +9,7 @@ import type { PptxReport } from '@/reports/pptx';
 
 const sourceFile = 'Tmp1.pptx';
 
-export const report = {
+const report = {
   schema: requestSchema,
   notConfiguredMessage: 'Template report demo not configured',
   readRequestInput,

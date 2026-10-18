@@ -2,6 +2,7 @@ import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { spreadsheet } from '@/pptx/jszip/package/namespaces';
 
 import { readCellAddress } from './cell-address.ts';
+import { MAX_WORKSHEET_ROWS } from './columns.ts';
 
 import type { Document } from '@xmldom/xmldom';
 import type { WorksheetBounds } from './types.ts';
@@ -18,7 +19,11 @@ export function readWorksheetBounds(sheet: Document): WorksheetBounds {
     sheet.getElementsByTagNameNS(spreadsheet, 'row'),
   )) {
     rowNumber = Number(rowElement.getAttribute('r') || rowNumber + 1);
-    if (!Number.isInteger(rowNumber) || rowNumber < 1 || rowNumber > 1048576)
+    if (
+      !Number.isInteger(rowNumber) ||
+      rowNumber < 1 ||
+      rowNumber > MAX_WORKSHEET_ROWS
+    )
       throw invalidTemplate();
     let column = 0;
     for (const cell of Array.from(

@@ -11,7 +11,7 @@ import type { BriefInput } from '@/services/pptxgenjs/schema';
 // Server-owned generated design.
 const template = 'brief';
 
-export const report = {
+const report = {
   schema: requestSchema,
   readRequestInput,
   prepareInput: ({ filename, title, subtitle, author, accent, slides }) => ({

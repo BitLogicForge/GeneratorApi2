@@ -1,5 +1,7 @@
 import { fillCategoryChart } from '@/pptx/jszip/charts';
 import { findNamedObjects } from '@/pptx/jszip/objects';
+import { cloneObject } from '@/pptx/jszip/objects/clone';
+import { cloneChartParts } from '@/pptx/jszip/objects/clone-chart-parts';
 import { deleteObject } from '@/pptx/jszip/objects/delete';
 import { moveObject } from '@/pptx/jszip/objects/move';
 import { resizeObject } from '@/pptx/jszip/objects/resize';
@@ -86,11 +88,15 @@ interface ObjectHandleBase {
 interface TableObjectHandle extends ObjectHandleBase {
   /** Fills table cells using the preconfigured `options` (`startRow`, `startColumn`, `resizeRows`, `resizeColumns`, `cellColors`), merged with optional per-call overrides. */
   fill(data: (string | number)[][], options?: FillTableOptions): void;
+  /** Clones this table on the slide and returns a new handle. */
+  clone(): TableObjectHandle;
 }
 
 interface ChartObjectHandle extends ObjectHandleBase {
   /** Updates chart series caches, formulas, and the embedded `.xlsx` workbook using the preconfigured `options` (`sheetName`, `firstColumn`, `firstRow`, `categories`, `seriesNames`, `colors`), merged with optional per-call overrides. */
   fill(data: number[][], options?: CategoryChartOptions): Promise<void>;
+  /** Clones this chart on the slide (with independent package parts) and returns a new handle. */
+  clone(): ChartObjectHandle;
 }
 
 interface TextObjectHandle extends ObjectHandleBase {
@@ -100,9 +106,14 @@ interface TextObjectHandle extends ObjectHandleBase {
   fillParagraphs(values: string[]): void;
   /** Replaces literal text occurrences within paragraphs, including matches split across formatted runs. */
   replace(search: string, replacement: string): number;
+  /** Clones this text shape on the slide and returns a new handle. */
+  clone(): TextObjectHandle;
 }
 
-type ImageObjectHandle = ObjectHandleBase;
+interface ImageObjectHandle extends ObjectHandleBase {
+  /** Clones this image on the slide and returns a new handle. */
+  clone(): ImageObjectHandle;
+}
 
 type HandleMap<Group, Handle> =
   Group extends Record<string, unknown>
@@ -156,6 +167,10 @@ function createTableHandle(
         ...options,
       });
     },
+    clone: () => {
+      const clonedObject = cloneObject(object);
+      return createTableHandle(setting, clonedObject);
+    },
   };
 }
 
@@ -163,6 +178,8 @@ function createChartHandle(
   zip: JSZip,
   setting: ChartObjectSetting,
   object: NamedObject,
+  pendingTasks: Promise<void>[],
+  readyPromise?: Promise<void>,
 ): ChartObjectHandle {
   if (!object.element.getElementsByTagNameNS(chartNs, 'chart')[0])
     throw invalidTemplate(`Object "${setting.name}" is not a chart`);
@@ -170,10 +187,27 @@ function createChartHandle(
     ...createObjectHandleBase(object),
     fill: async (data, options) => {
       getTargetElement(object);
+      if (readyPromise) await readyPromise;
       await fillCategoryChart(zip, object, data, {
         ...setting.options,
         ...options,
       });
+    },
+    clone: () => {
+      const clonedObject = cloneObject(object);
+      const copyTask = cloneChartParts(
+        zip,
+        clonedObject.path,
+        clonedObject.element,
+      );
+      pendingTasks.push(copyTask);
+      return createChartHandle(
+        zip,
+        setting,
+        clonedObject,
+        pendingTasks,
+        copyTask,
+      );
     },
   };
 }
@@ -190,8 +224,8 @@ function createTextHandle(
     fill: (text) => {
       const element = getTargetElement(object);
       if (token !== undefined) {
-        replaceParagraphText(element, token, text);
-        return;
+        const count = replaceParagraphText(element, token, text);
+        if (count > 0) return;
       }
       fillTextShape(element, text);
     },
@@ -200,6 +234,10 @@ function createTextHandle(
     },
     replace: (search, replacement) =>
       replaceParagraphText(getTargetElement(object), search, replacement),
+    clone: () => {
+      const clonedObject = cloneObject(object);
+      return createTextHandle(setting, clonedObject);
+    },
   };
 }
 
@@ -209,7 +247,13 @@ function createImageHandle(
 ): ImageObjectHandle {
   if (object.element.localName !== 'pic')
     throw invalidTemplate(`Object "${setting.name}" is not an image`);
-  return createObjectHandleBase(object);
+  return {
+    ...createObjectHandleBase(object),
+    clone: () => {
+      const clonedObject = cloneObject(object);
+      return createImageHandle(setting, clonedObject);
+    },
+  };
 }
 
 /** Validates configured template objects and binds each entry in `tables`, `charts`, `texts`, and `images` to its preconfigured handle. */
@@ -233,6 +277,8 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
       ? await findNamedObjects(zip, names)
       : { slides: new Map<string, Document>(), objects: undefined };
 
+  const pendingTasks: Promise<void>[] = [];
+
   const tables: Record<string, TableObjectHandle> = {};
   for (const [key, setting] of tableEntries) {
     tables[key] = createTableHandle(
@@ -247,6 +293,7 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
       zip,
       setting,
       objects!.get(setting.name, setting.slide),
+      pendingTasks,
     );
   }
 
@@ -274,6 +321,7 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
     zip,
     slides,
     toBuffer: async () => {
+      await Promise.all(pendingTasks);
       for (const [path, document] of slides) writeXml(zip, path, document);
       return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
     },

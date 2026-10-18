@@ -6,7 +6,9 @@ import type { Element } from '@xmldom/xmldom';
 import type { NamedObject } from '@/pptx/jszip/objects';
 import type { ObjectBoundsEmu } from './types.ts';
 
-function isNamedObject(target: NamedObject | Element): target is NamedObject {
+export function isNamedObject(
+  target: NamedObject | Element,
+): target is NamedObject {
   return 'element' in target && 'path' in target;
 }
 

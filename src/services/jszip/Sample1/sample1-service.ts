@@ -176,6 +176,9 @@ export class Sample1Service extends PresentationService<
     prepared: PreparedData,
   ): Promise<void> {
     deck.texts.x1Title.fill(prepared.x1Title);
+    const x1TitleCopy = deck.texts.x1Title.clone();
+    x1TitleCopy.move({ dy: -2 });
+    x1TitleCopy.fill('xxx');
     deck.texts.x1Sub.fill(prepared.x1Sub);
     deck.texts.x1Text.fill(prepared.x1Text);
     deck.texts.x2Title.fill(prepared.x2Title);

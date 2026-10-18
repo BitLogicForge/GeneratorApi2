@@ -7,8 +7,14 @@ import { moveObject } from '@/pptx/jszip/objects/move';
 import { resizeObject } from '@/pptx/jszip/objects/resize';
 import { getTargetElement } from '@/pptx/jszip/objects/transform';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-import { chartNs, drawing } from '@/pptx/jszip/package/namespaces';
+import {
+  chartNs,
+  drawing,
+  presentationNs,
+} from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillParagraphs } from '@/pptx/jszip/text/fill-paragraphs';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
@@ -120,6 +126,20 @@ type HandleMap<Group, Handle> =
     ? { readonly [Key in keyof Group]: Handle }
     : Record<never, never>;
 
+/** Bound object handles on a duplicated slide. */
+interface DuplicatedSlide<Settings extends TemplateSettings> {
+  /** The archive path of the duplicated slide (e.g. `'ppt/slides/slide5.xml'`). */
+  readonly path: string;
+  /** Bound table handles on the duplicated slide. */
+  readonly tables: HandleMap<Settings['tables'], TableObjectHandle>;
+  /** Bound chart handles on the duplicated slide. */
+  readonly charts: HandleMap<Settings['charts'], ChartObjectHandle>;
+  /** Bound text shape handles on the duplicated slide. */
+  readonly texts: HandleMap<Settings['texts'], TextObjectHandle>;
+  /** Bound image handles on the duplicated slide. */
+  readonly images: HandleMap<Settings['images'], ImageObjectHandle>;
+}
+
 /** Mutable PowerPoint archive session with bound object handles grouped by `tables`, `charts`, `texts`, and `images`. */
 export interface TemplateDeck<Settings extends TemplateSettings> {
   /** Bound table handles for each entry in `templateSettings.tables`. */
@@ -134,6 +154,8 @@ export interface TemplateDeck<Settings extends TemplateSettings> {
   readonly zip: JSZip;
   /** Parsed XML documents for slides containing bound objects, automatically written back on `toBuffer()`. */
   readonly slides: Map<string, Document>;
+  /** Duplicates a slide (by 1-based index or slide path), binds handles for shapes on the duplicate, and tracks its XML for saving. */
+  duplicateSlide(slide: string | number): Promise<DuplicatedSlide<Settings>>;
   /** Serializes modified slide XML documents back into the archive and generates the output `.pptx` buffer. */
   toBuffer(): Promise<Buffer>;
 }
@@ -241,6 +263,26 @@ function createTextHandle(
   };
 }
 
+function createMissingHandle(name: string, slidePath: string) {
+  const error = () => {
+    throw invalidTemplate(
+      `Object "${name}" is not present on duplicated slide ${slidePath}`,
+    );
+  };
+  return {
+    get object() {
+      return error();
+    },
+    move: error,
+    resize: error,
+    delete: error,
+    fill: error,
+    fillParagraphs: error,
+    replace: error,
+    clone: error,
+  };
+}
+
 function createImageHandle(
   setting: ImageObjectSetting,
   object: NamedObject,
@@ -320,6 +362,108 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
     images: images as HandleMap<Settings['images'], ImageObjectHandle>,
     zip,
     slides,
+    duplicateSlide: async (
+      slide: string | number,
+    ): Promise<DuplicatedSlide<Settings>> => {
+      const newSlidePath = await duplicateSlide(zip, slide);
+      const newSlideDoc = await readXml(zip, newSlidePath);
+
+      const slideCnvPrNames = new Set(
+        Array.from(newSlideDoc.getElementsByTagNameNS(presentationNs, 'cNvPr'))
+          .map((node) => node.getAttribute('name'))
+          .filter((name): name is string => Boolean(name)),
+      );
+
+      const slideNames = [
+        ...new Set(
+          [...tableEntries, ...chartEntries, ...textEntries, ...imageEntries]
+            .map(([, setting]) => setting.name)
+            .filter((name) => slideCnvPrNames.has(name)),
+        ),
+      ];
+
+      const { slides: newSlides, objects: newObjects } =
+        slideNames.length > 0
+          ? await findNamedObjects(zip, slideNames, [newSlidePath])
+          : {
+              slides: new Map([[newSlidePath, newSlideDoc]]),
+              objects: undefined,
+            };
+
+      for (const [path, doc] of newSlides) {
+        slides.set(path, doc);
+      }
+
+      const dupTables: Record<string, TableObjectHandle> = {};
+      for (const [key, setting] of tableEntries) {
+        if (slideCnvPrNames.has(setting.name) && newObjects) {
+          dupTables[key] = createTableHandle(
+            setting,
+            newObjects.get(setting.name, newSlidePath),
+          );
+        } else {
+          dupTables[key] = createMissingHandle(
+            setting.name,
+            newSlidePath,
+          ) as unknown as TableObjectHandle;
+        }
+      }
+
+      const dupCharts: Record<string, ChartObjectHandle> = {};
+      for (const [key, setting] of chartEntries) {
+        if (slideCnvPrNames.has(setting.name) && newObjects) {
+          dupCharts[key] = createChartHandle(
+            zip,
+            setting,
+            newObjects.get(setting.name, newSlidePath),
+            pendingTasks,
+          );
+        } else {
+          dupCharts[key] = createMissingHandle(
+            setting.name,
+            newSlidePath,
+          ) as unknown as ChartObjectHandle;
+        }
+      }
+
+      const dupTexts: Record<string, TextObjectHandle> = {};
+      for (const [key, setting] of textEntries) {
+        if (slideCnvPrNames.has(setting.name) && newObjects) {
+          dupTexts[key] = createTextHandle(
+            setting,
+            newObjects.get(setting.name, newSlidePath),
+          );
+        } else {
+          dupTexts[key] = createMissingHandle(
+            setting.name,
+            newSlidePath,
+          ) as unknown as TextObjectHandle;
+        }
+      }
+
+      const dupImages: Record<string, ImageObjectHandle> = {};
+      for (const [key, setting] of imageEntries) {
+        if (slideCnvPrNames.has(setting.name) && newObjects) {
+          dupImages[key] = createImageHandle(
+            setting,
+            newObjects.get(setting.name, newSlidePath),
+          );
+        } else {
+          dupImages[key] = createMissingHandle(
+            setting.name,
+            newSlidePath,
+          ) as unknown as ImageObjectHandle;
+        }
+      }
+
+      return {
+        path: newSlidePath,
+        tables: dupTables as HandleMap<Settings['tables'], TableObjectHandle>,
+        charts: dupCharts as HandleMap<Settings['charts'], ChartObjectHandle>,
+        texts: dupTexts as HandleMap<Settings['texts'], TextObjectHandle>,
+        images: dupImages as HandleMap<Settings['images'], ImageObjectHandle>,
+      };
+    },
     toBuffer: async () => {
       await Promise.all(pendingTasks);
       for (const [path, document] of slides) writeXml(zip, path, document);

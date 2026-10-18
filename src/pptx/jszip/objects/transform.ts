@@ -27,7 +27,7 @@ export function cmToEmu(centimeters: number): number {
   return Math.round(centimeters * EMU_PER_CM);
 }
 
-function findDirectChild(
+export function findDirectChild(
   parent: Element,
   namespace: string,
   localName: string,

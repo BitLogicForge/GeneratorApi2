@@ -4,6 +4,7 @@ import { PackagePath } from '@/pptx/jszip/package/constants';
 import { packageNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 
+import { updateAppPropertiesSlideCount } from './app-properties.ts';
 import { copySlideParts } from './copy-parts.ts';
 import { deck } from './deck.ts';
 
@@ -53,5 +54,6 @@ export async function duplicateSlide(
   writeXml(zip, PackagePath.ContentTypes, contentTypes);
   writeXml(zip, PackagePath.Presentation, presentation.document);
   writeXml(zip, PackagePath.PresentationRels, presentation.relationships);
+  await updateAppPropertiesSlideCount(zip, 1);
   return output;
 }

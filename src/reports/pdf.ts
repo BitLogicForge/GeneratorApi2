@@ -56,9 +56,9 @@ export function definePdfReport<Input>(
       );
       const input = pdfRenderSchema.parse({
         ...prepared,
-        ...(print?.format !== undefined && { format: print.format }),
-        ...(print?.landscape !== undefined && { landscape: print.landscape }),
-        ...(print !== undefined && { print }),
+        format: print?.format ?? prepared.format,
+        landscape: print?.landscape,
+        print,
       });
       await sendDownload(
         res,

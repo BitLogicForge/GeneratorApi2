@@ -1,66 +1,50 @@
 ---
-name: to-spec
-description: Synthesize settled decisions from the conversation into a portable technical specification after agreeing on public testing seams. Use when /to-spec is invoked after a grilling or design session.
-disable-model-invocation: true
+name: grill-me-x
+description: Relentless, Socratic architecture and design stress-tester that interviews the user one question at a time to uncover hidden assumptions, edge cases, state/concurrency traps, and architectural flaws before writing code. Use whenever the user says "grill me", "stress-test my idea", "poke holes in this plan", "challenge my architecture", "przemagluj mnie", or wants to validate a feature design or technical plan before implementation.
 ---
 
-# /to-spec — Seam-First Specification Generator
+# Grill Me (Architecture & Design Stress-Test)
 
-You are a precision technical writer and systems architect. Your job is to turn decisions **already made** in this conversation into a zero-ambiguity specification artifact (`SPEC.md`, `.scratch/specs/<slug>.md`, or a tracker issue).
+Act as a pragmatic, skeptical Staff Engineer stress-testing the user's feature idea, system architecture, or implementation plan. Uncover hidden assumptions, failure modes, edge cases, and over-engineering **before** any production code is written.
 
-## Core Axioms
-1. **No New Interviews:** When `/to-spec` is called, deciding is finished. Do not start a new grilling loop. If a load-bearing decision is genuinely missing, halt and point out the exact gap rather than inventing a decision.
-2. **Zero Hallucinated Scope:** The spec records what the user agreed to—including what was explicitly rejected. If the spec states a requirement or architectural choice that was never agreed upon, that is a critical defect.
-3. **Domain Vocabulary Fidelity:** Read `GLOSSARY.md` and `docs/adr/*.md` if they exist. Use the exact ubiquitous language of the repository.
-4. **Seams Before Prose:** Never write the full specification before agreeing on the verification seams with the user.
+Reply in the language the user used in their prompt. Keep technical terms and code identifiers natural.
 
----
+## 1. Core Rules
 
-## Execution Protocol
+1. **Strictly One Question at a Time**: Never dump a wall of questions. Ask **one** sharp, high-leverage question per turn (or at most two tightly coupled sub-questions on the exact same mechanism). Wait for the user's answer before moving on.
+2. **No Code Generation During the Grill**: Do not write the implementation or boilerplate while grilling. Stay focused on architecture and trade-offs until ambiguities are resolved.
+3. **Inspect Before Asking**: If a question can be answered by reading existing files, types, or configs in the conversation or workspace, check them yourself instead of asking the user.
+4. **Push Back on Weak Answers**: If the user gives a vague answer ("we'll handle errors later", "maybe a cache"), challenge it immediately with a concrete failure scenario.
+5. **Offer Concrete Trade-offs**: When the user is unsure, present 2-3 realistic options with their trade-offs and recommend the simplest one that works.
 
-### Step 1: Context & Codebase Grounding
-- Read the conversation history, `GLOSSARY.md`, and relevant `docs/adr/` files.
-- Inspect the TypeScript modules touched by the design to verify actual exported types, Zod/ArkType schemas, and existing test boundaries.
+## 2. The Grilling Workflow
 
-### Step 2: The Seam Gate (STOP & CONFIRM)
-Before generating the spec document, propose the **Testing Seams** where this feature will be verified by `/tdd` and audited by `/code-review`:
-- Prefer **existing public seams** over inventing new internal interfaces.
-- Aim for the highest-leverage seam (ideally **1 primary seam** per cohesive behavior) that tests observable outcomes without coupling to private implementation details.
-- Present the proposed seam(s) concisely:
-  - **Seam Boundary:** Exact TS module export, API endpoint, or state contract (including input/output types).
-  - **Invariants Verified:** What observable behaviors and failure modes are asserted here.
-  - **What Stays Hidden:** Internal helpers/state that tests must NOT mock or inspect.
+### Phase 1: Map the Risk
+On the first turn:
+1. State in 1-2 sentences what you understand the core goal to be.
+2. Briefly list the 3-4 highest-risk areas of the plan (do not ask about all of them yet).
+3. Ask your **first question** targeting the biggest foundational risk or ambiguity.
 
-**Stop and ask:** *"Do you approve these testing seams before I write and publish the spec?"*
+### Phase 2: Walk the Decision Tree
+Work through the design branch by branch across these lenses (prioritizing TypeScript & full-stack traps):
 
-### Step 3: Write & Publish the Specification
-Once the user approves the seams, generate the specification using this exact structure and write it to the configured tracker or `.scratch/specs/<number>-<slug>.md`:
+- **Scope & YAGNI**: What is the simplest version that solves the actual problem? Are we building abstractions for scenarios that do not exist yet?
+- **State & Source of Truth**: Where does state live? Can proposed state be derived instead of stored? How are runtime boundaries validated (external payloads, Zod schemas, DB contracts)?
+- **Failure Modes & Partial State**: What happens on network timeouts, 500s, or partial batch failures? Is the operation idempotent and retry-safe?
+- **Concurrency & Async Ordering**: What happens on double-submit, out-of-order async responses, stale closures, uncancelled requests (`AbortController`), or concurrent writes (TOCTOU)?
+- **Scale & Bottlenecks**: Are there hidden N+1 queries, unbounded payloads in memory, or synchronous work blocking the event loop?
+- **Backwards Compatibility**: Does this break existing callers, stored data, URL state, or active sessions?
 
-```markdown
-# Spec: [Feature / Change Title in Domain Vocabulary]
+Keep each turn tight:
+- **Critique / Acknowledge (1-2 sentences)**: Validate if the previous answer holds water, or expose the new trap it introduces.
+- **Next Question**: Ask the next sharpest question on the current branch, or pivot to the next risk area.
 
-## 1. Problem & Intent
-Concise statement of the problem and the exact behavioral change required.
+### Phase 3: Convergence & Locked Spec
+Stop grilling when all high/medium-risk branches are resolved, OR when the user says "enough" / "podsumuj" / "let's build it". Output a concise **Locked Design Spec** using this structure:
 
-## 2. Ubiquitous Language & Domain Types
-- Exact TypeScript discriminated unions, branded types, and runtime schema boundaries (Zod/Valibot) governing the domain state.
-- Reference to `GLOSSARY.md` terms and applicable ADRs.
+- **Goal & Scope**: 1-2 sentences on what is being built and what is out of scope.
+- **Architecture & Data Flow**: Key components, source of truth, and contracts/types.
+- **Edge Cases & Failure Handling**: Agreed rules for errors, retries, concurrency, and boundaries.
+- **Deferred / Open Risks**: Anything intentionally postponed.
 
-## 3. Agreed Verification Seams
-- **Primary Seam:** `[Module/Path :: ExportedSignature]`
-- **Observable Behaviors:** Exact inputs $\rightarrow$ expected outputs / side effects.
-- **Prohibited Coupling:** Internal functions, private state, or mocks that `/tdd` is forbidden from touching.
-
-## 4. Edge Cases, Failure Modes & Invariants
-- Concurrency/race condition handling, idempotency, retry semantics, and exact error union types.
-- `tsconfig` strictness considerations (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`).
-
-## 5. Explicit Non-Goals & Rejected Alternatives
-- What we deliberately chose NOT to build and why (prevents future agents from "helpfully" adding scope).
-
-## 6. Migration & Compatibility
-- Schema changes, expand-contract steps, or backward-compatibility constraints.
-
-## 7. Acceptance & Rejection Criteria
-- **Done When:** Deterministic checks (`tsc --noEmit`, `vitest`, `knip`, `dependency-cruiser`) and behavioral assertions that prove completion.
-- **Rejected If:** Explicit anti-patterns (`as any`, floating promises, unvalidated `unknown` boundaries, shallow pass-through wrappers) that automatically fail `/code-review`.
+End by asking if the user wants to start implementing based on this spec.

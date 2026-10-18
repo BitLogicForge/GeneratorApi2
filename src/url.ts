@@ -19,3 +19,16 @@ export function buildUrl(
   }
   return url;
 }
+
+/** Renames validated query fields, forwarding only mapped, defined values. */
+export function mapQuery<Value extends UrlValue>(
+  query: Record<string, Value | undefined>,
+  names: Record<string, string>,
+): Record<string, Value> {
+  return Object.fromEntries(
+    Object.entries(names).flatMap(([name, externalName]) => {
+      const value = query[name];
+      return value === undefined ? [] : [[externalName, value]];
+    }),
+  );
+}

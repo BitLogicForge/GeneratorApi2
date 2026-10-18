@@ -185,8 +185,9 @@ The factsheet folder has the same structure and its own independent definition.
 values. To put the ID in a query instead, return `route: '/document'` and
 `query: { id }`.
 
-Map external query names and apply defaults explicitly in `prepareInput` when
-needed. Forward only validated public fields; fixed server-owned values belong
+Onepager maps public query names to external names with the `externalQueryNames`
+dictionary in `src/routes/pdf/onepager/schema.ts`, after validating the public
+fields. Change dictionary values to rename outgoing query parameters. Forward only validated public fields; fixed server-owned values belong
 in the same query object. Configure the shared origin through `WEBAPP_BASE_URL`.
 
 The former `/pdf/portrait/:id.pdf` and `/pdf/landscape/:id.pdf` document routes are removed.

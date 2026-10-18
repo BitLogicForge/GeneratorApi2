@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { mapQuery } from '@/url';
 import { documentIdSchema } from '@/validation/document-id';
 
 // Public query parameters for this endpoint. Unknown and repeated values are rejected.
@@ -11,9 +12,18 @@ const querySchema = z
   })
   .strict();
 
+// Public query name -> external webapp query name. Change values to rename fields.
+const externalQueryNames = {
+  START: 'START',
+  END: 'END',
+  BENCHMARK: 'BENCHMARK',
+} satisfies Record<keyof z.infer<typeof querySchema>, string>;
+
 export const requestSchema = z
   .object({
     id: documentIdSchema,
-    query: querySchema,
+    query: querySchema.transform((query) =>
+      mapQuery(query, externalQueryNames),
+    ),
   })
   .strict();

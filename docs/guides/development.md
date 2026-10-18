@@ -249,11 +249,23 @@ buildUrl('https://webapp.example', '/onepager/:id', {
 });
 ```
 
-When external query names differ from public names, map them explicitly in the
-report's `prepareInput`. For example, `query: { from: query.START, to: query.END }`
-renames two fields. Apply defaults there as well. The shared builder omits
-undefined query values. Keep fixed server-owned query values in this object,
-and forward only fields allowed by the report schema.
+Onepager keeps an `externalQueryNames` dictionary in
+`src/routes/pdf/onepager/schema.ts`. Keys are public query names; values are the
+names sent to the external webapp:
+
+```ts
+const externalQueryNames = {
+  START: 'START',
+  END: 'END',
+  BENCHMARK: 'BENCHMARK',
+} satisfies Record<keyof z.infer<typeof querySchema>, string>;
+```
+
+Change a value, such as `START: 'from'`, to rename an outgoing field while keeping
+the public API unchanged. The request schema validates the public fields first,
+then calls the shared `mapQuery` helper from `src/url.ts` to rename fields and omit absent values. TypeScript requires the dictionary to
+cover every declared query field. `report.ts` passes this mapped query to the
+shared URL builder. Defaults can stay in the public field schemas.
 
 PDF report orientation is defined only in `print.landscape` on the report
 definition. `prepareInput` returns the external route, query, filename, and

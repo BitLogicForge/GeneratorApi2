@@ -37,7 +37,7 @@ For `WEBAPP_BASE_URL=https://other-host.example`:
 
 The demo webapp serves both pages. For an ID in the query string, return `route: "/factsheet"` and `query: { id }`. Use `params` for `:id` placeholders in paths only. Rebuild after changing these settings. Query values come only from the report's validated fields; keep fixed server-owned query values explicit when adding mappings.
 
-IDs accept 1–80 letters, numbers, underscores, and hyphens. Factsheet accepts no query fields. Onepager accepts optional `START` and `END` (valid `YYYY-MM-DD` dates), and `BENCHMARK` (`SAA` or `REPORTING`); it rejects `language` and `year`. These onepager parameters are forwarded using their uppercase names. Unknown, invalid, or duplicate parameters return 400 before rendering. Omitted query parameters use the webapp's defaults.
+IDs accept 1–80 letters, numbers, underscores, and hyphens. Factsheet accepts no query fields. Onepager accepts optional `START` and `END` (valid `YYYY-MM-DD` dates), and `BENCHMARK` (`SAA` or `REPORTING`); it rejects `language` and `year`. Onepager’s `externalQueryNames` dictionary in `src/routes/pdf/onepager/schema.ts` maps public names to outgoing query names. The current mapping preserves their uppercase names; change dictionary values to rename outgoing fields. Unknown, invalid, or duplicate parameters return 400 before rendering. Omitted query parameters use the webapp's defaults.
 
 ## Readiness and appearance
 

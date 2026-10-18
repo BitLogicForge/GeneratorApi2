@@ -44,7 +44,7 @@ export function findDirectTransformElement(
   if (element.localName === 'graphicFrame') {
     return findDirectChild(element, presentationNs, 'xfrm');
   }
-  if (element.localName === 'sp') {
+  if (element.localName === 'sp' || element.localName === 'pic') {
     const spPr = findDirectChild(element, presentationNs, 'spPr');
     return spPr ? findDirectChild(spPr, drawing, 'xfrm') : undefined;
   }
@@ -99,7 +99,7 @@ function ensureTransformElement(element: Element): Element {
   const doc = element.ownerDocument;
   if (!doc) throw invalidTemplate('Object element has no owner document');
 
-  if (element.localName === 'sp') {
+  if (element.localName === 'sp' || element.localName === 'pic') {
     const spPr = findDirectChild(element, presentationNs, 'spPr');
     if (!spPr) throw invalidTemplate('Shape is missing <p:spPr>');
     const xfrm = doc.createElementNS(drawing, 'a:xfrm');

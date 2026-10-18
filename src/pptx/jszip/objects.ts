@@ -66,7 +66,10 @@ export async function findNamedObjects<const Name extends string>(
       if (slideMatches.has(path))
         throw invalidTemplate(`Duplicate object "${name}" in ${path}`);
       const element = properties.parentNode?.parentNode as Element | undefined;
-      if (!element || !['graphicFrame', 'sp'].includes(element.localName ?? ''))
+      if (
+        !element ||
+        !['graphicFrame', 'sp', 'pic'].includes(element.localName ?? '')
+      )
         throw invalidTemplate(
           `Unsupported object "${name}" in ${path}: ${element?.localName ?? 'missing shape'}`,
         );

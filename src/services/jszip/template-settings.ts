@@ -54,6 +54,13 @@ interface TextObjectSetting {
   options?: TextOptions;
 }
 
+interface ImageObjectSetting {
+  /** PowerPoint Selection Pane object name. */
+  name: string;
+  /** Optional slide path or 1-based slide number when the name appears on multiple slides. */
+  slide?: string | number;
+}
+
 export interface TemplateSettings {
   /** PowerPoint tables (`<a:tbl>`) keyed by alias. */
   tables?: Record<string, TableObjectSetting>;
@@ -61,6 +68,8 @@ export interface TemplateSettings {
   charts?: Record<string, ChartObjectSetting>;
   /** PowerPoint text shapes (`<p:sp>`) keyed by alias. */
   texts?: Record<string, TextObjectSetting>;
+  /** PowerPoint images (`<p:pic>`) keyed by alias. */
+  images?: Record<string, ImageObjectSetting>;
 }
 
 interface ObjectHandleBase {
@@ -93,12 +102,14 @@ interface TextObjectHandle extends ObjectHandleBase {
   replace(search: string, replacement: string): number;
 }
 
+type ImageObjectHandle = ObjectHandleBase;
+
 type HandleMap<Group, Handle> =
   Group extends Record<string, unknown>
     ? { readonly [Key in keyof Group]: Handle }
     : Record<never, never>;
 
-/** Mutable PowerPoint archive session with bound object handles grouped by `tables`, `charts`, and `texts`. */
+/** Mutable PowerPoint archive session with bound object handles grouped by `tables`, `charts`, `texts`, and `images`. */
 export interface TemplateDeck<Settings extends TemplateSettings> {
   /** Bound table handles for each entry in `templateSettings.tables`. */
   readonly tables: HandleMap<Settings['tables'], TableObjectHandle>;
@@ -106,6 +117,8 @@ export interface TemplateDeck<Settings extends TemplateSettings> {
   readonly charts: HandleMap<Settings['charts'], ChartObjectHandle>;
   /** Bound text shape handles for each entry in `templateSettings.texts`. */
   readonly texts: HandleMap<Settings['texts'], TextObjectHandle>;
+  /** Bound image handles for each entry in `templateSettings.images`. */
+  readonly images: HandleMap<Settings['images'], ImageObjectHandle>;
   /** Mutable JSZip archive for this render call. */
   readonly zip: JSZip;
   /** Parsed XML documents for slides containing bound objects, automatically written back on `toBuffer()`. */
@@ -190,7 +203,16 @@ function createTextHandle(
   };
 }
 
-/** Validates configured template objects and binds each entry in `tables`, `charts`, and `texts` to its preconfigured fill handle. */
+function createImageHandle(
+  setting: ImageObjectSetting,
+  object: NamedObject,
+): ImageObjectHandle {
+  if (object.element.localName !== 'pic')
+    throw invalidTemplate(`Object "${setting.name}" is not an image`);
+  return createObjectHandleBase(object);
+}
+
+/** Validates configured template objects and binds each entry in `tables`, `charts`, `texts`, and `images` to its preconfigured handle. */
 export async function bindTemplateSettings<Settings extends TemplateSettings>(
   zip: JSZip,
   settings: Settings,
@@ -198,9 +220,10 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
   const tableEntries = Object.entries(settings.tables ?? {});
   const chartEntries = Object.entries(settings.charts ?? {});
   const textEntries = Object.entries(settings.texts ?? {});
+  const imageEntries = Object.entries(settings.images ?? {});
   const names = [
     ...new Set(
-      [...tableEntries, ...chartEntries, ...textEntries].map(
+      [...tableEntries, ...chartEntries, ...textEntries, ...imageEntries].map(
         ([, setting]) => setting.name,
       ),
     ),
@@ -235,10 +258,19 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
     );
   }
 
+  const images: Record<string, ImageObjectHandle> = {};
+  for (const [key, setting] of imageEntries) {
+    images[key] = createImageHandle(
+      setting,
+      objects!.get(setting.name, setting.slide),
+    );
+  }
+
   return {
     tables: tables as HandleMap<Settings['tables'], TableObjectHandle>,
     charts: charts as HandleMap<Settings['charts'], ChartObjectHandle>,
     texts: texts as HandleMap<Settings['texts'], TextObjectHandle>,
+    images: images as HandleMap<Settings['images'], ImageObjectHandle>,
     zip,
     slides,
     toBuffer: async () => {

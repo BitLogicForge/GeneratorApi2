@@ -40,7 +40,10 @@ function findPlaceholderShape(
   idx: string | undefined,
   allowMasterFallbacks = false,
 ): Element | undefined {
-  const shapes = Array.from(doc.getElementsByTagNameNS(presentationNs, 'sp'));
+  const shapes = [
+    ...Array.from(doc.getElementsByTagNameNS(presentationNs, 'sp')),
+    ...Array.from(doc.getElementsByTagNameNS(presentationNs, 'pic')),
+  ];
   const candidates = shapes
     .map((shape) => ({
       shape,
@@ -68,7 +71,7 @@ function findPlaceholderShape(
       const fallbackType =
         type === 'ctrTitle'
           ? 'title'
-          : type === 'subTitle'
+          : type === 'subTitle' || type === 'pic'
             ? 'body'
             : undefined;
       if (fallbackType) {
@@ -92,15 +95,18 @@ function findPlaceholderShape(
 
 /**
  * Resolves the inherited 2D transform bounds (`x`, `y`, `cx`, `cy` in EMUs)
- * from `slideLayout` or `slideMaster` when a placeholder `<p:sp>` has no
- * slide-local `<a:xfrm>`.
+ * from `slideLayout` or `slideMaster` when a placeholder `<p:sp>` or `<p:pic>`
+ * has no slide-local `<a:xfrm>`.
  */
 export async function resolvePlaceholderBounds(
   zip: JSZip,
   slidePath: string,
   element: Element,
 ): Promise<ObjectBoundsEmu | undefined> {
-  if (element.localName !== 'sp' || findDirectTransformElement(element)) {
+  if (
+    (element.localName !== 'sp' && element.localName !== 'pic') ||
+    findDirectTransformElement(element)
+  ) {
     return undefined;
   }
 

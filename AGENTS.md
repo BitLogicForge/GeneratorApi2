@@ -135,8 +135,8 @@ When the user requests tests, select the smallest relevant scope:
 Use the matching skill for the current task; do not load all skills or start an
 unrelated audit. The verification policy above applies even when no skill is used.
 
-| Task                        | Skill                                                                  |
-| --------------------------- | ---------------------------------------------------------------------- |
-| Implement features or fixes | [generatorapi-quality](.agents/skills/generatorapi-quality/SKILL.md)   |
-| Simplify or reorganize code | [generatorapi-refactor](.agents/skills/generatorapi-refactor/SKILL.md) |
-| Review code or a change     | [generatorapi-review](.agents/skills/generatorapi-review/SKILL.md)     |
+| Task                        | Skill                                                  |
+| --------------------------- | ------------------------------------------------------ |
+| Implement features or fixes | [code-quality](.agents/skills/code-quality/SKILL.md)   |
+| Simplify or reorganize code | [code-refactor](.agents/skills/code-refactor/SKILL.md) |
+| Review code or a change     | [code-review](.agents/skills/code-review/SKILL.md)     |

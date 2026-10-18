@@ -1,12 +1,14 @@
-import { randomInt } from 'node:crypto';
-
+import { loadConfig } from '@/config';
+import { DataApiClient } from '@/services/data-api-client';
 import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
-import { createRandomDataGenerator } from '@/utils/random-data';
 
 import { PresentationService } from './presentation-service.ts';
 
+import type {
+  TmaBreakdownData,
+  TmaSeriesData,
+} from '@/data-api/tma-data-schema';
 import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
-import type { PresentationServiceOptions } from './presentation-service.ts';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
@@ -45,15 +47,9 @@ const templateSettings = {
   },
 } satisfies TemplateSettings;
 
-const demoData = {
-  chartA: { rows: 20 },
-  chartB: { rows: 4 },
-} as const;
-
 interface TmaRawData {
-  asOf: Date;
-  chartA: number[][];
-  chartB: number[][];
+  series: TmaSeriesData;
+  breakdown: TmaBreakdownData;
 }
 
 interface TmaPreparedData {
@@ -79,26 +75,20 @@ export class TmxPocPresentationService extends PresentationService<
   TmaRawData,
   TmaPreparedData
 > {
-  private readonly generateData: (rows: number) => number[][];
-
-  constructor(path: string, options: PresentationServiceOptions = {}) {
-    super(path, templateSettings, options);
-    this.generateData = createRandomDataGenerator(1);
+  constructor(path: string) {
+    super(path, templateSettings);
   }
 
-  /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */
-  protected fetchData(input: TmaRequestInput): TmaRawData {
-    console.debug({
-      PP1: input.PP1,
-      PP2: input.PP2,
-      dataApiConfigured: Boolean(this.dataApi),
-    });
-    // Placeholder for future Data API call via `this.dataApi`.
-    return {
-      asOf: new Date(),
-      chartA: this.generateData(demoData.chartA.rows),
-      chartB: this.generateData(demoData.chartB.rows),
-    };
+  /** Step 1: Fetches raw series and breakdown data from the Data API using PP1 and PP2. */
+  protected async fetchData(input: TmaRequestInput): Promise<TmaRawData> {
+    console.debug({ PP1: input.PP1, PP2: input.PP2 });
+    const config = loadConfig();
+    const api = new DataApiClient(config.dataApi);
+    const [series, breakdown] = await Promise.all([
+      api.get('tmaSeries', {}, { pp1: input.PP1 }),
+      api.get('tmaBreakdown', {}, { pp2: input.PP2 }),
+    ]);
+    return { series, breakdown };
   }
 
   /** Step 2: Transforms request parameters and raw API data into presentation-ready values. */
@@ -106,31 +96,31 @@ export class TmxPocPresentationService extends PresentationService<
     input: TmaRequestInput,
     raw: TmaRawData,
   ): TmaPreparedData {
+    const asOf = new Date(raw.series.asOf);
     // Dates YYYY-MM-DD from asOf backwards.
-    const categories = Array.from({ length: raw.chartA.length }, (_, index) => {
-      const date = new Date(raw.asOf);
-      date.setUTCDate(date.getUTCDate() - index);
-      return formatDateTime(date, { format: DateTimeFormat.Date });
-    });
-
-    const colors = raw.chartB.map(() =>
-      randomInt(0x1000000).toString(16).padStart(6, '0'),
+    const categories = Array.from(
+      { length: raw.series.values.length },
+      (_, index) => {
+        const date = new Date(asOf);
+        date.setUTCDate(date.getUTCDate() - index);
+        return formatDateTime(date, { format: DateTimeFormat.Date });
+      },
     );
 
     return {
       texts: {
         text0: input.TEXT_ME,
-        text1: 'CHART A',
-        text2: 'CHART B',
-        subtitle: formatDateTime(raw.asOf),
+        text1: raw.series.title,
+        text2: raw.breakdown.title,
+        subtitle: formatDateTime(asOf),
       },
       chartA: {
-        data: raw.chartA,
+        data: raw.series.values,
         categories,
       },
       chartB: {
-        data: raw.chartB,
-        colors,
+        data: raw.breakdown.values,
+        colors: raw.breakdown.colors,
       },
     };
   }

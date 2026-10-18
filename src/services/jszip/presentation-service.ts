@@ -1,11 +1,7 @@
 import { TemplateSource } from './template-source.ts';
 
-import type { ReportContext, ReportService } from '@/reports/services';
+import type { ReportService } from '@/reports/services';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
-
-export interface PresentationServiceOptions {
-  dataApi?: ReportContext['dataApi'];
-}
 
 /** Shared base contract for JSZip template presentation services: fetch -> prepare -> render. */
 export abstract class PresentationService<
@@ -15,14 +11,8 @@ export abstract class PresentationService<
   PreparedData,
 > implements ReportService<Input> {
   private readonly source: TemplateSource<Settings>;
-  protected readonly dataApi: ReportContext['dataApi'] | undefined;
 
-  constructor(
-    path: string,
-    settings: Settings,
-    options: PresentationServiceOptions = {},
-  ) {
-    this.dataApi = options.dataApi;
+  constructor(path: string, settings: Settings) {
     this.source = new TemplateSource(path, settings);
   }
 
@@ -39,7 +29,7 @@ export abstract class PresentationService<
     return deck.toBuffer();
   }
 
-  /** Step 1: Fetches raw data (e.g. from `this.dataApi`). */
+  /** Step 1: Fetches raw data for the presentation. */
   protected abstract fetchData(input: Input): Promise<RawData> | RawData;
 
   /** Step 2: Transforms request input and raw data into presentation-ready values. */

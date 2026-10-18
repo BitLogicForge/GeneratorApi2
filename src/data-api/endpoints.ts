@@ -4,6 +4,10 @@ import { customerDataSchema } from './customer-data-schema.ts';
 import { reportDataSchema } from './report-data-schema.ts';
 import { reportIdsSchema } from './report-ids-schema.ts';
 import { reportSummarySchema } from './report-summary-schema.ts';
+import {
+  tmaBreakdownDataSchema,
+  tmaSeriesDataSchema,
+} from './tma-data-schema.ts';
 
 const reportPath = compile('/reports/:id');
 const customerPath = compile('/customers/:id');
@@ -26,5 +30,13 @@ export const dataApiEndpoints = {
   reportSummary: {
     path: (params: { id: string }) => reportSummaryPath(params),
     response: reportSummarySchema,
+  },
+  tmaSeries: {
+    path: (_params: Record<string, never>) => '/tma/series',
+    response: tmaSeriesDataSchema,
+  },
+  tmaBreakdown: {
+    path: (_params: Record<string, never>) => '/tma/breakdown',
+    response: tmaBreakdownDataSchema,
   },
 };

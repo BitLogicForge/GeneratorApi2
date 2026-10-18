@@ -7,11 +7,13 @@ import { documentIdSchema } from '@/validation/schema';
 import { createCustomerRoute } from './routes/customer.ts';
 import { createReportIdsRoute } from './routes/report-ids.ts';
 import { createReportSummaryRoute } from './routes/report-summary.ts';
+import { createTmaRoute } from './routes/tma.ts';
 
 const app = express();
 app.use('/api', createReportIdsRoute());
 app.use('/api', createCustomerRoute());
 app.use('/api', createReportSummaryRoute());
+app.use('/api', createTmaRoute());
 const querySchema = z
   .object({
     language: z.string().default('en'),

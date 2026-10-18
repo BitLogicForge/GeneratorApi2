@@ -15,6 +15,5 @@ export default definePptxReport({
     filename: 'tma',
     input,
   }),
-  createService: ({ dataApi }) =>
-    new TmxPocPresentationService(templateFile(sourceFile), { dataApi }),
+  createService: () => new TmxPocPresentationService(templateFile(sourceFile)),
 });

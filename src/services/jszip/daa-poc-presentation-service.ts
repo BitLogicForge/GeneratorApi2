@@ -3,7 +3,6 @@ import { createRandomDataGenerator } from '@/utils/random-data';
 import { PresentationService } from './presentation-service.ts';
 
 import type { DaaRequestInput } from '@/routes/pptx/daa/schema';
-import type { PresentationServiceOptions } from './presentation-service.ts';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
@@ -53,13 +52,15 @@ export class DaaPocPresentationService extends PresentationService<
   DaaRawData,
   DaaPreparedData
 > {
-  private readonly generateTableData: (rows: number) => number[][];
-  private readonly generateChartData: (rows: number) => number[][];
+  private readonly generateTableData = createRandomDataGenerator(
+    demoData.table.columns,
+  );
+  private readonly generateChartData = createRandomDataGenerator(
+    demoData.chart.series,
+  );
 
-  constructor(path: string, options: PresentationServiceOptions = {}) {
-    super(path, templateSettings, options);
-    this.generateTableData = createRandomDataGenerator(demoData.table.columns);
-    this.generateChartData = createRandomDataGenerator(demoData.chart.series);
+  constructor(path: string) {
+    super(path, templateSettings);
   }
 
   /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */

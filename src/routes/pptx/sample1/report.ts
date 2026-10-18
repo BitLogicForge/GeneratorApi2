@@ -1,8 +1,8 @@
 import { ReportErrorMessage } from '@/reports/constants';
 import { definePptxReport } from '@/reports/pptx';
 import { templateFile } from '@/reports/template';
-
 import { Sample1Service } from '@/services/jszip/Sample1/sample1-service';
+
 import { readRequestInput, requestSchema } from './schema.ts';
 
 const sourceFile = 'template_3.pptx';

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import sample1 from './pptx/sample1/report.ts';
 
 import health from './health.ts';
 import metrics from './internal/metrics.ts';
@@ -9,6 +8,7 @@ import factsheet from './pdf/factsheet/report.ts';
 import onepager from './pdf/onepager/report.ts';
 import quarterly from './pdf/quarterly/report.ts';
 import daa from './pptx/daa/report.ts';
+import sample1 from './pptx/sample1/report.ts';
 import tma from './pptx/tma/report.ts';
 import brief from './pptxgenjs/brief/report.ts';
 

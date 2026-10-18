@@ -10,72 +10,97 @@ import { createChartRange } from './charts/ranges.ts';
 import { validateCategoryChartInput } from './charts/schema.ts';
 import { fillChartSeries } from './charts/series.ts';
 
+import type { Document, Element } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
 import type { CategoryChartOptions } from './charts/types.ts';
 import type { NamedObject } from './objects.ts';
+
+const SUPPORTED_CHART_TYPES = new Set([
+  'lineChart',
+  'barChart',
+  'areaChart',
+  'pieChart',
+  'doughnutChart',
+  'radarChart',
+]);
+
+/**
+ * Extracts and validates the single supported category chart plot element
+ * from the chart XML document.
+ */
+function getSingleCategoryPlot(chartDoc: Document): Element {
+  const plotArea = chartDoc.getElementsByTagNameNS(chartNs, 'plotArea')[0];
+  if (!plotArea) {
+    throw invalidTemplate('Chart XML is missing a <c:plotArea> element');
+  }
+
+  const chartNodes = Array.from(plotArea.childNodes).filter(
+    (node): node is Element =>
+      node.nodeType === 1 &&
+      node.namespaceURI === chartNs &&
+      Boolean(node.localName?.endsWith('Chart')),
+  );
+
+  if (
+    chartNodes.length !== 1 ||
+    !SUPPORTED_CHART_TYPES.has(chartNodes[0].localName ?? '')
+  ) {
+    throw invalidTemplate(
+      'Expected exactly one supported category chart in <c:plotArea>',
+    );
+  }
+
+  return chartNodes[0];
+}
 
 /** Resizes chart caches, formulas and workbook data; retains series names and styling. */
 export async function fillCategoryChart(
   zip: JSZip,
   chartObject: NamedObject,
   data: number[][],
-  {
+  userOptions: CategoryChartOptions = {},
+): Promise<void> {
+  const {
     sheetName = 'Sheet1',
     firstColumn = 'B',
     firstRow = 2,
-    categories,
     seriesNames,
-    colors,
-  }: CategoryChartOptions = {},
-) {
-  const validation = validateCategoryChartInput(data, {
-    sheetName,
-    firstColumn,
-    firstRow,
-    categories,
-    seriesNames,
-    colors,
-  });
+  } = userOptions;
+  const options = { ...userOptions, sheetName, firstColumn, firstRow };
+
+  const validation = validateCategoryChartInput(data, options);
   if (!validation.valid) {
-    if (validation.colorsError) {
-      throw invalidTemplate(
-        'Chart colors require one six-digit RGB hex color per data row',
-      );
-    }
-    throw invalidTemplate();
+    throw invalidTemplate(
+      validation.colorsError
+        ? 'Chart colors require one six-digit RGB hex color per data row'
+        : 'Invalid category chart input data or options',
+    );
   }
+
   const chartReference = chartObject.element.getElementsByTagNameNS(
     chartNs,
     'chart',
   )[0];
+  const relId = chartReference?.getAttributeNS(relationshipNs, 'id') ?? null;
   const chartPath = await resolveRelationship(
     zip,
     chartObject.path,
-    chartReference?.getAttributeNS(relationshipNs, 'id') ?? null,
+    relId,
     'chart',
   );
   const chart = await readXml(zip, chartPath);
-  const plots = [
-    'lineChart',
-    'barChart',
-    'areaChart',
-    'pieChart',
-    'doughnutChart',
-    'radarChart',
-  ].flatMap((tag) => Array.from(chart.getElementsByTagNameNS(chartNs, tag)));
-  if (plots.length !== 1) throw invalidTemplate();
-  const plotArea = chart.getElementsByTagNameNS(chartNs, 'plotArea')[0];
-  if (
-    !plotArea ||
-    Array.from(plotArea.childNodes).filter(
-      (node) => node.nodeType === 1 && node.localName?.endsWith('Chart'),
-    ).length !== 1
-  )
-    throw invalidTemplate();
-  const series = Array.from(plots[0].getElementsByTagNameNS(chartNs, 'ser'));
-  if (series.length !== data[0].length) throw invalidTemplate();
+
+  const plot = getSingleCategoryPlot(chart);
+  const series = Array.from(plot.getElementsByTagNameNS(chartNs, 'ser'));
+  if (series.length !== data[0]?.length) {
+    throw invalidTemplate(
+      `Series count mismatch: template has ${series.length}, data has ${data[0]?.length ?? 0}`,
+    );
+  }
+
   const { workbook, workbookPath, sheet, sheetPath, date1904 } =
     await loadChartWorkbook(zip, chart, chartPath, sheetName);
+
   const range = createChartRange(
     sheet,
     sheetName,
@@ -83,13 +108,9 @@ export async function fillCategoryChart(
     firstRow,
     data.length,
   );
-  fillChartSeries(
-    sheet,
-    series,
-    data,
-    { sheetName, firstRow, categories, seriesNames, colors, date1904 },
-    range,
-  );
+
+  fillChartSeries(sheet, series, data, { ...options, date1904 }, range);
+
   await resizeWorkbookTables(
     workbook,
     sheet,
@@ -99,14 +120,13 @@ export async function fillCategoryChart(
     range.lastRow,
     seriesNames,
   );
+
   writeXml(zip, chartPath, chart);
   writeXml(workbook, sheetPath, sheet);
-  zip.file(
-    workbookPath,
-    await workbook.generateAsync({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-    }),
-    { createFolders: false },
-  );
+
+  const workbookBuffer = await workbook.generateAsync({
+    type: 'uint8array',
+    compression: 'DEFLATE',
+  });
+  zip.file(workbookPath, workbookBuffer, { createFolders: false });
 }

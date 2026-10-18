@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-
 import { LRUCache } from 'lru-cache';
 
 import { dataApiCacheDefaults } from '@/config';
@@ -13,10 +12,7 @@ import { buildDataApiUrl } from './data-api/url.ts';
 import type { z } from 'zod';
 import type { Config } from '@/config';
 
-export type DataApiQuery = Record<
-  string,
-  string | number | boolean | undefined
->;
+export type DataApiQuery = Record<string, string | number | boolean | undefined>;
 
 type EndpointRegistry = Record<
   string,
@@ -26,10 +22,7 @@ type EndpointRegistry = Record<
   }
 >;
 
-type ClientConfig<Endpoints> = Omit<
-  Config['dataApi'],
-  'endpoints' | 'cache'
-> & {
+type ClientConfig<Endpoints> = Omit<Config['dataApi'], 'endpoints' | 'cache'> & {
   endpoints: Endpoints;
   cache?: Config['dataApi']['cache'];
 };
@@ -37,12 +30,10 @@ type ClientConfig<Endpoints> = Omit<
 /** Fetches validated JSON from the configured API, preserving its base path. */
 export class DataApiClient<Endpoints extends EndpointRegistry> {
   private readonly cache:
-    | LRUCache<string, { data: unknown }, { load: () => Promise<unknown> }>
-    | undefined;
+    LRUCache<string, { data: unknown }, { load: () => Promise<unknown> }> | undefined;
 
   constructor(private readonly config: ClientConfig<Endpoints>) {
-    const { ttlMs, maxEntries, maxBytes } =
-      config.cache ?? dataApiCacheDefaults;
+    const { ttlMs, maxEntries, maxBytes } = config.cache ?? dataApiCacheDefaults;
     if (ttlMs > 0) {
       this.cache = new LRUCache({
         max: maxEntries,
@@ -51,8 +42,7 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
         // Eviction must not cancel an upstream request already serving a caller.
         ignoreFetchAbort: true,
         sizeCalculation: (value, key) =>
-          Buffer.byteLength(JSON.stringify(value.data)) +
-          Buffer.byteLength(key),
+          Buffer.byteLength(JSON.stringify(value.data)) + Buffer.byteLength(key),
         fetchMethod: async (_key, _stale, { context }) => ({
           data: await context.load(),
         }),
@@ -67,11 +57,7 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
     query: DataApiQuery = {},
   ): Promise<z.output<Endpoints[Key]['response']>> {
     if (!this.config.baseUrl)
-      throw new AppError(
-        503,
-        ErrorCode.DataApiNotConfigured,
-        DataApiErrorMessage.NotConfigured,
-      );
+      throw new AppError(503, ErrorCode.DataApiNotConfigured, DataApiErrorMessage.NotConfigured);
     const definition = this.config.endpoints[endpoint];
     if (!definition)
       throw new AppError(
@@ -79,11 +65,7 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
         ErrorCode.UnknownDataApiEndpoint,
         DataApiErrorMessage.UnknownEndpoint,
       );
-    const url = buildDataApiUrl(
-      this.config.baseUrl,
-      definition.path(params as never),
-      query,
-    );
+    const url = buildDataApiUrl(this.config.baseUrl, definition.path(params as never), query);
     const load = () =>
       requestDataApi(
         url,

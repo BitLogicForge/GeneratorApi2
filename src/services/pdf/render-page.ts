@@ -16,11 +16,7 @@ export async function renderPagePdf(
 ): Promise<Buffer> {
   const response = await page.goto(url.href, { waitUntil: 'load' });
   if (!response || !response.ok()) {
-    throw new AppError(
-      502,
-      ErrorCode.UpstreamError,
-      PdfErrorMessage.UpstreamError,
-    );
+    throw new AppError(502, ErrorCode.UpstreamError, PdfErrorMessage.UpstreamError);
   }
   if (input.waitForSelector) {
     await page.locator(input.waitForSelector).waitFor({ state: 'visible' });

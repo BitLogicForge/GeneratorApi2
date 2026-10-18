@@ -15,9 +15,7 @@ export function resizeWorkbookTable(
   const resized = range.replace(/\d+$/, String(lastRow));
   root.setAttribute('ref', resized);
   if (seriesNames) renameTableColumns(root, seriesNames);
-  for (const filter of Array.from(
-    root.getElementsByTagNameNS(spreadsheet, 'autoFilter'),
-  ))
+  for (const filter of Array.from(root.getElementsByTagNameNS(spreadsheet, 'autoFilter')))
     filter.setAttribute('ref', resized);
   return true;
 }

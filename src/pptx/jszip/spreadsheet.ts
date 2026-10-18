@@ -22,19 +22,10 @@ export function setWorksheetCell(
   const match = CELL_ADDRESS_REGEX.exec(address);
   const sheetData = sheet.getElementsByTagNameNS(spreadsheet, 'sheetData')[0];
   if (!match || !sheetData) {
-    throw invalidTemplate(
-      `Invalid cell address "${address}" or missing <sheetData>`,
-    );
+    throw invalidTemplate(`Invalid cell address "${address}" or missing <sheetData>`);
   }
   const [, column, rowStr] = match;
   const row = findOrCreateRow(sheet, sheetData, Number(rowStr));
-  const cell = findOrCreateCell(
-    sheet,
-    sheetData,
-    row,
-    address,
-    column,
-    styleReferenceRow,
-  );
+  const cell = findOrCreateCell(sheet, sheetData, row, address, column, styleReferenceRow);
   writeCellValue(sheet, cell, value);
 }

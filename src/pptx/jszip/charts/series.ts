@@ -23,12 +23,7 @@ export function fillChartSeries(
     date1904 = false,
   }: Required<Pick<CategoryChartOptions, 'sheetName' | 'firstRow'>> &
     CategoryChartOptions & { date1904?: boolean },
-  {
-    categoryColumn,
-    columnNumber,
-    columnName,
-    resizeFormula,
-  }: ReturnType<typeof createChartRange>,
+  { categoryColumn, columnNumber, columnName, resizeFormula }: ReturnType<typeof createChartRange>,
 ) {
   for (const [seriesIndex, item] of series.entries()) {
     if (colors) fillPointColors(item, colors);
@@ -60,20 +55,12 @@ export function fillChartSeries(
       if (!titleCache || !expected.includes(titleFormula?.textContent ?? ''))
         throw invalidTemplate();
       fillCache(titleCache, [seriesNames[seriesIndex]]);
-      setWorksheetCell(
-        sheet,
-        `${column}${firstRow - 1}`,
-        seriesNames[seriesIndex],
-      );
+      setWorksheetCell(sheet, `${column}${firstRow - 1}`, seriesNames[seriesIndex]);
     }
     for (const [index, row] of data.entries()) {
       setWorksheetCell(sheet, `${column}${index + firstRow}`, row[seriesIndex]);
       if (seriesIndex === 0)
-        setWorksheetCell(
-          sheet,
-          `${categoryColumn}${index + firstRow}`,
-          labels[index],
-        );
+        setWorksheetCell(sheet, `${categoryColumn}${index + firstRow}`, labels[index]);
     }
   }
 }

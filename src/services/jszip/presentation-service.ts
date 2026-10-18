@@ -33,10 +33,7 @@ export abstract class PresentationService<
   protected abstract fetchData(input: Input): Promise<RawData> | RawData;
 
   /** Step 2: Transforms request input and raw data into presentation-ready values. */
-  protected abstract prepareData(
-    input: Input,
-    raw: RawData,
-  ): Promise<PreparedData> | PreparedData;
+  protected abstract prepareData(input: Input, raw: RawData): Promise<PreparedData> | PreparedData;
 
   /** Step 3: Populates the opened PowerPoint template deck with prepared values. */
   protected abstract renderDeck(

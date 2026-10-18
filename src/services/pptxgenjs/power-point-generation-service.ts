@@ -10,9 +10,7 @@ import type { BriefInput } from './schema.ts';
 
 export class PowerPointGenerationService {
   private readonly templates: Map<string, PresentationTemplate>;
-  constructor(
-    templates: Record<string, PresentationTemplate> = { brief: briefTemplate },
-  ) {
+  constructor(templates: Record<string, PresentationTemplate> = { brief: briefTemplate }) {
     this.templates = new Map(Object.entries(templates));
   }
   /** Runs a registered design on a fresh deck to keep request content and metadata isolated. */

@@ -29,13 +29,7 @@ export function replaceParagraphText(
     )
       positions.push(start);
     for (const start of positions.reverse()) {
-      replaceRunRange(
-        nodes,
-        original,
-        start,
-        start + search.length,
-        replacement,
-      );
+      replaceRunRange(nodes, original, start, start + search.length, replacement);
       count++;
     }
   }

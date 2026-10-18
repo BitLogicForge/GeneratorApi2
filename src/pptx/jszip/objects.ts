@@ -42,9 +42,7 @@ export async function findNamedObjects<const Name extends string>(
           : undefined
         : slide;
     if (!path || !activeSlides.includes(path))
-      throw invalidTemplate(
-        `Slide is not part of the presentation: ${String(slide)}`,
-      );
+      throw invalidTemplate(`Slide is not part of the presentation: ${String(slide)}`);
     return path;
   };
   const availableNames = new Set<string>();
@@ -52,9 +50,7 @@ export async function findNamedObjects<const Name extends string>(
     const path = resolveActiveSlide(slide);
     const document = await readXml(zip, path);
     slides.set(path, document);
-    for (const properties of Array.from(
-      document.getElementsByTagNameNS(presentationNs, 'cNvPr'),
-    )) {
+    for (const properties of Array.from(document.getElementsByTagNameNS(presentationNs, 'cNvPr'))) {
       const name = properties.getAttribute('name') ?? '';
       if (name) availableNames.add(name);
       if (!requestedNames.includes(name)) continue;
@@ -63,21 +59,13 @@ export async function findNamedObjects<const Name extends string>(
         slideMatches = new Map();
         byName.set(name, slideMatches);
       }
-      if (slideMatches.has(path))
-        throw invalidTemplate(`Duplicate object "${name}" in ${path}`);
+      if (slideMatches.has(path)) throw invalidTemplate(`Duplicate object "${name}" in ${path}`);
       const element = properties.parentNode?.parentNode as Element | undefined;
-      if (
-        !element ||
-        !['graphicFrame', 'sp', 'pic'].includes(element.localName ?? '')
-      )
+      if (!element || !['graphicFrame', 'sp', 'pic'].includes(element.localName ?? ''))
         throw invalidTemplate(
           `Unsupported object "${name}" in ${path}: ${element?.localName ?? 'missing shape'}`,
         );
-      const placeholderBounds = await resolvePlaceholderBounds(
-        zip,
-        path,
-        element,
-      );
+      const placeholderBounds = await resolvePlaceholderBounds(zip, path, element);
       slideMatches.set(path, {
         path,
         element,
@@ -104,13 +92,11 @@ export async function findNamedObjects<const Name extends string>(
   const objects: NamedObjects<Name> = {
     get(name: Name, slide?: string | number): NamedObject {
       const slideMatches = byName.get(name);
-      if (!slideMatches)
-        throw invalidTemplate(`Object "${name}" was not requested`);
+      if (!slideMatches) throw invalidTemplate(`Object "${name}" was not requested`);
       if (slide !== undefined) {
         const targetPath = resolveSearchedSlide(slide);
         const match = slideMatches.get(targetPath);
-        if (!match)
-          throw invalidTemplate(`Object "${name}" not found in ${targetPath}`);
+        if (!match) throw invalidTemplate(`Object "${name}" not found in ${targetPath}`);
         return match;
       }
       if (slideMatches.size > 1)

@@ -10,13 +10,11 @@ function getReferenceStyle(
 ): string | null {
   const refAddress = `${column}${referenceRowNumber}`;
   const rows = Array.from(sheetData.getElementsByTagNameNS(spreadsheet, 'row'));
-  const refRow = rows.find(
-    (row) => Number(row.getAttribute('r')) === referenceRowNumber,
-  );
+  const refRow = rows.find((row) => Number(row.getAttribute('r')) === referenceRowNumber);
   if (!refRow) return null;
-  const refCell = Array.from(
-    refRow.getElementsByTagNameNS(spreadsheet, 'c'),
-  ).find((cell) => cell.getAttribute('r') === refAddress);
+  const refCell = Array.from(refRow.getElementsByTagNameNS(spreadsheet, 'c')).find(
+    (cell) => cell.getAttribute('r') === refAddress,
+  );
   return refCell?.getAttribute('s') || null;
 }
 

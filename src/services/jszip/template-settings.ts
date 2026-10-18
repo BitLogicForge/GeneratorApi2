@@ -18,10 +18,7 @@ import type { Document } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
 import type { CategoryChartOptions } from '@/pptx/jszip/charts/types';
 import type { NamedObject } from '@/pptx/jszip/objects';
-import type {
-  MoveObjectOptions,
-  ResizeObjectOptions,
-} from '@/pptx/jszip/objects/types';
+import type { MoveObjectOptions, ResizeObjectOptions } from '@/pptx/jszip/objects/types';
 import type { FillTableOptions } from '@/pptx/jszip/tables/types';
 
 interface TextOptions {
@@ -153,10 +150,7 @@ function createObjectHandleBase(object: NamedObject): ObjectHandleBase {
   };
 }
 
-function createTableHandle(
-  setting: TableObjectSetting,
-  object: NamedObject,
-): TableObjectHandle {
+function createTableHandle(setting: TableObjectSetting, object: NamedObject): TableObjectHandle {
   if (!object.element.getElementsByTagNameNS(drawing, 'tbl')[0])
     throw invalidTemplate(`Object "${setting.name}" is not a table`);
   return {
@@ -195,27 +189,14 @@ function createChartHandle(
     },
     clone: () => {
       const clonedObject = cloneObject(object);
-      const copyTask = cloneChartParts(
-        zip,
-        clonedObject.path,
-        clonedObject.element,
-      );
+      const copyTask = cloneChartParts(zip, clonedObject.path, clonedObject.element);
       pendingTasks.push(copyTask);
-      return createChartHandle(
-        zip,
-        setting,
-        clonedObject,
-        pendingTasks,
-        copyTask,
-      );
+      return createChartHandle(zip, setting, clonedObject, pendingTasks, copyTask);
     },
   };
 }
 
-function createTextHandle(
-  setting: TextObjectSetting,
-  object: NamedObject,
-): TextObjectHandle {
+function createTextHandle(setting: TextObjectSetting, object: NamedObject): TextObjectHandle {
   if (object.element.localName !== 'sp')
     throw invalidTemplate(`Object "${setting.name}" is not a text shape`);
   const token = setting.options?.replace;
@@ -241,10 +222,7 @@ function createTextHandle(
   };
 }
 
-function createImageHandle(
-  setting: ImageObjectSetting,
-  object: NamedObject,
-): ImageObjectHandle {
+function createImageHandle(setting: ImageObjectSetting, object: NamedObject): ImageObjectHandle {
   if (object.element.localName !== 'pic')
     throw invalidTemplate(`Object "${setting.name}" is not an image`);
   return {
@@ -281,10 +259,7 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
 
   const tables: Record<string, TableObjectHandle> = {};
   for (const [key, setting] of tableEntries) {
-    tables[key] = createTableHandle(
-      setting,
-      objects!.get(setting.name, setting.slide),
-    );
+    tables[key] = createTableHandle(setting, objects!.get(setting.name, setting.slide));
   }
 
   const charts: Record<string, ChartObjectHandle> = {};
@@ -299,18 +274,12 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
 
   const texts: Record<string, TextObjectHandle> = {};
   for (const [key, setting] of textEntries) {
-    texts[key] = createTextHandle(
-      setting,
-      objects!.get(setting.name, setting.slide),
-    );
+    texts[key] = createTextHandle(setting, objects!.get(setting.name, setting.slide));
   }
 
   const images: Record<string, ImageObjectHandle> = {};
   for (const [key, setting] of imageEntries) {
-    images[key] = createImageHandle(
-      setting,
-      objects!.get(setting.name, setting.slide),
-    );
+    images[key] = createImageHandle(setting, objects!.get(setting.name, setting.slide));
   }
 
   return {

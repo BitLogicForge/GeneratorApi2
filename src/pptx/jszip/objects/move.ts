@@ -10,20 +10,10 @@ import type { MoveObjectOptions } from './types.ts';
  * Moves a shape, table, or chart on its slide using absolute coordinates (`x`, `y`)
  * and/or relative offsets (`dx`, `dy`) in centimeters (cm).
  */
-export function moveObject(
-  target: NamedObject | Element,
-  options: MoveObjectOptions,
-): void {
+export function moveObject(target: NamedObject | Element, options: MoveObjectOptions): void {
   const { x, y, dx, dy } = options;
-  if (
-    x === undefined &&
-    y === undefined &&
-    dx === undefined &&
-    dy === undefined
-  ) {
-    throw invalidTemplate(
-      'Move options require at least one of x, y, dx, or dy',
-    );
+  if (x === undefined && y === undefined && dx === undefined && dy === undefined) {
+    throw invalidTemplate('Move options require at least one of x, y, dx, or dy');
   }
 
   const bounds = readObjectBounds(target);

@@ -1,6 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-
 import { z } from 'zod';
 
 import { loadConfig } from '@/config';

@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-
 import express from 'express';
 import helmet from 'helmet';
 
@@ -15,10 +14,7 @@ import { createRouter } from './routes/router.ts';
 import type { AppOptions } from './http/types.ts';
 
 /** Assembles HTTP handling around injected services so routes can be tested independently. */
-export function createApp(
-  options: AppOptions,
-  routerFactory: typeof createRouter = createRouter,
-) {
+export function createApp(options: AppOptions, routerFactory: typeof createRouter = createRouter) {
   const {
     config = options.reports?.config ?? loadConfig({}),
     queues = createGenerationQueues(config),
@@ -38,9 +34,7 @@ export function createApp(
   app.use(express.json({ limit: '100kb' }));
   app.use(routerFactory(dependencies));
   app.use((req, res, next) =>
-    next(
-      new AppError(404, ErrorCode.NotFound, HttpErrorMessage.EndpointNotFound),
-    ),
+    next(new AppError(404, ErrorCode.NotFound, HttpErrorMessage.EndpointNotFound)),
   );
   app.use(createErrorHandler(logger));
   return app;

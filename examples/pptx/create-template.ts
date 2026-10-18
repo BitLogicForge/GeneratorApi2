@@ -1,5 +1,4 @@
 import { fileURLToPath } from 'node:url';
-
 import pptxgen from 'pptxgenjs';
 
 // Run once to create the sample; the API subsequently reads this actual PPTX file.
@@ -36,7 +35,5 @@ slide.addText('Prepared for {{customer}}', {
 });
 slide.addNotes('Presenting to {{customer}}');
 await deck.writeFile({
-  fileName: fileURLToPath(
-    new URL('../../templates/business.pptx', import.meta.url),
-  ),
+  fileName: fileURLToPath(new URL('../../templates/business.pptx', import.meta.url)),
 });

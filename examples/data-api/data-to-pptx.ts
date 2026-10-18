@@ -1,6 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-
 import JSZip from 'jszip';
 
 import { loadConfig } from '@/config';
@@ -22,15 +21,9 @@ const api = new DataApiClient(config.dataApi);
 const data = await api.get('report', { id }, { language, year });
 
 // Populate templates/daa.pptx using the fetched data.
-const templatePath = fileURLToPath(
-  new URL('../../templates/daa.pptx', import.meta.url),
-);
+const templatePath = fileURLToPath(new URL('../../templates/daa.pptx', import.meta.url));
 const zip = await JSZip.loadAsync(await readFile(templatePath));
-const { objects, slides } = await findNamedObjects(zip, [
-  'TAB100',
-  'GGO',
-  'TEXT_ME',
-]);
+const { objects, slides } = await findNamedObjects(zip, ['TAB100', 'GGO', 'TEXT_ME']);
 
 fillTextShape(
   objects.get('TEXT_ME').element,
@@ -55,6 +48,4 @@ await writeFile(
   await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }),
 );
 
-console.log(
-  `Generated presentation from Data API: ${fileURLToPath(outputFile)}`,
-);
+console.log(`Generated presentation from Data API: ${fileURLToPath(outputFile)}`);

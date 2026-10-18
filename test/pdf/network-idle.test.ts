@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
-
 import { Router } from 'express';
 import request from 'supertest';
 import { z } from 'zod';
@@ -68,10 +67,7 @@ test('PDF rendering waits for the readiness selector and for pending network req
       page.origin,
     );
     assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
-    assert.ok(
-      page.completedAt() > start,
-      'Report data must finish loading before printing',
-    );
+    assert.ok(page.completedAt() > start, 'Report data must finish loading before printing');
     assert.ok(
       performance.now() - page.completedAt() >= 450,
       'Network must remain idle before printing',
@@ -103,9 +99,7 @@ test('network-idle timeout reports RENDER_TIMEOUT and releases the renderer slot
         page.origin,
       ),
       (error: unknown) =>
-        error instanceof AppError &&
-        error.status === 504 &&
-        error.code === 'RENDER_TIMEOUT',
+        error instanceof AppError && error.status === 504 && error.code === 'RENDER_TIMEOUT',
     );
     assert.equal(service.stats.active, 0);
     const pdf = await service.generate(

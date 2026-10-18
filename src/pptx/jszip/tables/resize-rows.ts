@@ -13,23 +13,13 @@ export function resizeTableRows(
   startRow: number,
   rowCount: number,
 ) {
-  if (
-    !Number.isInteger(startRow) ||
-    startRow < 0 ||
-    startRow >= rows.length ||
-    !rowCount
-  )
+  if (!Number.isInteger(startRow) || startRow < 0 || startRow >= rows.length || !rowCount)
     throw invalidTemplate();
   for (const cell of Array.from(table.getElementsByTagNameNS(drawing, 'tc'))) {
-    if (
-      TABLE_MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute))
-    )
+    if (TABLE_MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute)))
       throw invalidTemplate();
   }
-  const oldHeight = rows.reduce(
-    (sum, row) => sum + Number(row.getAttribute('h')),
-    0,
-  );
+  const oldHeight = rows.reduce((sum, row) => sum + Number(row.getAttribute('h')), 0);
   const targetCount = startRow + rowCount;
   const refreshIdentifiers = createTableIdentifierRefresher(table);
   while (rows.length < targetCount) {

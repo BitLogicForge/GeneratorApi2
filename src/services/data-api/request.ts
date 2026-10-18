@@ -33,32 +33,16 @@ export async function requestDataApi<T>(
       body = await response.json();
     } catch {
       if (signal.aborted) throw signal.reason;
-      throw new AppError(
-        502,
-        ErrorCode.DataApiInvalidResponse,
-        DataApiErrorMessage.InvalidJson,
-      );
+      throw new AppError(502, ErrorCode.DataApiInvalidResponse, DataApiErrorMessage.InvalidJson);
     }
     const result = schema.safeParse(body);
     if (!result.success)
-      throw new AppError(
-        502,
-        ErrorCode.DataApiInvalidResponse,
-        DataApiErrorMessage.InvalidSchema,
-      );
+      throw new AppError(502, ErrorCode.DataApiInvalidResponse, DataApiErrorMessage.InvalidSchema);
     return result.data;
   } catch (error) {
     if (error instanceof AppError) throw error;
     if (signal.aborted)
-      throw new AppError(
-        504,
-        ErrorCode.DataApiTimeout,
-        DataApiErrorMessage.Timeout,
-      );
-    throw new AppError(
-      502,
-      ErrorCode.DataApiUnavailable,
-      DataApiErrorMessage.Unavailable,
-    );
+      throw new AppError(504, ErrorCode.DataApiTimeout, DataApiErrorMessage.Timeout);
+    throw new AppError(502, ErrorCode.DataApiUnavailable, DataApiErrorMessage.Unavailable);
   }
 }

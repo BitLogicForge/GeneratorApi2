@@ -1,7 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import esbuild from 'esbuild';
 
 const root = fileURLToPath(new URL('../', import.meta.url));

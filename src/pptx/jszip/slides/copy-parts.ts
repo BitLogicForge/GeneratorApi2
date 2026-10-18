@@ -1,12 +1,7 @@
 import { posix } from 'node:path';
-
 import { XMLSerializer } from '@xmldom/xmldom';
 
-import {
-  PackagePath,
-  RelationshipType,
-  TargetMode,
-} from '@/pptx/jszip/package/constants';
+import { PackagePath, RelationshipType, TargetMode } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { contentNs, packageNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
@@ -31,11 +26,7 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
     const reserved = new Set(copies.values());
     let index = 1;
     let candidate = `${stem}${index}${extension}`;
-    while (
-      zip.file(candidate) ||
-      staged.has(candidate) ||
-      reserved.has(candidate)
-    ) {
+    while (zip.file(candidate) || staged.has(candidate) || reserved.has(candidate)) {
       index++;
       candidate = `${stem}${index}${extension}`;
     }
@@ -49,9 +40,9 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
     const output = allocate(path);
     copies.set(path, output);
     staged.set(output, await file.async('nodebuffer'));
-    const override = Array.from(
-      contentTypes.getElementsByTagNameNS(contentNs, 'Override'),
-    ).find((item) => item.getAttribute('PartName') === `/${path}`);
+    const override = Array.from(contentTypes.getElementsByTagNameNS(contentNs, 'Override')).find(
+      (item) => item.getAttribute('PartName') === `/${path}`,
+    );
     if (override) {
       const clone = override.cloneNode(true) as typeof override;
       clone.setAttribute('PartName', `/${output}`);
@@ -62,25 +53,16 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
       for (const relation of Array.from(
         relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
       )) {
-        if (relation.getAttribute('TargetMode') === TargetMode.External)
-          continue;
+        if (relation.getAttribute('TargetMode') === TargetMode.External) continue;
         const target = targetPath(path, relation.getAttribute('Target') ?? '');
         const type = relation.getAttribute('Type')?.split('/').at(-1);
         // Notes point back to their owning slide. Other slide hyperlinks stay unchanged.
         const outputTarget =
           copies.get(target) ??
-          (COPIED_SLIDE_PART_TYPES.includes(type ?? '')
-            ? await copy(target)
-            : target);
-        relation.setAttribute(
-          'Target',
-          posix.relative(posix.dirname(output), outputTarget),
-        );
+          (COPIED_SLIDE_PART_TYPES.includes(type ?? '') ? await copy(target) : target);
+        relation.setAttribute('Target', posix.relative(posix.dirname(output), outputTarget));
       }
-      staged.set(
-        relsPath(output),
-        new XMLSerializer().serializeToString(relationships),
-      );
+      staged.set(relsPath(output), new XMLSerializer().serializeToString(relationships));
     }
     return output;
   };

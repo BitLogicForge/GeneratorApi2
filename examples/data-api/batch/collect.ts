@@ -36,7 +36,5 @@ export async function fetchReportDataBatch(
   }
   return mode === 'list'
     ? entries
-    : Object.fromEntries(
-        entries.map(({ requestedId, data }) => [requestedId, data]),
-      );
+    : Object.fromEntries(entries.map(({ requestedId, data }) => [requestedId, data]));
 }

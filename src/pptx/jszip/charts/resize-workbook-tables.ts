@@ -21,12 +21,9 @@ export async function resizeWorkbookTables(
   seriesNames?: string[],
 ) {
   const dimension = sheet.getElementsByTagNameNS(spreadsheet, 'dimension')[0];
-  if (dimension)
-    updateWorksheetDimension(dimension, readWorksheetBounds(sheet));
+  if (dimension) updateWorksheetDimension(dimension, readWorksheetBounds(sheet));
   const options = { categoryColumn, firstRow, lastRow, seriesNames };
-  for (const tablePart of Array.from(
-    sheet.getElementsByTagNameNS(spreadsheet, 'tablePart'),
-  )) {
+  for (const tablePart of Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'tablePart'))) {
     const tablePath = await resolveRelationship(
       workbook,
       sheetPath,
@@ -34,7 +31,6 @@ export async function resizeWorkbookTables(
       RelationshipType.Table,
     );
     const table = await readXml(workbook, tablePath);
-    if (resizeWorkbookTable(table, options))
-      writeXml(workbook, tablePath, table);
+    if (resizeWorkbookTable(table, options)) writeXml(workbook, tablePath, table);
   }
 }

@@ -16,9 +16,9 @@ export const resolveRelationship = async (
   type: RelationshipType,
 ) => {
   const relationships = await readXml(archive, relsPath(owner));
-  const relation = Array.from(
-    relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
-  ).find((item) => item.getAttribute('Id') === id);
+  const relation = Array.from(relationships.getElementsByTagNameNS(packageNs, 'Relationship')).find(
+    (item) => item.getAttribute('Id') === id,
+  );
   if (
     !id ||
     !relation ||

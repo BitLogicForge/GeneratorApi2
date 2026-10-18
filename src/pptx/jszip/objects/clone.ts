@@ -1,17 +1,10 @@
 import { randomInt, randomUUID } from 'node:crypto';
 
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-import {
-  officeDrawingNs,
-  presentationNs,
-} from '@/pptx/jszip/package/namespaces';
+import { officeDrawingNs, presentationNs } from '@/pptx/jszip/package/namespaces';
 import { createTableIdentifierRefresher } from '@/pptx/jszip/tables/refresh-identifiers';
 
-import {
-  getTargetElement,
-  isNamedObject,
-  writeObjectBounds,
-} from './transform.ts';
+import { getTargetElement, isNamedObject, writeObjectBounds } from './transform.ts';
 
 import type { Element } from '@xmldom/xmldom';
 import type { NamedObject } from '@/pptx/jszip/objects';
@@ -20,10 +13,7 @@ import type { NamedObject } from '@/pptx/jszip/objects';
  * Clones a shape, image, table, or chart element within its slide,
  * allocating collision-free identifiers and refreshing Office drawing GUIDs.
  */
-export function cloneObject(
-  target: NamedObject | Element,
-  name?: string,
-): NamedObject {
+export function cloneObject(target: NamedObject | Element, name?: string): NamedObject {
   const element = getTargetElement(target);
   const parent = element.parentNode;
   if (!parent) {
@@ -35,9 +25,9 @@ export function cloneObject(
     throw invalidTemplate('Object element has no owner document');
   }
 
-  const existingIds = Array.from(
-    doc.getElementsByTagNameNS(presentationNs, 'cNvPr'),
-  ).map((node) => Number(node.getAttribute('id')) || 0);
+  const existingIds = Array.from(doc.getElementsByTagNameNS(presentationNs, 'cNvPr')).map(
+    (node) => Number(node.getAttribute('id')) || 0,
+  );
   const nextId = Math.max(0, ...existingIds) + 1;
 
   const cloneElement = element.cloneNode(true) as Element;
@@ -63,9 +53,7 @@ export function cloneObject(
   }
 
   if (cloneElement.getElementsByTagNameNS('*', 'tbl')[0]) {
-    createTableIdentifierRefresher(doc.documentElement ?? cloneElement)(
-      cloneElement,
-    );
+    createTableIdentifierRefresher(doc.documentElement ?? cloneElement)(cloneElement);
   }
 
   parent.insertBefore(cloneElement, element.nextSibling);
@@ -79,8 +67,6 @@ export function cloneObject(
   return {
     path: isNamed ? target.path : '',
     element: cloneElement,
-    ...(placeholderBounds
-      ? { placeholderBounds: { ...placeholderBounds } }
-      : {}),
+    ...(placeholderBounds ? { placeholderBounds: { ...placeholderBounds } } : {}),
   };
 }

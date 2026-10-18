@@ -8,10 +8,7 @@ import { HttpErrorMessage, HttpHeader, ParserErrorType } from './constants.ts';
 
 import type { ErrorRequestHandler } from 'express';
 
-const parserErrors = new Map<
-  string,
-  { status: number; code: ErrorCode; message: string }
->([
+const parserErrors = new Map<string, { status: number; code: ErrorCode; message: string }>([
   [
     ParserErrorType.EntityTooLarge,
     {
@@ -47,9 +44,7 @@ const parserErrors = new Map<
 ]);
 
 /** Maps failures to the public error contract while keeping unexpected error details in server logs. */
-export function createErrorHandler(
-  logger: Pick<Console, 'error'>,
-): ErrorRequestHandler {
+export function createErrorHandler(logger: Pick<Console, 'error'>): ErrorRequestHandler {
   return (error, req, res, next) => {
     if (res.destroyed) return;
     if (res.headersSent) return next(error);

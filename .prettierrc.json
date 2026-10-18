@@ -13,9 +13,7 @@
   "arrowParens": "always",
   "endOfLine": "lf",
   "singleAttributePerLine": false,
-  "plugins": [
-    "@ianvs/prettier-plugin-sort-imports"
-  ],
+  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
   "importOrder": [
     "^(react/(.*)$)|^(react$)",
     "^(next/(.*)$)|^(next$)",
@@ -34,21 +32,12 @@
     "^(?!.*[.]module[.]).*\\.(css|scss|less)$",
     "\\.module\\.(css|scss|less)$"
   ],
-  "importOrderParserPlugins": [
-    "typescript",
-    "jsx",
-    "decorators-legacy"
-  ],
+  "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
   "importOrderTypeScriptVersion": "5.0.0",
   "importOrderCaseSensitive": false,
   "overrides": [
     {
-      "files": [
-        "*.json",
-        "*.md",
-        "*.yml",
-        "*.yaml"
-      ],
+      "files": ["*.json", "*.md", "*.yml", "*.yaml"],
       "options": {
         "tabWidth": 2,
         "printWidth": 80

@@ -1,5 +1,4 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-
 import JSZip from 'jszip';
 
 import { findNamedObjects } from '@/pptx/jszip/objects';

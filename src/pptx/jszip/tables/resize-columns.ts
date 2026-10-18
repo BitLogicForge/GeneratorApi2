@@ -16,25 +16,16 @@ export function resizeTableColumns(
   const grid = table.getElementsByTagNameNS(drawing, 'tblGrid')[0];
   if (!grid) throw invalidTemplate();
   const columns = Array.from(grid.getElementsByTagNameNS(drawing, 'gridCol'));
-  const cellsByRow = rows.map((row) =>
-    Array.from(row.getElementsByTagNameNS(drawing, 'tc')),
-  );
+  const cellsByRow = rows.map((row) => Array.from(row.getElementsByTagNameNS(drawing, 'tc')));
   if (
     startColumn >= columns.length ||
     cellsByRow.some((cells) => cells.length !== columns.length) ||
     cellsByRow
       .flat()
-      .some((cell) =>
-        TABLE_MERGE_ATTRIBUTES.some((attribute) =>
-          cell.hasAttribute(attribute),
-        ),
-      )
+      .some((cell) => TABLE_MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute)))
   )
     throw invalidTemplate();
-  const oldWidth = columns.reduce(
-    (sum, column) => sum + Number(column.getAttribute('w')),
-    0,
-  );
+  const oldWidth = columns.reduce((sum, column) => sum + Number(column.getAttribute('w')), 0);
   const targetCount = startColumn + columnCount;
   const refreshIdentifiers = createTableIdentifierRefresher(table);
   while (columns.length < targetCount) {
@@ -63,10 +54,7 @@ export function resizeTableColumns(
       'cx',
       String(
         Number(extent.getAttribute('cx')) +
-          columns.reduce(
-            (sum, column) => sum + Number(column.getAttribute('w')),
-            0,
-          ) -
+          columns.reduce((sum, column) => sum + Number(column.getAttribute('w')), 0) -
           oldWidth,
       ),
     );

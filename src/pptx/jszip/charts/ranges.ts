@@ -23,13 +23,12 @@ export function createChartRange(
       .find((value) => formula.textContent?.startsWith(value));
     if (!prefix) throw invalidTemplate();
     const oldLastRow = Number(formula.textContent!.slice(prefix.length));
-    if (!Number.isInteger(oldLastRow) || oldLastRow < firstRow)
-      throw invalidTemplate();
+    if (!Number.isInteger(oldLastRow) || oldLastRow < firstRow) throw invalidTemplate();
     // Remove obsolete data only inside this chart's old range; leave other worksheet data alone.
     for (let row = lastRow + 1; row <= oldLastRow; row++) {
-      const cell = Array.from(
-        sheet.getElementsByTagNameNS(spreadsheet, 'c'),
-      ).find((node) => node.getAttribute('r') === `${column}${row}`);
+      const cell = Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'c')).find(
+        (node) => node.getAttribute('r') === `${column}${row}`,
+      );
       if (cell) cell.parentNode!.removeChild(cell);
     }
     formula.textContent = `${prefix}${lastRow}`;

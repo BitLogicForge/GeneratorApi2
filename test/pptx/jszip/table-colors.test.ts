@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 
 import { drawing } from '@/pptx/jszip/package/namespaces';
@@ -56,15 +55,11 @@ test('individual cell colors respect offsets and preserve header and styling in 
     assert.equal(properties.getAttribute('b'), '1');
     assert.equal(properties.getAttribute('sz'), '1800');
     assert.equal(
-      properties
-        .getElementsByTagNameNS(drawing, 'latin')[0]
-        .getAttribute('typeface'),
+      properties.getElementsByTagNameNS(drawing, 'latin')[0].getAttribute('typeface'),
       'Arial',
     );
     assert.equal(
-      properties
-        .getElementsByTagNameNS(drawing, 'srgbClr')[0]
-        .getAttribute('val'),
+      properties.getElementsByTagNameNS(drawing, 'srgbClr')[0].getAttribute('val'),
       index === 0 ? 'FF0000' : '00FF00',
     );
     assert.equal(
@@ -87,10 +82,7 @@ test('cell colors create run properties for initially empty cells', () => {
     startRow: 1,
     cellColors: [['0000FF', undefined, undefined]],
   });
-  assert.equal(
-    paragraph.getElementsByTagNameNS(drawing, 't')[0].textContent,
-    'New',
-  );
+  assert.equal(paragraph.getElementsByTagNameNS(drawing, 't')[0].textContent, 'New');
   assert.equal(
     paragraph
       .getElementsByTagNameNS(drawing, 'rPr')[0]

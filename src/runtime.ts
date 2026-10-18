@@ -14,9 +14,7 @@ export function startServer() {
   const reports = createReportServices(config);
   let stopping = false;
   // Warm Chromium once; probes only inspect state. Failed launches can retry on a PDF request.
-  void pdf
-    .browser()
-    .catch(() => console.error({ event: LogEvent.BrowserWarmupFailed }));
+  void pdf.browser().catch(() => console.error({ event: LogEvent.BrowserWarmupFailed }));
   const server = createApp({
     reports,
     config,
@@ -25,17 +23,12 @@ export function startServer() {
   }).listen(config.port, config.host, () =>
     console.log(`Generator API listening on ${config.host}:${config.port}`),
   );
-  void reports
-    .initialize()
-    .catch((error: unknown) => logTemplateValidationFailure(error));
+  void reports.initialize().catch((error: unknown) => logTemplateValidationFailure(error));
   /** Stops admission and drains active requests before closing Chromium, with a fixed exit deadline. */
   function shutdown() {
     if (stopping) return;
     stopping = true;
-    const drained = Promise.all([
-      queues.pdf.close(),
-      queues.presentations.close(),
-    ]);
+    const drained = Promise.all([queues.pdf.close(), queues.presentations.close()]);
     const deadline = setTimeout(() => process.exit(1), 15000).unref();
     server.close(() => {
       drained

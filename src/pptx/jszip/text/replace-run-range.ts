@@ -18,8 +18,6 @@ export function replaceRunRange(
     const from = Math.max(0, start - nodeStart);
     const to = Math.min(original[n].length, end - nodeStart);
     nodes[n].textContent =
-      current.slice(0, from) +
-      (start >= nodeStart ? replacement : '') +
-      current.slice(to);
+      current.slice(0, from) + (start >= nodeStart ? replacement : '') + current.slice(to);
   }
 }

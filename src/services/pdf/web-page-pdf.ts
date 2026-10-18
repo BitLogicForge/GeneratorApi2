@@ -33,10 +33,9 @@ export class WebPagePdfService {
   }
 
   constructor(
-    private readonly config: Pick<
-      Config,
-      'baseUrl' | 'concurrency' | 'timeout' | 'port'
-    > & { pdfPrint?: Config['pdfPrint'] },
+    private readonly config: Pick<Config, 'baseUrl' | 'concurrency' | 'timeout' | 'port'> & {
+      pdfPrint?: Config['pdfPrint'];
+    },
   ) {}
 
   /** Shares one Chromium launch across requests and permits relaunch after failure or disconnect. */
@@ -68,59 +67,36 @@ export class WebPagePdfService {
   /** Prints in an isolated context, restricts navigation to the webapp, and always releases rendering resources. */
   async generate(input: PdfRenderInput, externalOrigin?: string) {
     const origin =
-      externalOrigin === undefined
-        ? this.config.baseUrl
-        : pdfOriginSchema.parse(externalOrigin);
+      externalOrigin === undefined ? this.config.baseUrl : pdfOriginSchema.parse(externalOrigin);
     const url = buildUrl(origin, input.route, {
       params: input.params,
       query: input.query,
     });
     if (url.origin !== origin)
-      throw new AppError(
-        400,
-        ErrorCode.InvalidRoute,
-        PdfErrorMessage.InvalidRoute,
-      );
+      throw new AppError(400, ErrorCode.InvalidRoute, PdfErrorMessage.InvalidRoute);
     if (this.#active >= this.config.concurrency)
       throw new AppError(503, ErrorCode.RenderBusy, PdfErrorMessage.RenderBusy);
     this.#active++;
     let context: BrowserContext | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      context = await (
-        await this.browser()
-      ).newContext({ serviceWorkers: 'block' });
+      context = await (await this.browser()).newContext({ serviceWorkers: 'block' });
       const page = await context.newPage();
-      const { failure: navigationFailure } = await navigationBoundary(
-        context,
-        page,
-        origin,
-      );
+      const { failure: navigationFailure } = await navigationBoundary(context, page, origin);
       page.setDefaultTimeout(this.config.timeout);
       return await Promise.race([
         renderPagePdf(page, url, input, this.config.pdfPrint),
         navigationFailure,
         new Promise<never>((_resolve, reject) => {
           timer = setTimeout(
-            () =>
-              reject(
-                new AppError(
-                  504,
-                  ErrorCode.RenderTimeout,
-                  PdfErrorMessage.RenderTimeout,
-                ),
-              ),
+            () => reject(new AppError(504, ErrorCode.RenderTimeout, PdfErrorMessage.RenderTimeout)),
             this.config.timeout,
           );
         }),
       ]);
     } catch (error) {
       if (error instanceof errors.TimeoutError)
-        throw new AppError(
-          504,
-          ErrorCode.RenderTimeout,
-          PdfErrorMessage.RenderTimeout,
-        );
+        throw new AppError(504, ErrorCode.RenderTimeout, PdfErrorMessage.RenderTimeout);
       throw error;
     } finally {
       clearTimeout(timer);

@@ -25,8 +25,7 @@ export function createDataApiUrlSchema(base: URL) {
   return z
     .instanceof(URL)
     .refine(
-      (url) =>
-        url.origin === base.origin && url.pathname.startsWith(base.pathname),
+      (url) => url.origin === base.origin && url.pathname.startsWith(base.pathname),
       'Path must stay within the configured data API',
     );
 }

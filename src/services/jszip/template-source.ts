@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-
 import JSZip from 'jszip';
 
 import { ErrorCode } from '@/constants';
@@ -11,9 +10,7 @@ import { bindTemplateSettings } from './template-settings.ts';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
 /** Retains validated source bytes; callers must load their own mutable archive. */
-export class TemplateSource<
-  Settings extends TemplateSettings = Record<never, never>,
-> {
+export class TemplateSource<Settings extends TemplateSettings = Record<never, never>> {
   private source: Promise<Buffer> | undefined;
   private readonly settings: Settings | undefined;
   private readonly validateArchive: (zip: JSZip) => Promise<void>;
@@ -58,21 +55,10 @@ export class TemplateSource<
   private async read(): Promise<Buffer> {
     const source = await readFile(this.path);
     if (source.length > 20 * 1024 * 1024)
-      throw new AppError(
-        500,
-        ErrorCode.InvalidTemplate,
-        PptxErrorMessage.TemplateExceedsMaxSize,
-      );
+      throw new AppError(500, ErrorCode.InvalidTemplate, PptxErrorMessage.TemplateExceedsMaxSize);
     const zip = await JSZip.loadAsync(source);
-    if (
-      !zip.file(PackagePath.ContentTypes) ||
-      !zip.file(PackagePath.Presentation)
-    )
-      throw new AppError(
-        500,
-        ErrorCode.InvalidTemplate,
-        PptxErrorMessage.TemplateInvalidPptx,
-      );
+    if (!zip.file(PackagePath.ContentTypes) || !zip.file(PackagePath.Presentation))
+      throw new AppError(500, ErrorCode.InvalidTemplate, PptxErrorMessage.TemplateInvalidPptx);
     await this.validateArchive(zip);
     return source;
   }

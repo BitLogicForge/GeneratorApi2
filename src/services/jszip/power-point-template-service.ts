@@ -22,9 +22,7 @@ export class PowerPointTemplateService {
   }
 
   async validate() {
-    await Promise.all(
-      [...this.templates.values()].map((source) => source.load()),
-    );
+    await Promise.all([...this.templates.values()].map((source) => source.load()));
   }
 
   /** Replaces paragraph tokens across formatting runs and rejects missing or unused replacement keys. */

@@ -12,10 +12,7 @@ import type { ZodType } from 'zod';
 import type { RouteDependencies, RouteFactory } from '@/http/types';
 import type { ServiceDefinition } from './services.ts';
 
-export interface PptxReport<
-  Input,
-  RenderInput = Input,
-> extends ServiceDefinition<RenderInput> {
+export interface PptxReport<Input, RenderInput = Input> extends ServiceDefinition<RenderInput> {
   schema: ZodType<Input>;
   prepareInput: (
     input: Input,
@@ -41,8 +38,7 @@ export function definePptxReport<Input, RenderInput = Input>(
         throw new AppError(
           404,
           ErrorCode.UnknownTemplate,
-          definition.notConfiguredMessage ??
-            ReportErrorMessage.PowerPointReportNotConfigured,
+          definition.notConfiguredMessage ?? ReportErrorMessage.PowerPointReportNotConfigured,
         );
       const prepared = definition.prepareInput(input, dependencies.config);
       const filename = filenameSchema.parse(prepared.filename);

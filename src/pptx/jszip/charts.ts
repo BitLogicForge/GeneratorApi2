@@ -42,13 +42,8 @@ function getSingleCategoryPlot(chartDoc: Document): Element {
       Boolean(node.localName?.endsWith('Chart')),
   );
 
-  if (
-    chartNodes.length !== 1 ||
-    !SUPPORTED_CHART_TYPES.has(chartNodes[0].localName ?? '')
-  ) {
-    throw invalidTemplate(
-      'Expected exactly one supported category chart in <c:plotArea>',
-    );
+  if (chartNodes.length !== 1 || !SUPPORTED_CHART_TYPES.has(chartNodes[0].localName ?? '')) {
+    throw invalidTemplate('Expected exactly one supported category chart in <c:plotArea>');
   }
 
   return chartNodes[0];
@@ -61,12 +56,7 @@ export async function fillCategoryChart(
   data: number[][],
   userOptions: CategoryChartOptions = {},
 ): Promise<void> {
-  const {
-    sheetName = 'Sheet1',
-    firstColumn = 'B',
-    firstRow = 2,
-    seriesNames,
-  } = userOptions;
+  const { sheetName = 'Sheet1', firstColumn = 'B', firstRow = 2, seriesNames } = userOptions;
   const options = { ...userOptions, sheetName, firstColumn, firstRow };
 
   const validation = validateCategoryChartInput(data, options);
@@ -78,17 +68,9 @@ export async function fillCategoryChart(
     );
   }
 
-  const chartReference = chartObject.element.getElementsByTagNameNS(
-    chartNs,
-    'chart',
-  )[0];
+  const chartReference = chartObject.element.getElementsByTagNameNS(chartNs, 'chart')[0];
   const relId = chartReference?.getAttributeNS(relationshipNs, 'id') ?? null;
-  const chartPath = await resolveRelationship(
-    zip,
-    chartObject.path,
-    relId,
-    RelationshipType.Chart,
-  );
+  const chartPath = await resolveRelationship(zip, chartObject.path, relId, RelationshipType.Chart);
   const chart = await readXml(zip, chartPath);
 
   const plot = getSingleCategoryPlot(chart);
@@ -99,16 +81,14 @@ export async function fillCategoryChart(
     );
   }
 
-  const { workbook, workbookPath, sheet, sheetPath, date1904 } =
-    await loadChartWorkbook(zip, chart, chartPath, sheetName);
-
-  const range = createChartRange(
-    sheet,
+  const { workbook, workbookPath, sheet, sheetPath, date1904 } = await loadChartWorkbook(
+    zip,
+    chart,
+    chartPath,
     sheetName,
-    firstColumn,
-    firstRow,
-    data.length,
   );
+
+  const range = createChartRange(sheet, sheetName, firstColumn, firstRow, data.length);
 
   fillChartSeries(sheet, series, data, { ...options, date1904 }, range);
 

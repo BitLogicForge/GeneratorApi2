@@ -18,9 +18,7 @@ try {
   await mkdir(outputDir, { recursive: true });
   const outputFile = new URL(`${input.filename}.pdf`, outputDir);
   await writeFile(outputFile, buffer);
-  console.log(
-    `Rendered PDF from ${configPath} to ${fileURLToPath(outputFile)}`,
-  );
+  console.log(`Rendered PDF from ${configPath} to ${fileURLToPath(outputFile)}`);
 } finally {
   await pdfService.close();
 }

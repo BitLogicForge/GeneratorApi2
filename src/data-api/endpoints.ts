@@ -4,10 +4,7 @@ import { customerDataSchema } from './customer-data-schema.ts';
 import { reportDataSchema } from './report-data-schema.ts';
 import { reportIdsSchema } from './report-ids-schema.ts';
 import { reportSummarySchema } from './report-summary-schema.ts';
-import {
-  tmaBreakdownDataSchema,
-  tmaSeriesDataSchema,
-} from './tma-data-schema.ts';
+import { tmaBreakdownDataSchema, tmaSeriesDataSchema } from './tma-data-schema.ts';
 
 const reportPath = compile('/reports/:id');
 const customerPath = compile('/customers/:id');

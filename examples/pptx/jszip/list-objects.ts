@@ -1,15 +1,9 @@
 import { readFile } from 'node:fs/promises';
-
 import JSZip from 'jszip';
 
 import { SUPPORTED_CHART_TYPES } from '@/pptx/jszip/charts';
 import { RelationshipType } from '@/pptx/jszip/package/constants';
-import {
-  chartNs,
-  drawing,
-  presentationNs,
-  relationshipNs,
-} from '@/pptx/jszip/package/namespaces';
+import { chartNs, drawing, presentationNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 import { listSlides } from '@/pptx/jszip/slides/list';
@@ -30,9 +24,7 @@ interface DiscoveredObject {
 }
 
 function toCamelKey(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/_+([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+  return name.toLowerCase().replace(/_+([a-z0-9])/g, (_, char: string) => char.toUpperCase());
 }
 
 function extractText(element: Element): string {
@@ -49,9 +41,7 @@ async function detectManipulableType(
   if (!element) return null;
 
   if (element.localName === 'sp') {
-    return element.getElementsByTagNameNS(drawing, 'p').length > 0
-      ? 'text'
-      : null;
+    return element.getElementsByTagNameNS(drawing, 'p').length > 0 ? 'text' : null;
   }
 
   if (element.localName === 'graphicFrame') {
@@ -64,12 +54,7 @@ async function detectManipulableType(
 
     const relId = chartReference.getAttributeNS(relationshipNs, 'id') ?? null;
     try {
-      const chartPath = await resolveRelationship(
-        zip,
-        slidePath,
-        relId,
-        RelationshipType.Chart,
-      );
+      const chartPath = await resolveRelationship(zip, slidePath, relId, RelationshipType.Chart);
       const chartDoc = await readXml(zip, chartPath);
       const plotArea = chartDoc.getElementsByTagNameNS(chartNs, 'plotArea')[0];
       if (!plotArea) return null;
@@ -81,8 +66,7 @@ async function detectManipulableType(
           Boolean(node.localName?.endsWith('Chart')),
       );
 
-      return chartNodes.length === 1 &&
-        SUPPORTED_CHART_TYPES.has(chartNodes[0].localName ?? '')
+      return chartNodes.length === 1 && SUPPORTED_CHART_TYPES.has(chartNodes[0].localName ?? '')
         ? 'chart'
         : null;
     } catch {
@@ -102,9 +86,7 @@ const nameCounts = new Map<string, number>();
 for (const [index, slidePath] of slidePaths.entries()) {
   const slideNumber = index + 1;
   const document = await readXml(zip, slidePath);
-  const propertiesList = Array.from(
-    document.getElementsByTagNameNS(presentationNs, 'cNvPr'),
-  );
+  const propertiesList = Array.from(document.getElementsByTagNameNS(presentationNs, 'cNvPr'));
 
   console.log(`Slide ${slideNumber} (${slidePath}):`);
   for (const properties of propertiesList) {
@@ -115,8 +97,7 @@ for (const [index, slidePath] of slidePaths.entries()) {
     const type = await detectManipulableType(zip, slidePath, element);
     if (!type || !element) continue;
 
-    const tokenMatch =
-      type === 'text' ? PLACEHOLDER_TOKEN.exec(extractText(element)) : null;
+    const tokenMatch = type === 'text' ? PLACEHOLDER_TOKEN.exec(extractText(element)) : null;
 
     discovered.push({
       key: toCamelKey(name),
@@ -136,9 +117,7 @@ const charts = discovered.filter((item) => item.type === 'chart');
 const texts = discovered.filter((item) => item.type === 'text');
 
 const formatKey = (item: DiscoveredObject) =>
-  (nameCounts.get(item.name) ?? 0) > 1
-    ? `${item.key}Slide${item.slide}`
-    : item.key;
+  (nameCounts.get(item.name) ?? 0) > 1 ? `${item.key}Slide${item.slide}` : item.key;
 
 const formatSlideProp = (item: DiscoveredObject) =>
   (nameCounts.get(item.name) ?? 0) > 1 ? `\n      slide: ${item.slide},` : '';

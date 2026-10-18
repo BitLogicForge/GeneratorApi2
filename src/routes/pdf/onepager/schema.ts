@@ -22,8 +22,6 @@ const externalQueryNames = {
 export const requestSchema = z
   .object({
     id: documentIdSchema,
-    query: querySchema.transform((query) =>
-      mapQuery(query, externalQueryNames),
-    ),
+    query: querySchema.transform((query) => mapQuery(query, externalQueryNames)),
   })
   .strict();

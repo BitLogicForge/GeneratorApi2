@@ -5,11 +5,7 @@ import type { Document, Element } from '@xmldom/xmldom';
 const NEEDS_SPACE_PRESERVE = /^\s|\s$|\s{2,}/;
 
 /** Replaces `<c>` cell contents with a numeric `<v>` or inline string `<is><t>`. */
-export function writeCellValue(
-  sheet: Document,
-  cell: Element,
-  value: string | number,
-): void {
+export function writeCellValue(sheet: Document, cell: Element, value: string | number): void {
   while (cell.firstChild) {
     cell.removeChild(cell.firstChild);
   }

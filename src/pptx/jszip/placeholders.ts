@@ -20,8 +20,7 @@ export async function replacePlaceholders(
     let changed = false;
     const paragraphs = document.getElementsByTagNameNS(drawing, 'p');
     for (let i = 0; i < paragraphs.length; i++) {
-      if (replaceParagraphTokens(paragraphs.item(i)!, replacements, usage))
-        changed = true;
+      if (replaceParagraphTokens(paragraphs.item(i)!, replacements, usage)) changed = true;
     }
     if (changed) writeXml(zip, name, document);
   }

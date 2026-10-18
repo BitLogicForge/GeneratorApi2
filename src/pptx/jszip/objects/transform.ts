@@ -6,9 +6,7 @@ import type { Element } from '@xmldom/xmldom';
 import type { NamedObject } from '@/pptx/jszip/objects';
 import type { ObjectBoundsEmu } from './types.ts';
 
-export function isNamedObject(
-  target: NamedObject | Element,
-): target is NamedObject {
+export function isNamedObject(target: NamedObject | Element): target is NamedObject {
   return 'element' in target && 'path' in target;
 }
 
@@ -34,15 +32,11 @@ function findDirectChild(
 ): Element | undefined {
   return Array.from(parent.childNodes).find(
     (node): node is Element =>
-      node.nodeType === 1 &&
-      node.namespaceURI === namespace &&
-      node.localName === localName,
+      node.nodeType === 1 && node.namespaceURI === namespace && node.localName === localName,
   );
 }
 
-export function findDirectTransformElement(
-  element: Element,
-): Element | undefined {
+export function findDirectTransformElement(element: Element): Element | undefined {
   if (element.localName === 'graphicFrame') {
     return findDirectChild(element, presentationNs, 'xfrm');
   }
@@ -53,9 +47,7 @@ export function findDirectTransformElement(
   return undefined;
 }
 
-export function parseTransformElementBounds(
-  xfrm: Element,
-): ObjectBoundsEmu | undefined {
+export function parseTransformElementBounds(xfrm: Element): ObjectBoundsEmu | undefined {
   const off = findDirectChild(xfrm, drawing, 'off');
   const ext = findDirectChild(xfrm, drawing, 'ext');
   if (!off || !ext) return undefined;
@@ -63,28 +55,19 @@ export function parseTransformElementBounds(
   const y = Number(off.getAttribute('y'));
   const cx = Number(ext.getAttribute('cx'));
   const cy = Number(ext.getAttribute('cy'));
-  if (
-    !Number.isFinite(x) ||
-    !Number.isFinite(y) ||
-    !Number.isFinite(cx) ||
-    !Number.isFinite(cy)
-  ) {
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(cx) || !Number.isFinite(cy)) {
     return undefined;
   }
   return { x, y, cx, cy };
 }
 
-export function readObjectBounds(
-  target: NamedObject | Element,
-): ObjectBoundsEmu {
+export function readObjectBounds(target: NamedObject | Element): ObjectBoundsEmu {
   const element = getTargetElement(target);
   const xfrm = findDirectTransformElement(element);
   if (xfrm) {
     const bounds = parseTransformElementBounds(xfrm);
     if (!bounds) {
-      throw invalidTemplate(
-        'Object <xfrm> is missing valid <a:off> or <a:ext>',
-      );
+      throw invalidTemplate('Object <xfrm> is missing valid <a:off> or <a:ext>');
     }
     return bounds;
   }
@@ -113,10 +96,7 @@ function ensureTransformElement(element: Element): Element {
   throw invalidTemplate('Graphic frame is missing <p:xfrm>');
 }
 
-export function writeObjectBounds(
-  target: NamedObject | Element,
-  bounds: ObjectBoundsEmu,
-): void {
+export function writeObjectBounds(target: NamedObject | Element, bounds: ObjectBoundsEmu): void {
   const element = getTargetElement(target);
   const xfrm = ensureTransformElement(element);
   const doc = element.ownerDocument!;

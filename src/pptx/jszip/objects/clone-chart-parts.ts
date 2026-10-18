@@ -2,11 +2,7 @@ import { posix } from 'node:path';
 
 import { PackagePath, RelationshipType } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-import {
-  chartNs,
-  packageNs,
-  relationshipNs,
-} from '@/pptx/jszip/package/namespaces';
+import { chartNs, packageNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { relsPath } from '@/pptx/jszip/package/relationship-path';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
@@ -26,10 +22,7 @@ export async function cloneChartParts(
   slidePath: string,
   clonedChartElement: Element,
 ): Promise<void> {
-  const chartRef = clonedChartElement.getElementsByTagNameNS(
-    chartNs,
-    'chart',
-  )[0];
+  const chartRef = clonedChartElement.getElementsByTagNameNS(chartNs, 'chart')[0];
   if (!chartRef) {
     throw invalidTemplate('Cloned element is not a chart');
   }
@@ -46,10 +39,7 @@ export async function cloneChartParts(
     RelationshipType.Chart,
   );
 
-  const { output, staged, contentTypes } = await copySlideParts(
-    zip,
-    sourceChartPath,
-  );
+  const { output, staged, contentTypes } = await copySlideParts(zip, sourceChartPath);
 
   for (const [path, bytes] of staged) {
     zip.file(path, bytes, { createFolders: false });
@@ -58,9 +48,9 @@ export async function cloneChartParts(
 
   const slideRelsDoc = await readXml(zip, relsPath(slidePath));
   const usedIds = new Set(
-    Array.from(
-      slideRelsDoc.getElementsByTagNameNS(packageNs, 'Relationship'),
-    ).map((item) => item.getAttribute('Id')),
+    Array.from(slideRelsDoc.getElementsByTagNameNS(packageNs, 'Relationship')).map((item) =>
+      item.getAttribute('Id'),
+    ),
   );
   let index = 1;
   while (usedIds.has(`rId${index}`)) index++;
@@ -68,14 +58,8 @@ export async function cloneChartParts(
 
   const newRelation = slideRelsDoc.createElementNS(packageNs, 'Relationship');
   newRelation.setAttribute('Id', newRelId);
-  newRelation.setAttribute(
-    'Type',
-    `${relationshipNs}/${RelationshipType.Chart}`,
-  );
-  newRelation.setAttribute(
-    'Target',
-    posix.relative(posix.dirname(slidePath), output),
-  );
+  newRelation.setAttribute('Type', `${relationshipNs}/${RelationshipType.Chart}`);
+  newRelation.setAttribute('Target', posix.relative(posix.dirname(slidePath), output));
   slideRelsDoc.documentElement!.appendChild(newRelation);
   writeXml(zip, relsPath(slidePath), slideRelsDoc);
 

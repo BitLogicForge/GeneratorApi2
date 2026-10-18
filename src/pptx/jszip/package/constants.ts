@@ -16,8 +16,7 @@ export const RelationshipType = {
   Table: 'table',
 } as const;
 
-export type RelationshipType =
-  (typeof RelationshipType)[keyof typeof RelationshipType];
+export type RelationshipType = (typeof RelationshipType)[keyof typeof RelationshipType];
 
 /** OpenXML English Metric Units per centimeter (`914,400 / 2.54 = 360,000`). */
 export const EMU_PER_CM = 360_000;
@@ -35,12 +34,7 @@ export const DRAWING_FILL_TAGS = [
   'grpFill',
 ] as const;
 
-export const TABLE_MERGE_ATTRIBUTES = [
-  'rowSpan',
-  'gridSpan',
-  'hMerge',
-  'vMerge',
-] as const;
+export const TABLE_MERGE_ATTRIBUTES = ['rowSpan', 'gridSpan', 'hMerge', 'vMerge'] as const;
 
 export const PptxErrorMessage = {
   InvalidTemplateObjects:

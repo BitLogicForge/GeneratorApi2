@@ -9,27 +9,17 @@ export const MAX_WORKSHEET_ROWS = 1048576;
 
 export const columnNameSchema = z.string().regex(/^[A-Z]+$/);
 
-export const columnNumberSchema = z
-  .number()
-  .int()
-  .min(1)
-  .max(MAX_WORKSHEET_COLUMNS);
+export const columnNumberSchema = z.number().int().min(1).max(MAX_WORKSHEET_COLUMNS);
 
 const chartDataSchema = z
   .array(z.array(z.number().refine(Number.isFinite)))
   .min(1)
-  .refine(
-    (rows) =>
-      rows[0].length > 0 && rows.every((row) => row.length === rows[0].length),
-  );
+  .refine((rows) => rows[0].length > 0 && rows.every((row) => row.length === rows[0].length));
 
 function createChartColorsSchema(expectedLength: number) {
   return z
     .array(hexColorSchema)
-    .length(
-      expectedLength,
-      'Chart colors require one six-digit RGB hex color per data row',
-    );
+    .length(expectedLength, 'Chart colors require one six-digit RGB hex color per data row');
 }
 
 export function validateCategoryChartInput(
@@ -44,9 +34,7 @@ export function validateCategoryChartInput(
     return { valid: false };
   }
   if (options.colors) {
-    if (
-      !createChartColorsSchema(data.length).safeParse(options.colors).success
-    ) {
+    if (!createChartColorsSchema(data.length).safeParse(options.colors).success) {
       return { valid: false, colorsError: true };
     }
   }

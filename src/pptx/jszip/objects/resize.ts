@@ -1,12 +1,7 @@
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { drawing } from '@/pptx/jszip/package/namespaces';
 
-import {
-  cmToEmu,
-  getTargetElement,
-  readObjectBounds,
-  writeObjectBounds,
-} from './transform.ts';
+import { cmToEmu, getTargetElement, readObjectBounds, writeObjectBounds } from './transform.ts';
 
 import type { Element } from '@xmldom/xmldom';
 import type { NamedObject } from '@/pptx/jszip/objects';
@@ -19,14 +14,10 @@ function scaleElementsProportionally(
 ): void {
   if (elements.length === 0) return;
   if (targetTotal < elements.length) {
-    throw invalidTemplate(
-      'Table dimensions are too small for the number of rows or columns',
-    );
+    throw invalidTemplate('Table dimensions are too small for the number of rows or columns');
   }
 
-  const sizes = elements.map((el) =>
-    Math.max(0, Number(el.getAttribute(attribute)) || 0),
-  );
+  const sizes = elements.map((el) => Math.max(0, Number(el.getAttribute(attribute)) || 0));
   const currentTotal = sizes.reduce((sum, size) => sum + size, 0);
 
   let cumulativeOld = 0;
@@ -50,10 +41,7 @@ function scaleElementsProportionally(
  * and/or relative deltas (`dWidth`, `dHeight`) in centimeters (cm).
  * When resizing a table, scales `<a:gridCol w>` and `<a:tr h>` proportionally.
  */
-export function resizeObject(
-  target: NamedObject | Element,
-  options: ResizeObjectOptions,
-): void {
+export function resizeObject(target: NamedObject | Element, options: ResizeObjectOptions): void {
   const { width, height, dWidth, dHeight } = options;
   const widthChanged = width !== undefined || dWidth !== undefined;
   const heightChanged = height !== undefined || dHeight !== undefined;
@@ -80,9 +68,7 @@ export function resizeObject(
   if (table) {
     if (widthChanged) {
       const grid = table.getElementsByTagNameNS(drawing, 'tblGrid')[0];
-      const columns = grid
-        ? Array.from(grid.getElementsByTagNameNS(drawing, 'gridCol'))
-        : [];
+      const columns = grid ? Array.from(grid.getElementsByTagNameNS(drawing, 'gridCol')) : [];
       scaleElementsProportionally(columns, 'w', nextCx);
     }
     if (heightChanged) {

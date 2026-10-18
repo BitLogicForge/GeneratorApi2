@@ -8,16 +8,14 @@ import type { Element } from '@xmldom/xmldom';
 export function createTableIdentifierRefresher(table: Element) {
   const used = new Set(
     ['rowId', 'colId'].flatMap((name) =>
-      Array.from(table.getElementsByTagNameNS(officeDrawingNs, name)).map(
-        (node) => node.getAttribute('val'),
+      Array.from(table.getElementsByTagNameNS(officeDrawingNs, name)).map((node) =>
+        node.getAttribute('val'),
       ),
     ),
   );
   return (clone: Element) => {
     for (const name of ['rowId', 'colId']) {
-      for (const node of Array.from(
-        clone.getElementsByTagNameNS(officeDrawingNs, name),
-      )) {
+      for (const node of Array.from(clone.getElementsByTagNameNS(officeDrawingNs, name))) {
         let value: string;
         do {
           value = String(randomInt(0x100000000));

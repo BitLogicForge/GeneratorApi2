@@ -1,9 +1,4 @@
-import {
-  CacheControlValue,
-  ContentType,
-  HttpHeader,
-  HttpMethod,
-} from './constants.ts';
+import { CacheControlValue, ContentType, HttpHeader, HttpMethod } from './constants.ts';
 
 import type { Response } from 'express';
 import type { GenerationQueue } from '@/queue/generation-queue';

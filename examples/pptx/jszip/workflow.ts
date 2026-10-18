@@ -1,5 +1,4 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-
 import JSZip from 'jszip';
 
 import { fillCategoryChart } from '@/pptx/jszip/charts';
@@ -15,11 +14,7 @@ import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const [source] = await listSlides(zip);
 const copy = await duplicateSlide(zip, source);
-const { objects, slides } = await findNamedObjects(zip, [
-  'GGO',
-  'TEXT_ME',
-  'TAB100',
-]);
+const { objects, slides } = await findNamedObjects(zip, ['GGO', 'TEXT_ME', 'TAB100']);
 const copyObjects = objects.inSlide(copy);
 
 await fillCategoryChart(
@@ -35,11 +30,7 @@ fillParagraphs(copyObjects.get('TEXT_ME').element, [
   'Results for {{customer}}',
   'Prepared for {{customer}}',
 ]);
-replaceParagraphText(
-  copyObjects.get('TEXT_ME').element,
-  '{{customer}}',
-  'Example Company',
-);
+replaceParagraphText(copyObjects.get('TEXT_ME').element, '{{customer}}', 'Example Company');
 fillTable(
   copyObjects.get('TAB100').element,
   [

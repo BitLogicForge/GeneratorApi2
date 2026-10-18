@@ -4,10 +4,7 @@ import { readXml } from '@/pptx/jszip/package/read-xml';
 import { relsPath } from '@/pptx/jszip/package/relationship-path';
 import { targetPath } from '@/pptx/jszip/package/target-path';
 
-import {
-  findDirectTransformElement,
-  parseTransformElementBounds,
-} from './transform.ts';
+import { findDirectTransformElement, parseTransformElementBounds } from './transform.ts';
 
 import type { Document, Element } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
@@ -21,9 +18,7 @@ async function resolveFirstRelationshipByType(
   const relsFile = relsPath(sourcePath);
   if (!zip.file(relsFile)) return undefined;
   const relsDoc = await readXml(zip, relsFile);
-  const relation = Array.from(
-    relsDoc.getElementsByTagNameNS(packageNs, 'Relationship'),
-  ).find(
+  const relation = Array.from(relsDoc.getElementsByTagNameNS(packageNs, 'Relationship')).find(
     (item) =>
       item.getAttribute('TargetMode') !== TargetMode.External &&
       Boolean(item.getAttribute('Type')?.endsWith(`/${expectedType}`)),
@@ -49,31 +44,20 @@ function findPlaceholderShape(
       shape,
       ph: shape.getElementsByTagNameNS(presentationNs, 'ph')[0],
     }))
-    .filter(
-      (entry): entry is { shape: Element; ph: Element } =>
-        entry.ph !== undefined,
-    );
+    .filter((entry): entry is { shape: Element; ph: Element } => entry.ph !== undefined);
 
   if (idx !== undefined) {
-    const byIdx = candidates.find(
-      ({ ph }) => (ph.getAttribute('idx') || undefined) === idx,
-    );
+    const byIdx = candidates.find(({ ph }) => (ph.getAttribute('idx') || undefined) === idx);
     if (byIdx) return byIdx.shape;
   }
 
   if (type !== undefined) {
-    const byType = candidates.find(
-      ({ ph }) => (ph.getAttribute('type') || undefined) === type,
-    );
+    const byType = candidates.find(({ ph }) => (ph.getAttribute('type') || undefined) === type);
     if (byType) return byType.shape;
 
     if (allowMasterFallbacks) {
       const fallbackType =
-        type === 'ctrTitle'
-          ? 'title'
-          : type === 'subTitle' || type === 'pic'
-            ? 'body'
-            : undefined;
+        type === 'ctrTitle' ? 'title' : type === 'subTitle' || type === 'pic' ? 'body' : undefined;
       if (fallbackType) {
         const byFallback = candidates.find(
           ({ ph }) => (ph.getAttribute('type') || undefined) === fallbackType,
@@ -84,9 +68,7 @@ function findPlaceholderShape(
   }
 
   if (allowMasterFallbacks && type === undefined) {
-    const byBody = candidates.find(
-      ({ ph }) => (ph.getAttribute('type') || undefined) === 'body',
-    );
+    const byBody = candidates.find(({ ph }) => (ph.getAttribute('type') || undefined) === 'body');
     if (byBody) return byBody.shape;
   }
 
@@ -130,10 +112,7 @@ export async function resolvePlaceholderBounds(
     const layoutBounds = layoutXfrm && parseTransformElementBounds(layoutXfrm);
     if (layoutBounds) return layoutBounds;
 
-    const layoutPh = layoutShape.getElementsByTagNameNS(
-      presentationNs,
-      'ph',
-    )[0];
+    const layoutPh = layoutShape.getElementsByTagNameNS(presentationNs, 'ph')[0];
     type ??= layoutPh?.getAttribute('type') || undefined;
   }
 

@@ -41,7 +41,5 @@ app.get('/api/reports/:id', (req, res) => {
   });
 });
 app.listen(3002, loadConfig().host, () =>
-  console.log(
-    'Demo data API: http://localhost:3002/api/reports/id2222?language=en&year=2026',
-  ),
+  console.log('Demo data API: http://localhost:3002/api/reports/id2222?language=en&year=2026'),
 );

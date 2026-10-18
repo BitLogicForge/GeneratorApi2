@@ -46,27 +46,14 @@ export class GenerationQueue {
   run<T>(task: () => Promise<T>, signal?: AbortSignal): Promise<T> {
     if (!this.accepting)
       return Promise.reject(
-        new AppError(
-          503,
-          ErrorCode.QueueClosed,
-          QueueErrorMessage.ServerShuttingDown,
-        ),
+        new AppError(503, ErrorCode.QueueClosed, QueueErrorMessage.ServerShuttingDown),
       );
     if (signal?.aborted)
       return Promise.reject(
-        new AppError(
-          499,
-          ErrorCode.RequestCancelled,
-          QueueErrorMessage.RequestCancelled,
-        ),
+        new AppError(499, ErrorCode.RequestCancelled, QueueErrorMessage.RequestCancelled),
       );
-    if (
-      this.active >= this.options.concurrency &&
-      this.pending.length >= this.options.maxPending
-    ) {
-      return Promise.reject(
-        new AppError(503, ErrorCode.QueueFull, QueueErrorMessage.QueueFull),
-      );
+    if (this.active >= this.options.concurrency && this.pending.length >= this.options.maxPending) {
+      return Promise.reject(new AppError(503, ErrorCode.QueueFull, QueueErrorMessage.QueueFull));
     }
     return new Promise<T>((resolve, reject) => {
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -78,13 +65,7 @@ export class GenerationQueue {
         reject(error);
       };
       const onAbort = () =>
-        remove(
-          new AppError(
-            499,
-            ErrorCode.RequestCancelled,
-            QueueErrorMessage.RequestCancelled,
-          ),
-        );
+        remove(new AppError(499, ErrorCode.RequestCancelled, QueueErrorMessage.RequestCancelled));
       const job: PendingJob = {
         reject,
         cleanup: () => {
@@ -111,11 +92,7 @@ export class GenerationQueue {
         timer = setTimeout(
           () =>
             remove(
-              new AppError(
-                503,
-                ErrorCode.QueueWaitTimeout,
-                QueueErrorMessage.QueueWaitTimeout,
-              ),
+              new AppError(503, ErrorCode.QueueWaitTimeout, QueueErrorMessage.QueueWaitTimeout),
             ),
           this.options.waitTimeoutMs,
         );
@@ -133,13 +110,7 @@ export class GenerationQueue {
     this.accepting = false;
     for (const job of this.pending.splice(0)) {
       job.cleanup();
-      job.reject(
-        new AppError(
-          503,
-          ErrorCode.QueueClosed,
-          QueueErrorMessage.ServerShuttingDown,
-        ),
-      );
+      job.reject(new AppError(503, ErrorCode.QueueClosed, QueueErrorMessage.ServerShuttingDown));
     }
     if (this.active === 0) return Promise.resolve();
     return (this.drainPromise ??= new Promise<void>((resolve) => {
@@ -166,9 +137,7 @@ export function createGenerationQueues(
     }),
     presentations: new GenerationQueue({
       ...common,
-      concurrency:
-        options.presentationConcurrency ??
-        queueDefaults.presentationConcurrency,
+      concurrency: options.presentationConcurrency ?? queueDefaults.presentationConcurrency,
     }),
   };
 }

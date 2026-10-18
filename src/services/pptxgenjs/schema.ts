@@ -1,10 +1,6 @@
 import { z } from 'zod';
 
-import {
-  documentTextSchema,
-  filenameSchema,
-  hexColorSchema,
-} from '@/validation/schema';
+import { documentTextSchema, filenameSchema, hexColorSchema } from '@/validation/schema';
 
 // API request fields for the brief presentation.
 export const briefInputSchema = z

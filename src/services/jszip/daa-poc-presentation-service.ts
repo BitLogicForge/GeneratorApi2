@@ -66,18 +66,13 @@ export class DaaPocPresentationService extends PresentationService<
   }
 
   /** Step 2: Transforms request parameters and raw API data into presentation-ready values. */
-  protected prepareData(
-    input: DaaRequestInput,
-    raw: DaaRawData,
-  ): DaaPreparedData {
+  protected prepareData(input: DaaRequestInput, raw: DaaRawData): DaaPreparedData {
     return {
       text: input.TEXT_ME,
       table: raw.table,
       chart: {
         data: raw.chart,
-        categories: raw.chart.map(
-          (_, index) => `${demoData.chart.categoryPrefix}${index + 1}`,
-        ),
+        categories: raw.chart.map((_, index) => `${demoData.chart.categoryPrefix}${index + 1}`),
       },
     };
   }

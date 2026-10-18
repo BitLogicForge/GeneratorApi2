@@ -48,12 +48,7 @@ export const environmentSchema = z
       (value) => (value === '' ? undefined : value),
       z.string().optional(),
     ),
-    DATA_API_TIMEOUT_MS: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(120000)
-      .default(10000),
+    DATA_API_TIMEOUT_MS: z.coerce.number().int().min(1).max(120000).default(10000),
     DATA_API_CACHE_TTL_MS: z.coerce
       .number()
       .int()
@@ -72,36 +67,21 @@ export const environmentSchema = z
       .min(1)
       .max(268435456)
       .default(dataApiCacheDefaults.maxBytes),
-    PDF_CONCURRENCY: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(10)
-      .default(queueDefaults.concurrency),
+    PDF_CONCURRENCY: z.coerce.number().int().min(1).max(10).default(queueDefaults.concurrency),
     PPTX_CONCURRENCY: z.coerce
       .number()
       .int()
       .min(1)
       .max(20)
       .default(queueDefaults.presentationConcurrency),
-    QUEUE_MAX_PENDING: z.coerce
-      .number()
-      .int()
-      .min(0)
-      .max(2000)
-      .default(queueDefaults.maxPending),
+    QUEUE_MAX_PENDING: z.coerce.number().int().min(0).max(2000).default(queueDefaults.maxPending),
     QUEUE_WAIT_TIMEOUT_MS: z.coerce
       .number()
       .int()
       .min(1000)
       .max(180000)
       .default(queueDefaults.waitTimeoutMs),
-    RENDER_TIMEOUT_MS: z.coerce
-      .number()
-      .int()
-      .min(1000)
-      .max(120000)
-      .default(30000),
+    RENDER_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(30000),
   })
   .transform((c) => ({
     ...c,

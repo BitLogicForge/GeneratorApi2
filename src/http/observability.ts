@@ -5,9 +5,7 @@ import { ExportFormat, UNMATCHED_ROUTE } from './constants.ts';
 import type { RequestHandler } from 'express';
 
 /** Aggregates only registered route patterns; never URLs or payloads. */
-export function createObservability(logger: {
-  info?: (event: unknown) => void;
-}) {
+export function createObservability(logger: { info?: (event: unknown) => void }) {
   const totals = new Map<
     string,
     {
@@ -24,8 +22,7 @@ export function createObservability(logger: {
     const complete = () => {
       if (recorded) return;
       recorded = true;
-      const route =
-        typeof req.route?.path === 'string' ? req.route.path : UNMATCHED_ROUTE;
+      const route = typeof req.route?.path === 'string' ? req.route.path : UNMATCHED_ROUTE;
       const format = route.includes(ExportFormat.Pptx)
         ? ExportFormat.Pptx
         : route.includes(ExportFormat.Pdf)

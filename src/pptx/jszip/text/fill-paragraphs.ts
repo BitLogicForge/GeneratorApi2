@@ -19,13 +19,9 @@ export function fillParagraphs(element: Element, values: string[]): void {
       body.removeChild(paragraph);
       continue;
     }
-    for (const field of Array.from(
-      paragraph.getElementsByTagNameNS(drawing, 'fld'),
-    ))
+    for (const field of Array.from(paragraph.getElementsByTagNameNS(drawing, 'fld')))
       field.parentNode!.removeChild(field);
-    for (const lineBreak of Array.from(
-      paragraph.getElementsByTagNameNS(drawing, 'br'),
-    ))
+    for (const lineBreak of Array.from(paragraph.getElementsByTagNameNS(drawing, 'br')))
       lineBreak.parentNode!.removeChild(lineBreak);
     const runs = Array.from(paragraph.getElementsByTagNameNS(drawing, 'r'));
     let run = runs[0];

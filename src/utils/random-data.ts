@@ -3,10 +3,7 @@ import { randomInt } from 'node:crypto';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function randomLetters(length: number): string {
-  return Array.from(
-    { length },
-    () => LETTERS[randomInt(0, LETTERS.length)],
-  ).join('');
+  return Array.from({ length }, () => LETTERS[randomInt(0, LETTERS.length)]).join('');
 }
 
 const VALUE_GENERATORS = {
@@ -14,8 +11,7 @@ const VALUE_GENERATORS = {
   boolean: () => randomInt(0, 2) === 1,
   string: () => randomLetters(3),
   longString: () => randomLetters(randomInt(4, 15)),
-  color: () =>
-    randomInt(0, 0x1000000).toString(16).toUpperCase().padStart(6, '0'),
+  color: () => randomInt(0, 0x1000000).toString(16).toUpperCase().padStart(6, '0'),
 } as const;
 
 export type RandomDataType = keyof typeof VALUE_GENERATORS;
@@ -41,12 +37,8 @@ export function generateRandomData<T extends RandomDataType = 'number'>(
     throw new RangeError('Row count must be a positive safe integer');
   if (!isPositiveSafeInteger(columns))
     throw new RangeError('Column count must be a positive safe integer');
-  const generateValue = VALUE_GENERATORS[type] as () => ReturnType<
-    (typeof VALUE_GENERATORS)[T]
-  >;
-  return Array.from({ length: rows }, () =>
-    Array.from({ length: columns }, generateValue),
-  );
+  const generateValue = VALUE_GENERATORS[type] as () => ReturnType<(typeof VALUE_GENERATORS)[T]>;
+  return Array.from({ length: rows }, () => Array.from({ length: columns }, generateValue));
 }
 
 /** Pairs parallel `labels` and `values` arrays into `[label, ...values]` table rows. */
@@ -83,8 +75,6 @@ export function toColumnCellColors(
   colorColumn = 0,
 ): (string | undefined)[][] {
   return colors.map((color) =>
-    Array.from({ length: columnCount }, (_, index) =>
-      index === colorColumn ? color : undefined,
-    ),
+    Array.from({ length: columnCount }, (_, index) => (index === colorColumn ? color : undefined)),
   );
 }

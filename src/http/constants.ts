@@ -7,8 +7,7 @@ export type ExportFormat = (typeof ExportFormat)[keyof typeof ExportFormat];
 
 export const ContentType = {
   [ExportFormat.Pdf]: 'application/pdf',
-  [ExportFormat.Pptx]:
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  [ExportFormat.Pptx]: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 } as const;
 
 export const HttpMethod = {

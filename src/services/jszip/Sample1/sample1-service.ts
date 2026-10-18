@@ -95,35 +95,18 @@ export class Sample1Service extends PresentationService<
         values: generateRandomData(demoData.pie2.rows, 1),
       },
       table4: {
-        values: generateRandomData(
-          demoData.table4.rows,
-          demoData.table4.columns,
-        ),
+        values: generateRandomData(demoData.table4.rows, demoData.table4.columns),
       },
       table5: {
-        values: generateRandomData(
-          demoData.table5.rows,
-          demoData.table5.columns,
-        ),
+        values: generateRandomData(demoData.table5.rows, demoData.table5.columns),
       },
     };
   }
 
   /** Step 2: Transforms request parameters and raw API data into presentation-ready values. */
-  protected prepareData(
-    input: Sample1RequestInput,
-    raw: RawData,
-  ): PreparedData {
-    const pie1Colors = generateRandomData(
-      raw.pie1.labels.length,
-      1,
-      'color',
-    ).flat();
-    const pie2Colors = generateRandomData(
-      raw.pie2.labels.length,
-      1,
-      'color',
-    ).flat();
+  protected prepareData(input: Sample1RequestInput, raw: RawData): PreparedData {
+    const pie1Colors = generateRandomData(raw.pie1.labels.length, 1, 'color').flat();
+    const pie2Colors = generateRandomData(raw.pie2.labels.length, 1, 'color').flat();
 
     return {
       x1Title: 'Page 1 Title',
@@ -141,11 +124,7 @@ export class Sample1Service extends PresentationService<
       },
       tab2: {
         data: zipLegendLabelsAndValues(raw.pie1, demoData.pie1.colorColumn),
-        cellColors: toColumnCellColors(
-          pie1Colors,
-          3,
-          demoData.pie1.colorColumn,
-        ),
+        cellColors: toColumnCellColors(pie1Colors, 3, demoData.pie1.colorColumn),
       },
       chart2: {
         data: raw.pie1.values,
@@ -154,11 +133,7 @@ export class Sample1Service extends PresentationService<
       },
       tab3: {
         data: zipLegendLabelsAndValues(raw.pie2, demoData.pie2.colorColumn),
-        cellColors: toColumnCellColors(
-          pie2Colors,
-          3,
-          demoData.pie2.colorColumn,
-        ),
+        cellColors: toColumnCellColors(pie2Colors, 3, demoData.pie2.colorColumn),
       },
       chart3: {
         data: raw.pie2.values,

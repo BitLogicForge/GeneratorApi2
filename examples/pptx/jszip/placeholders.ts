@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-
 import JSZip from 'jszip';
 import pptxgen from 'pptxgenjs';
 
@@ -46,9 +45,7 @@ async function ensureTemplate(templatePath: string) {
   await deck.writeFile({ fileName: templatePath });
 }
 
-const templatePath = fileURLToPath(
-  new URL('../../../templates/business.pptx', import.meta.url),
-);
+const templatePath = fileURLToPath(new URL('../../../templates/business.pptx', import.meta.url));
 await ensureTemplate(templatePath);
 
 const payloadPath = fileURLToPath(new URL('../template.json', import.meta.url));
@@ -66,6 +63,4 @@ await writeFile(
   await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }),
 );
 
-console.log(
-  `Saved placeholder-filled presentation to ${fileURLToPath(outputFile)}`,
-);
+console.log(`Saved placeholder-filled presentation to ${fileURLToPath(outputFile)}`);

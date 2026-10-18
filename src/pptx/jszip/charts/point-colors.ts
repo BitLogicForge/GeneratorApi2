@@ -8,15 +8,11 @@ export function fillPointColors(series: Element, colors: string[]) {
   const document = series.ownerDocument!;
   const existing = Array.from(series.childNodes).filter(
     (node): node is Element =>
-      node.nodeType === 1 &&
-      node.namespaceURI === chartNs &&
-      node.localName === 'dPt',
+      node.nodeType === 1 && node.namespaceURI === chartNs && node.localName === 'dPt',
   );
   const points = new Map(
     existing.map((point) => [
-      Number(
-        point.getElementsByTagNameNS(chartNs, 'idx')[0]?.getAttribute('val'),
-      ),
+      Number(point.getElementsByTagNameNS(chartNs, 'idx')[0]?.getAttribute('val')),
       point,
     ]),
   );
@@ -25,20 +21,12 @@ export function fillPointColors(series: Element, colors: string[]) {
     (node) =>
       node.nodeType === 1 &&
       node.namespaceURI === chartNs &&
-      [
-        'dLbls',
-        'trendline',
-        'errBars',
-        'cat',
-        'val',
-        'smooth',
-        'shape',
-        'extLst',
-      ].includes(node.localName ?? ''),
+      ['dLbls', 'trendline', 'errBars', 'cat', 'val', 'smooth', 'shape', 'extLst'].includes(
+        node.localName ?? '',
+      ),
   );
   for (const [index, color] of colors.entries()) {
-    const point =
-      points.get(index) ?? document.createElementNS(chartNs, 'c:dPt');
+    const point = points.get(index) ?? document.createElementNS(chartNs, 'c:dPt');
     if (!points.has(index)) {
       const idx = document.createElementNS(chartNs, 'c:idx');
       idx.setAttribute('val', String(index));
@@ -47,9 +35,7 @@ export function fillPointColors(series: Element, colors: string[]) {
     let properties = point.getElementsByTagNameNS(chartNs, 'spPr')[0];
     if (!properties) {
       properties = document.createElementNS(chartNs, 'c:spPr');
-      const extension = Array.from(point.childNodes).find(
-        (node) => node.localName === 'extLst',
-      );
+      const extension = Array.from(point.childNodes).find((node) => node.localName === 'extLst');
       point.insertBefore(properties, extension ?? null);
     }
     for (const child of Array.from(properties.childNodes)) {

@@ -15,20 +15,12 @@ export function readWorksheetBounds(sheet: Document): WorksheetBounds {
     lastRow: 0,
   };
   let rowNumber = 0;
-  for (const rowElement of Array.from(
-    sheet.getElementsByTagNameNS(spreadsheet, 'row'),
-  )) {
+  for (const rowElement of Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'row'))) {
     rowNumber = Number(rowElement.getAttribute('r') || rowNumber + 1);
-    if (
-      !Number.isInteger(rowNumber) ||
-      rowNumber < 1 ||
-      rowNumber > MAX_WORKSHEET_ROWS
-    )
+    if (!Number.isInteger(rowNumber) || rowNumber < 1 || rowNumber > MAX_WORKSHEET_ROWS)
       throw invalidTemplate();
     let column = 0;
-    for (const cell of Array.from(
-      rowElement.getElementsByTagNameNS(spreadsheet, 'c'),
-    )) {
+    for (const cell of Array.from(rowElement.getElementsByTagNameNS(spreadsheet, 'c'))) {
       const address = readCellAddress(cell, column, rowNumber);
       column = address.column;
       bounds.firstColumn = Math.min(bounds.firstColumn, column);

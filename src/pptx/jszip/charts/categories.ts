@@ -11,16 +11,9 @@ function toNumericCategory(value: string | number, date1904: boolean): number {
     const date = Date.parse(value);
     const epoch = Date.parse(date1904 ? '1904-01-01' : '1899-12-31');
     // Excel's 1900 calendar includes the fictitious 1900-02-29.
-    return (
-      (date - epoch) / 86400000 +
-      (!date1904 && date >= Date.parse('1900-03-01') ? 1 : 0)
-    );
+    return (date - epoch) / 86400000 + (!date1904 && date >= Date.parse('1900-03-01') ? 1 : 0);
   }
-  if (
-    typeof value === 'string' &&
-    value.trim() &&
-    Number.isFinite(Number(value))
-  ) {
+  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) {
     return Number(value);
   }
   throw invalidTemplate(
@@ -41,10 +34,7 @@ export function resolveSeriesCategories(
     category?.getElementsByTagNameNS(chartNs, 'multiLvlStrCache')[0] ??
     category?.getElementsByTagNameNS(chartNs, 'numCache')[0];
   const categoryFormula = category?.getElementsByTagNameNS(chartNs, 'f')[0];
-  if (
-    !categoryCache ||
-    categoryCache.getElementsByTagNameNS(chartNs, 'lvl').length > 1
-  ) {
+  if (!categoryCache || categoryCache.getElementsByTagNameNS(chartNs, 'lvl').length > 1) {
     throw invalidTemplate();
   }
   const rawValues =

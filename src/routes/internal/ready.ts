@@ -1,21 +1,11 @@
 import { CacheControlValue, HttpHeader } from '@/http/constants';
-import {
-  ManagedExternally,
-  RendererState,
-  TemplateState,
-} from '@/observability/constants';
+import { ManagedExternally, RendererState, TemplateState } from '@/observability/constants';
 
 import type { RouteDependencies, RouteFactory } from '@/http/types';
 import type { ReadinessState } from '@/observability/constants';
 
-function evaluateReadiness({
-  readiness,
-  reports,
-  pdf,
-  queues,
-}: RouteDependencies): ReadinessState {
-  const accepting =
-    queues.pdf.stats.accepting && queues.presentations.stats.accepting;
+function evaluateReadiness({ readiness, reports, pdf, queues }: RouteDependencies): ReadinessState {
+  const accepting = queues.pdf.stats.accepting && queues.presentations.stats.accepting;
   if (readiness) {
     const state = readiness();
     return {

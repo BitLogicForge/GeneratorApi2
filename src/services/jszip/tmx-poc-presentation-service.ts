@@ -4,10 +4,7 @@ import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
 
 import { PresentationService } from './presentation-service.ts';
 
-import type {
-  TmaBreakdownData,
-  TmaSeriesData,
-} from '@/data-api/tma-data-schema';
+import type { TmaBreakdownData, TmaSeriesData } from '@/data-api/tma-data-schema';
 import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
@@ -92,20 +89,14 @@ export class TmxPocPresentationService extends PresentationService<
   }
 
   /** Step 2: Transforms request parameters and raw API data into presentation-ready values. */
-  protected prepareData(
-    input: TmaRequestInput,
-    raw: TmaRawData,
-  ): TmaPreparedData {
+  protected prepareData(input: TmaRequestInput, raw: TmaRawData): TmaPreparedData {
     const asOf = new Date(raw.series.asOf);
     // Dates YYYY-MM-DD from asOf backwards.
-    const categories = Array.from(
-      { length: raw.series.values.length },
-      (_, index) => {
-        const date = new Date(asOf);
-        date.setUTCDate(date.getUTCDate() - index);
-        return formatDateTime(date, { format: DateTimeFormat.Date });
-      },
-    );
+    const categories = Array.from({ length: raw.series.values.length }, (_, index) => {
+      const date = new Date(asOf);
+      date.setUTCDate(date.getUTCDate() - index);
+      return formatDateTime(date, { format: DateTimeFormat.Date });
+    });
 
     return {
       texts: {

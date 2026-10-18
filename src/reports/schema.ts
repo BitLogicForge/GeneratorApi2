@@ -4,10 +4,7 @@ import { pdfRenderSchema } from '@/services/pdf/schema';
 
 export const templateFilenameSchema = z
   .string()
-  .regex(
-    /^[A-Za-z0-9_-]+\.pptx$/,
-    'Use a template filename without directories',
-  );
+  .regex(/^[A-Za-z0-9_-]+\.pptx$/, 'Use a template filename without directories');
 
 // Report print settings have one owner: definition.print.
 export const preparedInputSchema = pdfRenderSchema.omit({

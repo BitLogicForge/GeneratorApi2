@@ -10,24 +10,15 @@ import { deck } from './deck.ts';
 import type JSZip from 'jszip';
 
 /** Inserts after the source. Copies mutable charts, embedded files and notes, sharing layouts/media. */
-export async function duplicateSlide(
-  zip: JSZip,
-  sourceSlide: string | number,
-): Promise<string> {
+export async function duplicateSlide(zip: JSZip, sourceSlide: string | number): Promise<string> {
   const presentation = await deck(zip);
   const source = presentation.findEntry(sourceSlide);
-  const { output, staged, contentTypes } = await copySlideParts(
-    zip,
-    source.path,
-  );
+  const { output, staged, contentTypes } = await copySlideParts(zip, source.path);
   const relation = source.relation.cloneNode(true) as typeof source.relation;
   const usedIds = new Set(
-    Array.from(
-      presentation.relationships.getElementsByTagNameNS(
-        packageNs,
-        'Relationship',
-      ),
-    ).map((item) => item.getAttribute('Id')),
+    Array.from(presentation.relationships.getElementsByTagNameNS(packageNs, 'Relationship')).map(
+      (item) => item.getAttribute('Id'),
+    ),
   );
   let index = 1;
   while (usedIds.has(`rId${index}`)) index++;
@@ -40,16 +31,13 @@ export async function duplicateSlide(
     String(
       Math.max(
         255,
-        ...presentation.entries.map((entry) =>
-          Number(entry.element.getAttribute('id')),
-        ),
+        ...presentation.entries.map((entry) => Number(entry.element.getAttribute('id'))),
       ) + 1,
     ),
   );
   slideId.setAttributeNS(relationshipNs, 'r:id', `rId${index}`);
   source.element.parentNode!.insertBefore(slideId, source.element.nextSibling);
-  for (const [path, bytes] of staged)
-    zip.file(path, bytes, { createFolders: false });
+  for (const [path, bytes] of staged) zip.file(path, bytes, { createFolders: false });
   writeXml(zip, PackagePath.ContentTypes, contentTypes);
   writeXml(zip, PackagePath.Presentation, presentation.document);
   writeXml(zip, PackagePath.PresentationRels, presentation.relationships);

@@ -11,18 +11,11 @@ export function setText(element: Element, value: string) {
     const paragraph = element.getElementsByTagNameNS(drawing, 'p')[0];
     if (!paragraph) throw invalidTemplate();
     const run = document.createElementNS(drawing, 'a:r');
-    const endProperties = paragraph.getElementsByTagNameNS(
-      drawing,
-      'endParaRPr',
-    )[0];
+    const endProperties = paragraph.getElementsByTagNameNS(drawing, 'endParaRPr')[0];
     if (endProperties) {
       const properties = document.createElementNS(drawing, 'a:rPr');
       for (const attribute of Array.from(endProperties.attributes))
-        properties.setAttributeNS(
-          attribute.namespaceURI,
-          attribute.name,
-          attribute.value,
-        );
+        properties.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
       run.appendChild(properties);
     }
     const node = document.createElementNS(drawing, 'a:t');

@@ -44,10 +44,7 @@ export class ReportServices {
   }
 
   /** Overrides are externally managed, keeping HTTP tests free of real services. */
-  override<Input>(
-    definition: ServiceDefinition<Input>,
-    service: ReportService<Input>,
-  ) {
+  override<Input>(definition: ServiceDefinition<Input>, service: ReportService<Input>) {
     if (this.entries.has(definition) || this.initialization || this.closing)
       throw new Error('Override report services before registering routes');
     this.overrides.set(definition, service);
@@ -58,10 +55,8 @@ export class ReportServices {
     if (this.closing) throw new Error('Report services are shutting down');
     const existing = this.entries.get(definition);
     if (existing) return existing.service as ReportService<Input>;
-    if (this.initialization)
-      throw new Error('Register report services before initialization');
-    const override = this.overrides.get(definition) as
-      ReportService<Input> | undefined;
+    if (this.initialization) throw new Error('Register report services before initialization');
+    const override = this.overrides.get(definition) as ReportService<Input> | undefined;
     const service = override ?? definition.createService(this.context);
     this.entries.set(definition, {
       service,
@@ -103,8 +98,7 @@ export class ReportServices {
       const errors = results.flatMap((result) =>
         result.status === 'rejected' ? [result.reason as unknown] : [],
       );
-      if (errors.length)
-        throw new AggregateError(errors, 'Report shutdown failed');
+      if (errors.length) throw new AggregateError(errors, 'Report shutdown failed');
     })();
     return this.closing;
   }

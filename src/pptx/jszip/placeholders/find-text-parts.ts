@@ -16,11 +16,7 @@ export async function findTextParts(zip: JSZip): Promise<Set<string>> {
     for (const relation of Array.from(
       relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
     )) {
-      if (
-        relation
-          .getAttribute('Type')
-          ?.endsWith(`/${RelationshipType.NotesSlide}`)
-      )
+      if (relation.getAttribute('Type')?.endsWith(`/${RelationshipType.NotesSlide}`))
         files.add(
           await resolveRelationship(
             zip,

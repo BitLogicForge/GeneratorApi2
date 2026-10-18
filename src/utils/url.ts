@@ -12,8 +12,7 @@ export function buildUrl(
   } = {},
 ): URL {
   const url = new URL(route, baseUrl);
-  if (options.params !== undefined)
-    url.pathname = compile(url.pathname)(options.params);
+  if (options.params !== undefined) url.pathname = compile(url.pathname)(options.params);
   for (const [name, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) url.searchParams.set(name, String(value));
   }

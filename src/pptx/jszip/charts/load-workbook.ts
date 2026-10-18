@@ -2,11 +2,7 @@ import JSZip from 'jszip';
 
 import { PackagePath, RelationshipType } from '@/pptx/jszip/package/constants';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-import {
-  chartNs,
-  relationshipNs,
-  spreadsheet,
-} from '@/pptx/jszip/package/namespaces';
+import { chartNs, relationshipNs, spreadsheet } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 

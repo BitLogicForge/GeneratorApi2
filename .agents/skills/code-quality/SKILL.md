@@ -29,6 +29,9 @@ the requested change.
   types from runtime schemas and contracts rather than maintaining duplicate
   interfaces. Fix the root cause of type mismatches instead of hiding them with
   `any`, type assertions, or lint suppressions.
+- Replace ambiguous or repeated string literals and enum-like values with
+  `as const` objects or named constants (e.g. in a `constants.ts` module) and
+  derive union types from them (`(typeof Name)[keyof typeof Name]`).
 
 ## Preserve Boundaries and Resource Lifecycles
 

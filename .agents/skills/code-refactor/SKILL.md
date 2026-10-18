@@ -35,6 +35,10 @@ cleanup invariants.
 - Rename or move files when it makes responsibilities easier to locate. Update
   all imports, examples, and documentation that reference them, and avoid
   creating barrel files just to hide paths.
+- Consolidate repeated text, status/event names, and enum-like string literals
+  into `as const` objects in a `constants.ts` file, deriving their TypeScript
+  union types (`(typeof Name)[keyof typeof Name]`) rather than scattering raw
+  strings.
 
 ## Prove Removals and Validate Proportionally
 

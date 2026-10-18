@@ -4,17 +4,21 @@ import { cloneObject } from '@/pptx/jszip/objects/clone';
 import { cloneChartParts } from '@/pptx/jszip/objects/clone-chart-parts';
 import { deleteObject } from '@/pptx/jszip/objects/delete';
 import { moveObject } from '@/pptx/jszip/objects/move';
+import { resolvePlaceholderBounds } from '@/pptx/jszip/objects/placeholder-bounds';
 import { resizeObject } from '@/pptx/jszip/objects/resize';
 import { getTargetElement } from '@/pptx/jszip/objects/transform';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
-import { chartNs, drawing } from '@/pptx/jszip/package/namespaces';
+import { chartNs, drawing, presentationNs } from '@/pptx/jszip/package/namespaces';
+import { readXml } from '@/pptx/jszip/package/read-xml';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
+import { duplicateSlides } from '@/pptx/jszip/slides/duplicate';
+import { listSlides } from '@/pptx/jszip/slides/list';
 import { fillTable } from '@/pptx/jszip/tables/fill';
 import { fillParagraphs } from '@/pptx/jszip/text/fill-paragraphs';
 import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 
-import type { Document } from '@xmldom/xmldom';
+import type { Document, Element } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
 import type { CategoryChartOptions } from '@/pptx/jszip/charts/types';
 import type { NamedObject } from '@/pptx/jszip/objects';
@@ -117,6 +121,22 @@ type HandleMap<Group, Handle> =
     ? { readonly [Key in keyof Group]: Handle }
     : Record<never, never>;
 
+/** Bound object handles on a specific slide grouped by `tables`, `charts`, `texts`, and `images`. */
+export interface SlideHandle<Settings extends TemplateSettings> {
+  /** 1-based presentation slide number. */
+  readonly slide: number;
+  /** Slide part path in the package (e.g. `ppt/slides/slide2.xml`). */
+  readonly path: string;
+  /** Bound table handles on this slide for entries configured in `templateSettings.tables`. */
+  readonly tables: HandleMap<Settings['tables'], TableObjectHandle>;
+  /** Bound chart handles on this slide for entries configured in `templateSettings.charts`. */
+  readonly charts: HandleMap<Settings['charts'], ChartObjectHandle>;
+  /** Bound text shape handles on this slide for entries configured in `templateSettings.texts`. */
+  readonly texts: HandleMap<Settings['texts'], TextObjectHandle>;
+  /** Bound image handles on this slide for entries configured in `templateSettings.images`. */
+  readonly images: HandleMap<Settings['images'], ImageObjectHandle>;
+}
+
 /** Mutable PowerPoint archive session with bound object handles grouped by `tables`, `charts`, `texts`, and `images`. */
 export interface TemplateDeck<Settings extends TemplateSettings> {
   /** Bound table handles for each entry in `templateSettings.tables`. */
@@ -133,6 +153,10 @@ export interface TemplateDeck<Settings extends TemplateSettings> {
   readonly slides: Map<string, Document>;
   /** Serializes modified slide XML documents back into the archive and generates the output `.pptx` buffer. */
   toBuffer(): Promise<Buffer>;
+  /** Obtains a bound handle for an existing slide by 1-based slide number or slide path. */
+  getSlide(slide: number | string): Promise<SlideHandle<Settings>>;
+  /** Duplicates a slide sequentially and returns bound handles for all created duplicate slides. */
+  duplicateSlide(sourceSlide: number | string, count?: number): Promise<SlideHandle<Settings>[]>;
 }
 
 function createObjectHandleBase(object: NamedObject): ObjectHandleBase {
@@ -234,6 +258,134 @@ function createImageHandle(setting: ImageObjectSetting, object: NamedObject): Im
   };
 }
 
+async function findSlideObjects(
+  zip: JSZip,
+  path: string,
+  doc: Document,
+): Promise<Map<string, NamedObject>> {
+  const objects = new Map<string, NamedObject>();
+  for (const properties of Array.from(doc.getElementsByTagNameNS(presentationNs, 'cNvPr'))) {
+    const name = properties.getAttribute('name');
+    if (!name) continue;
+    const element = properties.parentNode?.parentNode as Element | undefined;
+    if (!element || !['graphicFrame', 'sp', 'pic'].includes(element.localName ?? '')) continue;
+    const placeholderBounds = await resolvePlaceholderBounds(zip, path, element);
+    objects.set(name, {
+      path,
+      element,
+      ...(placeholderBounds ? { placeholderBounds } : {}),
+    });
+  }
+  return objects;
+}
+
+function createSlideGroupHandles<Setting extends { name: string }, Handle>(
+  settingsGroup: Record<string, Setting> | undefined,
+  objects: Map<string, NamedObject>,
+  createHandle: (setting: Setting, object: NamedObject) => Handle,
+  slideNumber: number,
+  slidePath: string,
+): Record<string, Handle> {
+  const handles: Record<string, Handle> = {};
+  for (const [key, setting] of Object.entries(settingsGroup ?? {})) {
+    const object = objects.get(setting.name);
+    if (object) {
+      handles[key] = createHandle(setting, object);
+    }
+  }
+  return new Proxy(handles, {
+    get(target, prop, receiver) {
+      if (typeof prop === 'string' && !(prop in target)) {
+        const configured = settingsGroup?.[prop];
+        if (configured) {
+          throw invalidTemplate(
+            `Object "${configured.name}" (alias "${prop}") not found on slide ${slideNumber} (${slidePath})`,
+          );
+        }
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
+
+async function bindSlideHandle<Settings extends TemplateSettings>(
+  zip: JSZip,
+  settings: Settings,
+  slide: number | string,
+  slides: Map<string, Document>,
+  pendingTasks: Promise<void>[],
+): Promise<SlideHandle<Settings>> {
+  const activeSlides = await listSlides(zip);
+  let resolvedPath: string;
+  let slideNumber: number;
+
+  if (typeof slide === 'number') {
+    if (!Number.isInteger(slide) || slide < 1 || slide > activeSlides.length) {
+      throw invalidTemplate(
+        `Slide number out of bounds: ${slide} (presentation has ${activeSlides.length} slides)`,
+      );
+    }
+    slideNumber = slide;
+    resolvedPath = activeSlides[slide - 1]!;
+  } else {
+    resolvedPath = slide;
+    const index = activeSlides.indexOf(resolvedPath);
+    if (index === -1) {
+      throw invalidTemplate(`Slide is not part of the presentation: ${slide}`);
+    }
+    slideNumber = index + 1;
+  }
+
+  let slideDoc = slides.get(resolvedPath);
+  if (!slideDoc) {
+    slideDoc = await readXml(zip, resolvedPath);
+    slides.set(resolvedPath, slideDoc);
+  }
+
+  const objectsOnSlide = await findSlideObjects(zip, resolvedPath, slideDoc);
+
+  const tables = createSlideGroupHandles(
+    settings.tables,
+    objectsOnSlide,
+    (setting, obj) => createTableHandle(setting, obj),
+    slideNumber,
+    resolvedPath,
+  );
+
+  const charts = createSlideGroupHandles(
+    settings.charts,
+    objectsOnSlide,
+    (setting, obj) => createChartHandle(zip, setting, obj, pendingTasks),
+    slideNumber,
+    resolvedPath,
+  );
+
+  const texts = createSlideGroupHandles(
+    settings.texts,
+    objectsOnSlide,
+    (setting, obj) => createTextHandle(setting, obj),
+    slideNumber,
+    resolvedPath,
+  );
+
+  const images = createSlideGroupHandles(
+    settings.images,
+    objectsOnSlide,
+    (setting, obj) => createImageHandle(setting, obj),
+    slideNumber,
+    resolvedPath,
+  );
+
+  return {
+    slide: slideNumber,
+    path: resolvedPath,
+    tables: tables as HandleMap<Settings['tables'], TableObjectHandle>,
+    charts: charts as HandleMap<Settings['charts'], ChartObjectHandle>,
+    texts: texts as HandleMap<Settings['texts'], TextObjectHandle>,
+    images: images as HandleMap<Settings['images'], ImageObjectHandle>,
+  };
+}
+
 /** Validates configured template objects and binds each entry in `tables`, `charts`, `texts`, and `images` to its preconfigured handle. */
 export async function bindTemplateSettings<Settings extends TemplateSettings>(
   zip: JSZip,
@@ -293,6 +445,23 @@ export async function bindTemplateSettings<Settings extends TemplateSettings>(
       await Promise.all(pendingTasks);
       for (const [path, document] of slides) writeXml(zip, path, document);
       return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+    },
+    getSlide: (slide: number | string) =>
+      bindSlideHandle(zip, settings, slide, slides, pendingTasks),
+    duplicateSlide: async (sourceSlide: number | string, count: number = 1) => {
+      if (count <= 0) return [];
+      const activeSlides = await listSlides(zip);
+      const sourcePath =
+        typeof sourceSlide === 'number' ? activeSlides[sourceSlide - 1] : sourceSlide;
+      if (sourcePath && slides.has(sourcePath)) {
+        writeXml(zip, sourcePath, slides.get(sourcePath)!);
+      }
+      const createdPaths = await duplicateSlides(zip, sourceSlide, count);
+      const result: SlideHandle<Settings>[] = [];
+      for (const path of createdPaths) {
+        result.push(await bindSlideHandle(zip, settings, path, slides, pendingTasks));
+      }
+      return result;
     },
   };
 }

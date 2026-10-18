@@ -52,17 +52,26 @@ test('Sample1Service generates presentation with duplicated slide 2 into output 
 
   const zip = await JSZip.loadAsync(buffer);
   const slides = await listSlides(zip);
-  assert.equal(slides.length, 5);
+  assert.equal(slides.length, 8);
   assert.deepEqual(slides, [
     'ppt/slides/slide1.xml',
     'ppt/slides/slide2.xml',
     'ppt/slides/slide5.xml',
+    'ppt/slides/slide6.xml',
+    'ppt/slides/slide7.xml',
+    'ppt/slides/slide8.xml',
     'ppt/slides/slide3.xml',
     'ppt/slides/slide4.xml',
   ]);
 
   const slide2Xml = await zip.file('ppt/slides/slide2.xml')!.async('string');
   const slide5Xml = await zip.file('ppt/slides/slide5.xml')!.async('string');
+  const slide6Xml = await zip.file('ppt/slides/slide6.xml')!.async('string');
+  const slide7Xml = await zip.file('ppt/slides/slide7.xml')!.async('string');
+  const slide8Xml = await zip.file('ppt/slides/slide8.xml')!.async('string');
   assert.match(slide2Xml, /Page 2/);
-  assert.match(slide5Xml, /Page 2 \(Duplicate\)/);
+  assert.match(slide5Xml, /Page 2 \(Duplicate 1\)/);
+  assert.match(slide6Xml, /Page 2 \(Duplicate 2\)/);
+  assert.match(slide7Xml, /Page 2 \(Duplicate 3\)/);
+  assert.match(slide8Xml, /Page 2 \(Duplicate 4\)/);
 });

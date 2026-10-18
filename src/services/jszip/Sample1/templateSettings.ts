@@ -11,14 +11,6 @@ export const templateSettings = {
         resizeRows: true,
       },
     },
-    x2Tab1Copy: {
-      name: 'X2_TAB1',
-      slide: 3,
-      options: {
-        startRow: 1,
-        resizeRows: true,
-      },
-    },
     x3Tab1: {
       name: 'X3_TAB1',
       options: {
@@ -51,10 +43,6 @@ export const templateSettings = {
       name: 'X2_CHART1',
       slide: 2,
     },
-    x2Chart1Copy: {
-      name: 'X2_CHART1',
-      slide: 3,
-    },
     x3Chart1: {
       name: 'X3_CHART1',
     },
@@ -78,10 +66,6 @@ export const templateSettings = {
     x2Title: {
       name: 'X2_TITLE',
       slide: 2,
-    },
-    x2TitleCopy: {
-      name: 'X2_TITLE',
-      slide: 3,
     },
     x3Title: {
       name: 'X3_TITLE',

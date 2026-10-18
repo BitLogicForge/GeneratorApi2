@@ -1,4 +1,3 @@
-import { duplicateSlide } from '@/pptx/jszip/slides/duplicate';
 import { formatDateTime, generateTimeSeriesDates } from '@/utils/date-time';
 import {
   generateRandomData,
@@ -10,39 +9,33 @@ import {
 import { PresentationService } from '../presentation-service.ts';
 import { templateSettings } from './templateSettings.ts';
 
-import type JSZip from 'jszip';
 import type { Sample1RequestInput } from '@/routes/pptx/sample1/schema';
-import type { TemplateDeck } from '../template-settings.ts';
+import type { SlideHandle, TemplateDeck } from '../template-settings.ts';
 
 const demoData = {
-  timeseries: { rows: 9 },
-  timeseriesCopy: { rows: 9 },
+  slide2Instances: 5,
+  timeseriesRows: 9,
   pie1: { rows: 5, colorColumn: 0 },
   pie2: { rows: 8, colorColumn: 0 },
   table4: { rows: 6, columns: 3 },
   table5: { rows: 7, columns: 5 },
 } as const;
 
-interface RawData {
-  // date YYYY-MM-DD and value
+interface Slide2RawData {
+  title: string;
   timeseries: { labels: string[]; values: number[][] };
-  timeseriesCopy: { labels: string[]; values: number[][] };
+}
+
+interface RawData {
+  slides2: Slide2RawData[];
   pie1: { labels: string[]; values: number[][] };
   pie2: { labels: string[]; values: number[][] };
   table4: { values: number[][] };
   table5: { values: number[][] };
 }
 
-interface PreparedData {
-  //text fields
-  x1Title: string;
-  x2Title: string;
-  x2TitleCopy: string;
-  x3Title: string;
-  x4Title: string;
-  x1Sub: string;
-  x1Text: string;
-
+interface Slide2PreparedData {
+  title: string;
   tab1: {
     data: (number | string)[][];
   };
@@ -50,13 +43,17 @@ interface PreparedData {
     data: number[][];
     categories: string[];
   };
-  tab1Copy: {
-    data: (number | string)[][];
-  };
-  chart1Copy: {
-    data: number[][];
-    categories: string[];
-  };
+}
+
+interface PreparedData {
+  //text fields
+  x1Title: string;
+  slides2: Slide2PreparedData[];
+  x3Title: string;
+  x4Title: string;
+  x1Sub: string;
+  x1Text: string;
+
   tab2: {
     data: (number | string)[][];
     cellColors: (string | undefined)[][];
@@ -94,14 +91,13 @@ export class Sample1Service extends PresentationService<
   protected fetchData(_input: Sample1RequestInput): RawData {
     // Placeholder for future Data API call.
     return {
-      timeseries: {
-        labels: generateTimeSeriesDates(demoData.timeseries.rows),
-        values: generateRandomData(demoData.timeseries.rows, 1),
-      },
-      timeseriesCopy: {
-        labels: generateTimeSeriesDates(demoData.timeseriesCopy.rows),
-        values: generateRandomData(demoData.timeseriesCopy.rows, 1),
-      },
+      slides2: Array.from({ length: demoData.slide2Instances }, (_, index) => ({
+        title: index === 0 ? 'Page 2' : `Page 2 (Duplicate ${index})`,
+        timeseries: {
+          labels: generateTimeSeriesDates(demoData.timeseriesRows),
+          values: generateRandomData(demoData.timeseriesRows, 1),
+        },
+      })),
       pie1: {
         labels: generateRandomData(demoData.pie1.rows, 1, 'string').flat(),
         values: generateRandomData(demoData.pie1.rows, 1),
@@ -126,26 +122,20 @@ export class Sample1Service extends PresentationService<
 
     return {
       x1Title: 'Page 1 Title',
-      x2Title: 'Page 2',
-      x2TitleCopy: 'Page 2 (Duplicate)',
+      slides2: raw.slides2.map((item) => ({
+        title: item.title,
+        tab1: {
+          data: zipLabelsAndValues(item.timeseries),
+        },
+        chart1: {
+          data: item.timeseries.values,
+          categories: item.timeseries.labels,
+        },
+      })),
       x3Title: 'Page 3',
       x4Title: 'Page 4',
       x1Sub: formatDateTime(),
       x1Text: input.someText,
-      tab1: {
-        data: zipLabelsAndValues(raw.timeseries),
-      },
-      chart1: {
-        data: raw.timeseries.values,
-        categories: raw.timeseries.labels,
-      },
-      tab1Copy: {
-        data: zipLabelsAndValues(raw.timeseriesCopy),
-      },
-      chart1Copy: {
-        data: raw.timeseriesCopy.values,
-        categories: raw.timeseriesCopy.labels,
-      },
       tab2: {
         data: zipLegendLabelsAndValues(raw.pie1, demoData.pie1.colorColumn),
         cellColors: toColumnCellColors(pie1Colors, 3, demoData.pie1.colorColumn),
@@ -169,29 +159,40 @@ export class Sample1Service extends PresentationService<
     };
   }
 
-  /** Step 3: Prepares the template archive before binding handles by duplicating slide 2. */
-  protected override async prepareTemplate(zip: JSZip): Promise<void> {
-    await duplicateSlide(zip, 2);
-  }
-
-  /** Step 4: Populates the PowerPoint template with prepared values. */
+  /** Step 3: Populates the PowerPoint template with prepared values. */
   protected async renderDeck(
     deck: TemplateDeck<typeof templateSettings>,
     prepared: PreparedData,
   ): Promise<void> {
+    // Page 1
     deck.texts.x1Title.fill(prepared.x1Title);
     const x1TitleCopy = deck.texts.x1Title.clone();
     x1TitleCopy.move({ dy: -2 });
     x1TitleCopy.fill('xxx');
     deck.texts.x1Sub.fill(prepared.x1Sub);
     deck.texts.x1Text.fill(prepared.x1Text);
-    deck.texts.x2Title.fill(prepared.x2Title);
-    deck.texts.x2TitleCopy.fill(prepared.x2TitleCopy);
+
+    // Page 2 & duplicates
+    const duplicates = await deck.duplicateSlide(2, prepared.slides2.length - 1);
+    const page2Slides: SlideHandle<typeof templateSettings>[] = [
+      await deck.getSlide(2),
+      ...duplicates,
+    ];
+
+    for (const [index, slide] of page2Slides.entries()) {
+      const slideData = prepared.slides2[index];
+      if (!slideData) continue;
+      slide.texts.x2Title.fill(slideData.title);
+      slide.tables.x2Tab1.fill(slideData.tab1.data, { resizeRows: true });
+      await slide.charts.x2Chart1.fill(slideData.chart1.data, {
+        categories: slideData.chart1.categories,
+      });
+    }
+
+    // Page 3 & Page 4
     deck.texts.x3Title.fill(prepared.x3Title);
     deck.texts.x4Title.fill(prepared.x4Title);
 
-    deck.tables.x2Tab1.fill(prepared.tab1.data, { resizeRows: true });
-    deck.tables.x2Tab1Copy.fill(prepared.tab1Copy.data, { resizeRows: true });
     deck.tables.x3Tab1.fill(prepared.tab2.data, {
       resizeRows: true,
       cellColors: prepared.tab2.cellColors,
@@ -201,12 +202,6 @@ export class Sample1Service extends PresentationService<
       cellColors: prepared.tab3.cellColors,
     });
 
-    await deck.charts.x2Chart1.fill(prepared.chart1.data, {
-      categories: prepared.chart1.categories,
-    });
-    await deck.charts.x2Chart1Copy.fill(prepared.chart1Copy.data, {
-      categories: prepared.chart1Copy.categories,
-    });
     await deck.charts.x3Chart1.fill(prepared.chart2.data, {
       categories: prepared.chart2.categories,
       colors: prepared.chart2.colors,

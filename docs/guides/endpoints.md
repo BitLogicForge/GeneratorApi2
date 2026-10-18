@@ -139,7 +139,7 @@ This checks process availability; it does not check Chromium or the upstream web
 
 ## GET /pdf/factsheet/:id
 
-Renders `/factsheet/{id}` on `WEBAPP_BASE_URL`, always in portrait orientation:
+Renders `/factsheet/:id` on `WEBAPP_BASE_URL`, always in portrait orientation:
 
 ```bash
 curl --fail-with-body 'http://localhost:3000/pdf/factsheet/id2222?language=en' --output factsheet.pdf
@@ -149,7 +149,7 @@ The API URL has no `.pdf` suffix; its attachment filename is `id2222.pdf`.
 
 ## GET /pdf/onepager/:id
 
-Renders `/onepager/{id}` on `WEBAPP_BASE_URL`, always in landscape orientation:
+Renders `/onepager/:id` on `WEBAPP_BASE_URL`, always in landscape orientation:
 
 ```bash
 curl --fail-with-body 'http://localhost:3000/pdf/onepager/id2222?START=2027-01-01&END=2027-12-31&BENCHMARK=SAA' --output onepager.pdf
@@ -172,22 +172,22 @@ names. Each is independently optional; `language` and `year` are rejected on one
 
 Unknown parameters, duplicate values, unsafe IDs, and invalid values return 400. Caller-supplied `landscape`, `route`, and `waitForSelector` are rejected. These routes use the shared renderer and queue; configured appearance applies with the endpoint's fixed orientation, defined only through `print.landscape` in its `report.ts`.
 
-Each endpoint folder defines the complete PDF route:
+Each endpoint folder owns its PDF definition:
 
-- `src/routes/pdf/onepager/[id]/schema.ts` declares the path ID and allowed query parameters.
-- `src/routes/pdf/onepager/[id]/report.ts` defines the external route, parameter mapping, filename, and print settings.
-- `src/routes/pdf/onepager/[id]/get.ts` exports that definition as the GET endpoint.
+- `src/routes/pdf/onepager/schema.ts` declares the path ID and allowed query parameters.
+- `src/routes/pdf/onepager/report.ts` defines the external route, parameters, filename, and print settings.
+- `src/routes/router.ts` registers `/pdf/onepager/:id` with Express.
 
-The factsheet folder has the same structure and its own independent definitions.
-In each `report.ts`, `externalRoute` defines the trusted webapp path (for example,
-`/onepager/{id}` or `/document?id={id}`). `prepareInput` maps the validated API
-ID into that pattern and uses `mapPdfRoute` from `src/reports/pdf-route.ts`
-with a mapping object such as `{ START: 'from', END: 'to', BENCHMARK: 'benchmark' }`.
-Mapping keys are public input names; values are external query names. The helper
-omits undefined values and rejects conflicts with fixed external query keys. Add or change public parameters in that folder's `schema.ts`
-and their mapping in its `report.ts`. Fixed query keys in the external route
-cannot be overridden by callers. Configure the shared webapp origin through
-`WEBAPP_BASE_URL`.
+The factsheet folder has the same structure and its own independent definition.
+`prepareInput` returns a trusted relative `route` such as `/onepager/:id`,
+`params: { id }`, and validated `query` fields. The shared URL builder uses
+`path-to-regexp` to encode path parameters and Node's `URLSearchParams` for query
+values. To put the ID in a query instead, return `route: '/document'` and
+`query: { id }`.
+
+Map external query names and apply defaults explicitly in `prepareInput` when
+needed. Forward only validated public fields; fixed server-owned values belong
+in the same query object. Configure the shared origin through `WEBAPP_BASE_URL`.
 
 The former `/pdf/portrait/:id.pdf` and `/pdf/landscape/:id.pdf` document routes are removed.
 
@@ -454,6 +454,11 @@ parameters are declared in the router and read through `req.params.id`. Report f
 and keep validation, mapping, and download handling beside each report.
 See [the development guide](development.md#add-a-pdf-endpoint) for adding endpoints.
 Existing URLs, query parameters, HEAD behavior, and download contracts are unchanged.
+
+PDF report definitions return a relative `route`, optional named `params` for
+path placeholders such as `:id`, and validated `query` values. The renderer uses
+`buildUrl` from `src/url.ts` to assemble the full URL on the configured origin.
+These are internal generation fields; public endpoint parameters are unchanged.
 
 ## Internal observability
 

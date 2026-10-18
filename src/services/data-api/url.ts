@@ -1,5 +1,11 @@
 import { AppError } from '@/errors';
-import { hasControlCharacters } from '@/validation/control-characters';
+import { buildUrl } from '@/url';
+
+import {
+  createDataApiUrlSchema,
+  dataApiPathSchema,
+  dataApiQuerySchema,
+} from './schema.ts';
 
 import type { DataApiQuery } from '@/services/data-api-client';
 
@@ -9,13 +15,7 @@ export function buildDataApiUrl(
   path: string,
   query: DataApiQuery,
 ): URL {
-  if (
-    !path ||
-    path.startsWith('//') ||
-    /^[a-z][a-z0-9+.-]*:/i.test(path) ||
-    /[\\?#]/.test(path) ||
-    hasControlCharacters(path)
-  )
+  if (!dataApiPathSchema.safeParse(path).success)
     throw new AppError(
       400,
       'INVALID_DATA_API_PATH',
@@ -23,22 +23,18 @@ export function buildDataApiUrl(
     );
   const base = new URL(baseUrl);
   base.pathname = `${base.pathname.replace(/\/$/, '')}/`;
-  const url = new URL(path.replace(/^\//, ''), base);
-  if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname))
+  const url = buildUrl(base.href, path.replace(/^\//, ''), { query });
+  if (!createDataApiUrlSchema(base).safeParse(url).success)
     throw new AppError(
       400,
       'INVALID_DATA_API_PATH',
       'Path must stay within the configured data API',
     );
-  for (const [key, value] of Object.entries(query)) {
-    if (value === undefined) continue;
-    if (typeof value === 'number' && !Number.isFinite(value))
-      throw new AppError(
-        400,
-        'INVALID_DATA_API_QUERY',
-        'Numeric query values must be finite',
-      );
-    url.searchParams.set(key, String(value));
-  }
+  if (!dataApiQuerySchema.safeParse(query).success)
+    throw new AppError(
+      400,
+      'INVALID_DATA_API_QUERY',
+      'Numeric query values must be finite',
+    );
   return url;
 }

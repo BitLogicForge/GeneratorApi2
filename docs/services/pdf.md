@@ -7,8 +7,8 @@
 | Endpoint                      | External webapp page      | Orientation                         |
 | ----------------------------- | ------------------------- | ----------------------------------- |
 | GET/POST `/pdf/test`          | Explicit relative `route` | Request options and shared defaults |
-| GET/HEAD `/pdf/factsheet/:id` | `/factsheet/{id}`         | Always portrait                     |
-| GET/HEAD `/pdf/onepager/:id`  | `/onepager/{id}`          | Always landscape                    |
+| GET/HEAD `/pdf/factsheet/:id` | `/factsheet/:id`          | Always portrait                     |
+| GET/HEAD `/pdf/onepager/:id`  | `/onepager/:id`           | Always landscape                    |
 | GET/HEAD `/pdf/quarterly`     | `/reports/quarterly`      | Always portrait                     |
 
 Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Factsheet downloads `{id}.pdf`. Onepager downloads `onepager-YYYY-MM-DD-HH-mm-{id}.pdf`, using the request's UTC date and time. If the complete filename would exceed 80 characters before the extension, it uses `{id}.pdf` to preserve the full ID. The previous portrait/landscape document download URLs are removed. See [PDF examples](../../examples/pdf/README.md).
@@ -16,25 +16,28 @@ Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Factsheet 
 ## External page configuration
 
 Configure the external origin with `WEBAPP_BASE_URL`. Each endpoint folder owns
-its `schema.ts` (path and query validation), `report.ts` (external URL, parameter
-mapping, default language, filename, and print settings), and `get.ts` (registration).
-For example, edit `src/routes/pdf/onepager/report.ts` to change
-`externalRoute` or the mapping passed to `mapPdfRoute`. Mapping keys are public
-input names and values are external query names; absent values are omitted. The
-shared helper lives in `src/reports/pdf-route.ts` and also handles fixed-query
-conflicts and optional defaults.
+its `schema.ts` (path and query validation) and `report.ts` (external page pattern,
+parameters, filename, and print settings). `src/routes/router.ts` registers the
+public Express paths.
+For example, `src/routes/pdf/onepager/report.ts` returns `route: '/onepager/:id'`,
+`params: { id }`, and its validated `query` directly. The renderer calls the shared
+`buildUrl` helper in `src/url.ts` to encode placeholders and append query values
+to the full URL. Routes without placeholders need no `params`.
+Map external query names or apply defaults explicitly in the report's
+`prepareInput`, forwarding only validated fields. Fixed server-owned values
+belong in the query object rather than caller-controlled input.
 The factsheet folder has its own independent definition.
 
 For `WEBAPP_BASE_URL=https://other-host.example`:
 
 | API request                                                 | External request                                                                  |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `/pdf/factsheet/id2222?language=de`                         | `https://other-host.example/factsheet/id2222?language=de`                         |
+| `/pdf/factsheet/id2222`                                     | `https://other-host.example/factsheet/id2222`                                     |
 | `/pdf/onepager/id2222?START=2027-01-01&BENCHMARK=REPORTING` | `https://other-host.example/onepager/id2222?START=2027-01-01&BENCHMARK=REPORTING` |
 
-The demo webapp serves both pages. Custom patterns can put the ID in a query parameter, such as `/factsheet?id={id}`; each pattern must be a relative route containing `{id}`. Rebuild after changing these settings. Configured query keys remain authoritative and cannot be overridden by callers.
+The demo webapp serves both pages. For an ID in the query string, return `route: "/factsheet"` and `query: { id }`. Use `params` for `:id` placeholders in paths only. Rebuild after changing these settings. Query values come only from the report's validated fields; keep fixed server-owned query values explicit when adding mappings.
 
-IDs accept 1–80 letters, numbers, underscores, and hyphens. Factsheet accepts `language` (nonempty text up to 100 characters) and `year` (four digits, 2000–2100). Onepager instead accepts optional `START` and `END` (valid `YYYY-MM-DD` dates), and `BENCHMARK` (`SAA` or `REPORTING`); it rejects `language` and `year`. These onepager parameters are forwarded using their uppercase names. Unknown, invalid, or duplicate parameters return 400 before rendering. On factsheet, omitted language uses the configured default unless the selected page pattern already fixes it. Other omitted parameters use the webapp's defaults.
+IDs accept 1–80 letters, numbers, underscores, and hyphens. Factsheet accepts no query fields. Onepager accepts optional `START` and `END` (valid `YYYY-MM-DD` dates), and `BENCHMARK` (`SAA` or `REPORTING`); it rejects `language` and `year`. These onepager parameters are forwarded using their uppercase names. Unknown, invalid, or duplicate parameters return 400 before rendering. Omitted query parameters use the webapp's defaults.
 
 ## Readiness and appearance
 
@@ -48,7 +51,8 @@ Pages with continuing network activity can time out.
 
 ```ts
 prepareInput: ({ query }) => ({
-  ...mapPdfRoute(externalRoute, query, mapping),
+  route: '/reports/quarterly',
+  query,
   filename: 'report',
   waitForSelector: '[data-report-ready]',
   waitForNetworkIdle: true,

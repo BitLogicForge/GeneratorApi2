@@ -22,7 +22,7 @@ The cache is local to one client in one process; multiple API instances do not s
 
 ## Fetch report data from another API
 
-`DataApiClient` coordinates helpers in `src/services/data-api/`: `url.ts` validates paths and encodes queries; `request.ts` fetches JSON, applies the timeout, and validates responses.
+`DataApiClient` coordinates helpers in `src/services/data-api/`: `url.ts` validates paths and uses the shared `buildUrl` helper to encode queries; `request.ts` fetches JSON, applies the timeout, and validates responses.
 
 The optional `DataApiClient` uses `config.dataApi` from `src/config.ts`:
 
@@ -48,7 +48,7 @@ DATA_API_BASE_URL=http://localhost:3002/api npm run example:fetch-data -- id2222
 
 This calls `/api/reports/id2222?language=en&year=2026` and saves `output/data-api/id2222.json`. If the settings are already in `.env`, omit the inline environment variable. The example defaults to `id2222`, the configured language, and year 2026 when arguments are omitted.
 
-Define upstream endpoints in `src/data-api/endpoints.ts`, exposed as `config.dataApi.endpoints`. Each definition pairs a path builder with a Zod response schema; the client infers the returned TypeScript type and validates the JSON automatically. Use the client in a service like this:
+Define upstream endpoints in `src/data-api/endpoints.ts`, exposed as `config.dataApi.endpoints`. Dynamic paths use `path-to-regexp` templates such as `/reports/:id`, compiled once and supplied with typed parameters. The URL layer preserves the configured base-path prefix and rejects requests outside it. Each definition pairs a path builder with a Zod response schema; the client infers the returned TypeScript type and validates the JSON automatically. Use the client in a service like this:
 
 ```ts
 const api = new DataApiClient(config.dataApi);

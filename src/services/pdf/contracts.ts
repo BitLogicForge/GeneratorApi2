@@ -55,24 +55,6 @@ export const pdfPrintOverridesSchema = pdfPrintSettingsSchema.partial().extend({
 });
 export type PdfPrintOverrides = z.infer<typeof pdfPrintOverridesSchema>;
 
-// Supports path parameters (/factsheet/{id}) and query parameters (/document?id={id}).
-export const pdfRoutePatternSchema = z
-  .string()
-  .max(2000)
-  .startsWith('/')
-  .refine((value) => value.includes('{id}'), 'Route pattern must contain {id}')
-  .refine(
-    (value) =>
-      !value.startsWith('//') &&
-      !value.includes('\\') &&
-      !value.includes('#') &&
-      !hasControlCharacters(value),
-    'Use a relative route without fragments',
-  );
-export function resolvePdfRoute(pattern: string, id: string) {
-  return pattern.replaceAll('{id}', encodeURIComponent(id));
-}
-
 /** Trusted report-owned origin; this is never decoded from request parameters. */
 export const pdfOriginSchema = z
   .url()
@@ -102,6 +84,8 @@ export const pdfRenderSchema = z
           !v.startsWith('//') && !v.includes('\\') && !hasControlCharacters(v),
         'Use a relative webapp route',
       ),
+    // Trusted route placeholders, separate from the public request schema.
+    params: z.record(z.string().max(100), z.string().max(2000)).optional(),
     // Internal transport values; each route validates its own allowed parameter names.
     query: z
       .record(

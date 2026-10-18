@@ -222,19 +222,38 @@ Library references: [Playwright page API](https://playwright.dev/docs/api/class-
 
 ### Map PDF parameters to an external page
 
-Use `mapPdfRoute` from `src/reports/pdf-route.ts` inside a route's `prepareInput`:
+Return the page pattern, named path parameters, and validated query values directly
+from `prepareInput` when query names already match the webapp:
 
 ```ts
-...mapPdfRoute(resolvePdfRoute(externalRoute, id), query, {
-  START: 'from',
-  END: 'to',
-  BENCHMARK: 'benchmark',
-})
+prepareInput: ({ id, query }) => ({
+  route: '/onepager/:id',
+  params: { id },
+  query,
+  filename: id,
+}),
 ```
 
-The mapping stays in the route folder. The shared helper forwards only mapped,
-defined values, rejects conflicts with fixed external query keys, and accepts
-an optional fourth argument of defaults keyed by external parameter name.
+The renderer uses `buildUrl` from `src/url.ts` to build the full URL on the
+configured origin. Path placeholders use Express syntax such as `:id` and are expanded and encoded
+by `path-to-regexp`. Supply `params` for path templates; plain routes need no
+`params`. Put dynamic query values in `query`, where Node’s native `URLSearchParams`
+handles encoding. Undefined query values are omitted. Missing required values in
+`params` are configuration errors.
+For example:
+
+```ts
+buildUrl('https://webapp.example', '/onepager/:id', {
+  params: { id: 'id2222' },
+  query: { START: '2027-01-01', BENCHMARK: 'REPORTING' },
+});
+```
+
+When external query names differ from public names, map them explicitly in the
+report's `prepareInput`. For example, `query: { from: query.START, to: query.END }`
+renames two fields. Apply defaults there as well. The shared builder omits
+undefined query values. Keep fixed server-owned query values in this object,
+and forward only fields allowed by the report schema.
 
 PDF report orientation is defined only in `print.landscape` on the report
 definition. `prepareInput` returns the external route, query, filename, and

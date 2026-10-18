@@ -1,5 +1,4 @@
 import { definePdfReport } from '@/reports/pdf';
-import { mapPdfRoute } from '@/reports/pdf-route';
 
 import { requestSchema } from './schema.ts';
 
@@ -11,7 +10,8 @@ export default definePdfReport({
   readRequestInput: (req) => ({ query: req.query }),
   externalOrigin: externalPage.origin,
   prepareInput: ({ query }) => ({
-    ...mapPdfRoute(externalPage.pathname, query, {}),
+    route: externalPage.pathname,
+    query,
     filename: 'example',
   }),
   print: { landscape: false },

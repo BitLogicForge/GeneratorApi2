@@ -2,6 +2,7 @@ import { chromium, errors } from 'playwright';
 
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
+import { buildUrl } from '@/url';
 
 import { pdfOriginSchema, resolvePdfPrintSettings } from './contracts.ts';
 import { navigationBoundary } from './navigation-boundary.ts';
@@ -63,15 +64,16 @@ export class WebPagePdfService {
       externalOrigin === undefined
         ? this.config.baseUrl
         : pdfOriginSchema.parse(externalOrigin);
-    const url = new URL(input.route, origin);
+    const url = buildUrl(origin, input.route, {
+      params: input.params,
+      query: input.query,
+    });
     if (url.origin !== origin)
       throw new AppError(
         400,
         'INVALID_ROUTE',
         'Route must belong to the configured webapp',
       );
-    for (const [key, value] of Object.entries(input.query))
-      url.searchParams.set(key, String(value));
     if (this.#active >= this.config.concurrency)
       throw new AppError(503, 'RENDER_BUSY', 'Renderer is busy; retry shortly');
     this.#active++;

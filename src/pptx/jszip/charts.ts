@@ -16,7 +16,7 @@ import type JSZip from 'jszip';
 import type { CategoryChartOptions } from './charts/types.ts';
 import type { NamedObject } from './objects.ts';
 
-const SUPPORTED_CHART_TYPES = new Set([
+export const SUPPORTED_CHART_TYPES = new Set([
   'lineChart',
   'barChart',
   'areaChart',

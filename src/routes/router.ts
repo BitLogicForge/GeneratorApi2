@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import sample1 from './pptx/sample1/report.ts';
 
 import health from './health.ts';
 import metrics from './internal/metrics.ts';
@@ -23,6 +24,7 @@ const RoutePath = {
   PdfQuarterly: '/pdf/quarterly',
   PptxDaa: '/pptx/daa',
   PptxTma: '/pptx/tma',
+  PptxSample1: '/pptx/sample1',
   PptxGenJsBrief: '/pptxgenjs/brief',
 } as const;
 
@@ -38,6 +40,7 @@ export function createRouter(dependencies: RouteDependencies) {
   router.get(RoutePath.PdfQuarterly, quarterly(dependencies));
   router.get(RoutePath.PptxDaa, daa(dependencies));
   router.get(RoutePath.PptxTma, tma(dependencies));
+  router.get(RoutePath.PptxSample1, sample1(dependencies));
   const briefHandler = brief(dependencies);
   router.get(RoutePath.PptxGenJsBrief, briefHandler);
   router.post(RoutePath.PptxGenJsBrief, briefHandler);

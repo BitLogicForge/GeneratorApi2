@@ -29,3 +29,15 @@ export function formatDateTime(
         : `${day} ${time}`;
   return filenameSafe ? value.replace(/[ :]/g, '-') : value;
 }
+
+/** Generates `rows` consecutive UTC `YYYY-MM-DD` date strings ending at `asOf`. */
+export function generateTimeSeriesDates(
+  rows: number,
+  asOf = new Date(),
+): string[] {
+  return Array.from({ length: rows }, (_, index) => {
+    const date = new Date(asOf);
+    date.setUTCDate(date.getUTCDate() - (rows - 1 - index));
+    return formatDateTime(date, { format: DateTimeFormat.Date });
+  });
+}

@@ -48,3 +48,16 @@ export function generateRandomData<T extends RandomDataType = 'number'>(
     Array.from({ length: columns }, generateValue),
   );
 }
+
+/** Pairs parallel `labels` and `values` arrays into `[label, value]` table rows. */
+export function zipLabelsAndValues<T extends number | string>(series: {
+  labels: readonly string[];
+  values: readonly T[];
+}): (string | T)[][] {
+  return series.labels.map((label, index) => [label, series.values[index]]);
+}
+
+/** Wraps a flat array of values into single-series `[value]` rows for chart filling. */
+export function toSingleSeriesData<T>(values: readonly T[]): T[][] {
+  return values.map((value) => [value]);
+}

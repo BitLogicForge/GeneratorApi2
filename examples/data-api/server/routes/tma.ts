@@ -3,10 +3,8 @@ import { randomInt } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { createRandomDataGenerator } from '@/utils/random-data';
+import { generateRandomData } from '@/utils/random-data';
 import { documentTextSchema } from '@/validation/schema';
-
-const generateData = createRandomDataGenerator(1);
 
 const seriesQuerySchema = z
   .object({
@@ -33,7 +31,7 @@ export function createTmaRoute() {
       pp1: query.data.pp1,
       asOf: new Date().toISOString(),
       title: `CHART A (${query.data.pp1})`,
-      values: generateData(20),
+      values: generateRandomData(20, 1),
     });
   });
 
@@ -43,7 +41,7 @@ export function createTmaRoute() {
       res.status(400).json({ error: 'Invalid TMA breakdown parameters' });
       return;
     }
-    const values = generateData(4);
+    const values = generateRandomData(4, 1);
     const colors = values.map(() =>
       randomInt(0x1000000).toString(16).toUpperCase().padStart(6, '0'),
     );

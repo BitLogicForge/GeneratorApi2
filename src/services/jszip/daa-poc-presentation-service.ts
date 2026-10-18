@@ -1,4 +1,4 @@
-import { createRandomDataGenerator } from '@/utils/random-data';
+import { generateRandomData } from '@/utils/random-data';
 
 import { PresentationService } from './presentation-service.ts';
 
@@ -52,23 +52,16 @@ export class DaaPocPresentationService extends PresentationService<
   DaaRawData,
   DaaPreparedData
 > {
-  private readonly generateTableData = createRandomDataGenerator(
-    demoData.table.columns,
-  );
-  private readonly generateChartData = createRandomDataGenerator(
-    demoData.chart.series,
-  );
-
   constructor(path: string) {
     super(path, templateSettings);
   }
 
   /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */
   protected fetchData(_input: DaaRequestInput): DaaRawData {
-    // Placeholder for future Data API call via `this.dataApi`.
+    // Placeholder for future Data API call.
     return {
-      table: this.generateTableData(demoData.table.rows),
-      chart: this.generateChartData(demoData.chart.rows),
+      table: generateRandomData(demoData.table.rows, demoData.table.columns),
+      chart: generateRandomData(demoData.chart.rows, demoData.chart.series),
     };
   }
 

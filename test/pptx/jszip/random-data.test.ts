@@ -14,13 +14,12 @@ import { readXml } from '@/pptx/jszip/package/read-xml';
 import { resolveRelationship } from '@/pptx/jszip/package/resolve-relationship';
 import { templateFile } from '@/reports/template';
 import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
-import { createRandomDataGenerator } from '@/utils/random-data';
+import { generateRandomData } from '@/utils/random-data';
 
-test('a configured generator supports different row counts with independent random cells', () => {
+test('generateRandomData supports different row and column counts with independent random cells', () => {
   for (const columns of [1, 3, 4]) {
-    const generateData = createRandomDataGenerator(columns);
     for (const rows of [1, 4, 5, 10, 20]) {
-      const data = generateData(rows);
+      const data = generateRandomData(rows, columns);
       assert.equal(data.length, rows);
       assert.equal(new Set(data).size, rows);
       for (const row of data) {
@@ -35,11 +34,10 @@ test('a configured generator supports different row counts with independent rand
   }
 });
 
-test('random-data generators reject invalid dimensions', () => {
-  const generateData = createRandomDataGenerator();
+test('generateRandomData rejects invalid dimensions', () => {
   for (const count of [0, -1, 1.5, NaN, Infinity]) {
-    assert.throws(() => createRandomDataGenerator(count), RangeError);
-    assert.throws(() => generateData(count), RangeError);
+    assert.throws(() => generateRandomData(count, 1), RangeError);
+    assert.throws(() => generateRandomData(1, count), RangeError);
   }
 });
 

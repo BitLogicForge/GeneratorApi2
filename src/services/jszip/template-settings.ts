@@ -1,5 +1,9 @@
 import { fillCategoryChart } from '@/pptx/jszip/charts';
 import { findNamedObjects } from '@/pptx/jszip/objects';
+import { deleteObject } from '@/pptx/jszip/objects/delete';
+import { moveObject } from '@/pptx/jszip/objects/move';
+import { resizeObject } from '@/pptx/jszip/objects/resize';
+import { getTargetElement } from '@/pptx/jszip/objects/transform';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { chartNs, drawing } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
@@ -12,6 +16,10 @@ import type { Document } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
 import type { CategoryChartOptions } from '@/pptx/jszip/charts/types';
 import type { NamedObject } from '@/pptx/jszip/objects';
+import type {
+  MoveObjectOptions,
+  ResizeObjectOptions,
+} from '@/pptx/jszip/objects/types';
 import type { FillTableOptions } from '@/pptx/jszip/tables/types';
 
 interface TextOptions {
@@ -55,23 +63,28 @@ export interface TemplateSettings {
   texts?: Record<string, TextObjectSetting>;
 }
 
-interface TableObjectHandle {
-  /** Resolved PowerPoint slide path and table `<p:graphicFrame>` XML element. */
+interface ObjectHandleBase {
+  /** Resolved PowerPoint slide path and shape XML element. */
   readonly object: NamedObject;
+  /** Moves the object on its slide using absolute coordinates (`x`, `y`) and/or relative offsets (`dx`, `dy`) in centimeters (cm). */
+  move(options: MoveObjectOptions): void;
+  /** Resizes the object on its slide using absolute dimensions (`width`, `height`) and/or relative deltas (`dWidth`, `dHeight`) in centimeters (cm). */
+  resize(options: ResizeObjectOptions): void;
+  /** Removes the object from its slide. */
+  delete(): void;
+}
+
+interface TableObjectHandle extends ObjectHandleBase {
   /** Fills table cells using the preconfigured `options` (`startRow`, `startColumn`, `resizeRows`, `resizeColumns`, `cellColors`), merged with optional per-call overrides. */
   fill(data: (string | number)[][], options?: FillTableOptions): void;
 }
 
-interface ChartObjectHandle {
-  /** Resolved PowerPoint slide path and chart `<p:graphicFrame>` XML element. */
-  readonly object: NamedObject;
+interface ChartObjectHandle extends ObjectHandleBase {
   /** Updates chart series caches, formulas, and the embedded `.xlsx` workbook using the preconfigured `options` (`sheetName`, `firstColumn`, `firstRow`, `categories`, `seriesNames`, `colors`), merged with optional per-call overrides. */
   fill(data: number[][], options?: CategoryChartOptions): Promise<void>;
 }
 
-interface TextObjectHandle {
-  /** Resolved PowerPoint slide path and text `<p:sp>` XML element. */
-  readonly object: NamedObject;
+interface TextObjectHandle extends ObjectHandleBase {
   /** Replaces the configured `options.replace` token if set in `templateSettings`, or replaces the entire shape text while preserving first-run formatting. */
   fill(text: string): void;
   /** Replaces body paragraphs, cloning the last paragraph's style when growing and removing extras when shrinking. */
@@ -101,6 +114,21 @@ export interface TemplateDeck<Settings extends TemplateSettings> {
   toBuffer(): Promise<Buffer>;
 }
 
+function createObjectHandleBase(object: NamedObject): ObjectHandleBase {
+  return {
+    object,
+    move: (options) => {
+      moveObject(object, options);
+    },
+    resize: (options) => {
+      resizeObject(object, options);
+    },
+    delete: () => {
+      deleteObject(object);
+    },
+  };
+}
+
 function createTableHandle(
   setting: TableObjectSetting,
   object: NamedObject,
@@ -108,9 +136,9 @@ function createTableHandle(
   if (!object.element.getElementsByTagNameNS(drawing, 'tbl')[0])
     throw invalidTemplate(`Object "${setting.name}" is not a table`);
   return {
-    object,
+    ...createObjectHandleBase(object),
     fill: (data, options) => {
-      fillTable(object.element, data, {
+      fillTable(getTargetElement(object), data, {
         ...setting.options,
         ...options,
       });
@@ -126,12 +154,14 @@ function createChartHandle(
   if (!object.element.getElementsByTagNameNS(chartNs, 'chart')[0])
     throw invalidTemplate(`Object "${setting.name}" is not a chart`);
   return {
-    object,
-    fill: (data, options) =>
-      fillCategoryChart(zip, object, data, {
+    ...createObjectHandleBase(object),
+    fill: async (data, options) => {
+      getTargetElement(object);
+      await fillCategoryChart(zip, object, data, {
         ...setting.options,
         ...options,
-      }),
+      });
+    },
   };
 }
 
@@ -143,19 +173,20 @@ function createTextHandle(
     throw invalidTemplate(`Object "${setting.name}" is not a text shape`);
   const token = setting.options?.replace;
   return {
-    object,
+    ...createObjectHandleBase(object),
     fill: (text) => {
+      const element = getTargetElement(object);
       if (token !== undefined) {
-        replaceParagraphText(object.element, token, text);
+        replaceParagraphText(element, token, text);
         return;
       }
-      fillTextShape(object.element, text);
+      fillTextShape(element, text);
     },
     fillParagraphs: (values) => {
-      fillParagraphs(object.element, values);
+      fillParagraphs(getTargetElement(object), values);
     },
     replace: (search, replacement) =>
-      replaceParagraphText(object.element, search, replacement),
+      replaceParagraphText(getTargetElement(object), search, replacement),
   };
 }
 

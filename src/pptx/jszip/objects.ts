@@ -1,3 +1,4 @@
+import { resolvePlaceholderBounds } from '@/pptx/jszip/objects/placeholder-bounds';
 import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { presentationNs } from '@/pptx/jszip/package/namespaces';
 import { readXml } from '@/pptx/jszip/package/read-xml';
@@ -5,10 +6,13 @@ import { listSlides } from '@/pptx/jszip/slides/list';
 
 import type { Element } from '@xmldom/xmldom';
 import type JSZip from 'jszip';
+import type { ObjectBoundsEmu } from '@/pptx/jszip/objects/types';
 
 export interface NamedObject {
   path: string;
   element: Element;
+  /** Inherited layout/master placeholder bounds in EMUs when `<p:spPr>` has no slide-local `<a:xfrm>` yet. */
+  placeholderBounds?: ObjectBoundsEmu;
 }
 
 interface SlideObjects<Name extends string> {
@@ -66,7 +70,16 @@ export async function findNamedObjects<const Name extends string>(
         throw invalidTemplate(
           `Unsupported object "${name}" in ${path}: ${element?.localName ?? 'missing shape'}`,
         );
-      slideMatches.set(path, { path, element });
+      const placeholderBounds = await resolvePlaceholderBounds(
+        zip,
+        path,
+        element,
+      );
+      slideMatches.set(path, {
+        path,
+        element,
+        ...(placeholderBounds ? { placeholderBounds } : {}),
+      });
     }
   }
 

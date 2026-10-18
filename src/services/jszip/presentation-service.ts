@@ -2,6 +2,7 @@ import { TemplateSource } from './template-source.ts';
 
 import type { ReportService } from '@/reports/services';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
+import type { TemplateSourceInput } from './template-source.ts';
 
 /** Shared base contract for JSZip template presentation services: fetch -> prepare -> render. */
 export abstract class PresentationService<
@@ -12,8 +13,11 @@ export abstract class PresentationService<
 > implements ReportService<Input> {
   private readonly source: TemplateSource<Settings>;
 
-  constructor(path: string, settings: Settings) {
-    this.source = new TemplateSource(path, settings);
+  constructor(sourceOrPath: TemplateSourceInput | TemplateSource<Settings>, settings: Settings) {
+    this.source =
+      sourceOrPath instanceof TemplateSource
+        ? sourceOrPath
+        : new TemplateSource(sourceOrPath, settings);
   }
 
   async validate(): Promise<void> {

@@ -1,3 +1,8 @@
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+
+import { prepareTemplate } from '@/pptx/automizer';
+import { templateFile } from '@/reports/template';
 import { formatDateTime, generateTimeSeriesDates } from '@/utils/date-time';
 import {
   generateRandomData,
@@ -11,9 +16,11 @@ import { templateSettings } from './templateSettings.ts';
 
 import type { Sample1RequestInput } from '@/routes/pptx/sample1/schema';
 import type { TemplateDeck } from '../template-settings.ts';
+import type { TemplateSourceInput } from '../template-source.ts';
 
 const demoData = {
   timeseries: { rows: 9 },
+  timeseriesDup: { rows: 9 },
   pie1: { rows: 5, colorColumn: 0 },
   pie2: { rows: 8, colorColumn: 0 },
   table4: { rows: 6, columns: 3 },
@@ -21,8 +28,8 @@ const demoData = {
 } as const;
 
 interface RawData {
-  // date YYYY-MM-DD and value
   timeseries: { labels: string[]; values: number[][] };
+  timeseriesDup: { labels: string[]; values: number[][] };
   pie1: { labels: string[]; values: number[][] };
   pie2: { labels: string[]; values: number[][] };
   table4: { values: number[][] };
@@ -30,9 +37,9 @@ interface RawData {
 }
 
 interface PreparedData {
-  //text fields
   x1Title: string;
   x2Title: string;
+  x2TitleDup: string;
   x3Title: string;
   x4Title: string;
   x1Sub: string;
@@ -42,6 +49,13 @@ interface PreparedData {
     data: (number | string)[][];
   };
   chart1: {
+    data: number[][];
+    categories: string[];
+  };
+  tab1Dup: {
+    data: (number | string)[][];
+  };
+  chart1Dup: {
     data: number[][];
     categories: string[];
   };
@@ -74,17 +88,35 @@ export class Sample1Service extends PresentationService<
   RawData,
   PreparedData
 > {
-  constructor(path: string) {
-    super(path, templateSettings);
+  constructor(
+    sourceOrPath: TemplateSourceInput = existsSync(templateFile('template_3_duplicated.pptx'))
+      ? templateFile('template_3_duplicated.pptx')
+      : templateFile('template_3.pptx'),
+  ) {
+    const sourceLoader: TemplateSourceInput =
+      typeof sourceOrPath === 'function'
+        ? sourceOrPath
+        : async () => {
+            const buffer =
+              typeof sourceOrPath === 'string' ? await readFile(sourceOrPath) : sourceOrPath;
+            return prepareTemplate(buffer, {
+              duplicateSlide: 2,
+              expectedSourceSlides: 4,
+            });
+          };
+    super(sourceLoader, templateSettings);
   }
 
   /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */
   protected fetchData(_input: Sample1RequestInput): RawData {
-    // Placeholder for future Data API call.
     return {
       timeseries: {
         labels: generateTimeSeriesDates(demoData.timeseries.rows),
         values: generateRandomData(demoData.timeseries.rows, 1),
+      },
+      timeseriesDup: {
+        labels: generateTimeSeriesDates(demoData.timeseriesDup.rows),
+        values: generateRandomData(demoData.timeseriesDup.rows, 1),
       },
       pie1: {
         labels: generateRandomData(demoData.pie1.rows, 1, 'string').flat(),
@@ -109,8 +141,9 @@ export class Sample1Service extends PresentationService<
     const pie2Colors = generateRandomData(raw.pie2.labels.length, 1, 'color').flat();
 
     return {
-      x1Title: 'Page 1 Title',
-      x2Title: 'Page 2',
+      x1Title: input.title ?? 'Page 1 Title',
+      x2Title: 'Page 2 (Original Series)',
+      x2TitleDup: 'Page 2 (Duplicated Slide - Similar Series)',
       x3Title: 'Page 3',
       x4Title: 'Page 4',
       x1Sub: formatDateTime(),
@@ -121,6 +154,13 @@ export class Sample1Service extends PresentationService<
       chart1: {
         data: raw.timeseries.values,
         categories: raw.timeseries.labels,
+      },
+      tab1Dup: {
+        data: zipLabelsAndValues(raw.timeseriesDup),
+      },
+      chart1Dup: {
+        data: raw.timeseriesDup.values,
+        categories: raw.timeseriesDup.labels,
       },
       tab2: {
         data: zipLegendLabelsAndValues(raw.pie1, demoData.pie1.colorColumn),
@@ -157,10 +197,12 @@ export class Sample1Service extends PresentationService<
     deck.texts.x1Sub.fill(prepared.x1Sub);
     deck.texts.x1Text.fill(prepared.x1Text);
     deck.texts.x2Title.fill(prepared.x2Title);
+    deck.texts.x2TitleDup.fill(prepared.x2TitleDup);
     deck.texts.x3Title.fill(prepared.x3Title);
     deck.texts.x4Title.fill(prepared.x4Title);
 
     deck.tables.x2Tab1.fill(prepared.tab1.data, { resizeRows: true });
+    deck.tables.x2Tab1Dup.fill(prepared.tab1Dup.data, { resizeRows: true });
     deck.tables.x3Tab1.fill(prepared.tab2.data, {
       resizeRows: true,
       cellColors: prepared.tab2.cellColors,
@@ -172,6 +214,9 @@ export class Sample1Service extends PresentationService<
 
     await deck.charts.x2Chart1.fill(prepared.chart1.data, {
       categories: prepared.chart1.categories,
+    });
+    await deck.charts.x2Chart1Dup.fill(prepared.chart1Dup.data, {
+      categories: prepared.chart1Dup.categories,
     });
     await deck.charts.x3Chart1.fill(prepared.chart2.data, {
       categories: prepared.chart2.categories,

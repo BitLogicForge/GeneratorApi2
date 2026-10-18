@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 
-import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { packageNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 
@@ -12,16 +11,13 @@ import type JSZip from 'jszip';
 /** Inserts after the source. Copies mutable charts, embedded files and notes, sharing layouts/media. */
 export async function duplicateSlide(
   zip: JSZip,
-  sourcePath: string,
+  sourceSlide: string | number,
 ): Promise<string> {
   const presentation = await deck(zip);
-  const source = presentation.entries.find(
-    (entry) => entry.path === sourcePath,
-  );
-  if (!source) throw invalidTemplate();
+  const source = presentation.findEntry(sourceSlide);
   const { output, staged, contentTypes } = await copySlideParts(
     zip,
-    sourcePath,
+    source.path,
   );
   const relation = source.relation.cloneNode(true) as typeof source.relation;
   const usedIds = new Set(

@@ -7,10 +7,13 @@ import { deck } from './deck.ts';
 import type JSZip from 'jszip';
 
 /** Removes a slide from the deck. Retains package assets to preserve shared relationships. */
-export async function removeSlide(zip: JSZip, path: string): Promise<void> {
+export async function removeSlide(
+  zip: JSZip,
+  slide: string | number,
+): Promise<void> {
   const presentation = await deck(zip);
-  const entry = presentation.entries.find((item) => item.path === path);
-  if (!entry || presentation.entries.length < 2) throw invalidTemplate();
+  if (presentation.entries.length < 2) throw invalidTemplate();
+  const entry = presentation.findEntry(slide);
   const id = entry.element.getAttribute('id');
   entry.element.parentNode!.removeChild(entry.element);
   entry.relation.parentNode!.removeChild(entry.relation);

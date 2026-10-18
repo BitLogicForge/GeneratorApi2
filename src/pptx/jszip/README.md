@@ -12,7 +12,7 @@ Always write a new output file rather than overwriting the source template.
 
 | Module                                                           | Utility                                              | Use                                                                                                                                                                 |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [objects.ts](objects.ts)                                         | `findNamedObjects(zip, names, slidePaths?)`          | Find Selection Pane names, optionally within specific active slides; reject missing or ambiguous matches. Returns object handles and parsed slide XML.              |
+| [objects.ts](objects.ts)                                         | `findNamedObjects(zip, names, slides?)`              | Find Selection Pane names; `objects.get(name, slide?)` and `objects.inSlide(slide)` target a slide path or 1-based slide number.                                    |
 | [text/fill-shape.ts](text/fill-shape.ts)                         | `fillTextShape(element, text)`                       | Set whole-shape text using its first run's style.                                                                                                                   |
 | [text/replace-paragraph-text.ts](text/replace-paragraph-text.ts) | `replaceParagraphText(element, search, replacement)` | Replace literal text within paragraphs, including matches split across formatted runs. Returns the replacement count.                                               |
 | [text/fill-paragraphs.ts](text/fill-paragraphs.ts)               | `fillParagraphs(element, strings)`                   | Fill paragraphs/bullets; clone the last paragraph when growing and remove excess paragraphs when shrinking.                                                         |
@@ -20,8 +20,8 @@ Always write a new output file rather than overwriting the source template.
 | [tables/fill.ts](tables/fill.ts)                                 | `fillTable(element, rows, options)`                  | Fill cells; `startRow: 1` keeps the header and `resizeRows: true` grows/shrinks rows with matching styles and adjusts frame height.                                 |
 | [charts.ts](charts.ts)                                           | `fillCategoryChart(zip, object, rows, options)`      | Fill line, bar/column, area, pie, doughnut and radar charts, synchronizing caches, formulas, embedded worksheet cells and table ranges. Saves chart/workbook parts. |
 | [slides/list.ts](slides/list.ts)                                 | `listSlides(zip)`                                    | Get active slide paths in presentation order, including hidden slides.                                                                                              |
-| [slides/duplicate.ts](slides/duplicate.ts)                       | `duplicateSlide(zip, path)`                          | Insert a copy after its source with independent charts, embedded workbooks and notes. Share layouts/media. Return the copied slide path.                            |
-| [slides/remove.ts](slides/remove.ts)                             | `removeSlide(zip, path)`                             | Remove the deck entry and custom-show/section references; keep at least one slide. Retain package assets to preserve shared relationships.                          |
+| [slides/duplicate.ts](slides/duplicate.ts)                       | `duplicateSlide(zip, slide)`                         | Insert a copy after `slide` (path or 1-based slide number) with independent charts, embedded workbooks and notes. Return the copied slide path.                     |
+| [slides/remove.ts](slides/remove.ts)                             | `removeSlide(zip, slide)`                            | Remove `slide` (path or 1-based slide number) and custom-show/section references; keep at least one slide. Retain package assets for shared relationships.          |
 | [spreadsheet.ts](spreadsheet.ts)                                 | `setWorksheetCell(document, address, value)`         | Set workbook cell content, creating missing rows/cells and retaining styles.                                                                                        |
 | [package/](package/)                                             | `readXml`, `writeXml`, `resolveRelationship`         | Read/write XML and follow typed internal relationships using `read-xml.ts`, `write-xml.ts` and `resolve-relationship.ts`.                                           |
 
@@ -60,7 +60,7 @@ await writeFile('report.pptx', await zip.generateAsync({ type: 'nodebuffer' }));
 Text, paragraph and table utilities mutate parsed XML: save those slide documents
 with `writeXml`. Chart, placeholder and slide operations save their own parts.
 Finish/save XML edits before looking up the same slide again. Duplicate slides
-before lookup, then scope lookup to the returned path when names repeat.
+before lookup, then target repeated names with `objects.inSlide(copy).get(name)` or `objects.get(name, copy)` (using either the slide path or 1-based slide number).
 
 For tables, `startRow` and `startColumn` are zero-based offsets, both defaulting
 to `0`. Use `startColumn: 1` to preserve first-column headers, or combine it with

@@ -36,5 +36,15 @@ export async function deck(zip: JSZip) {
     if (!zip.file(path)) throw invalidTemplate();
     return { path, element, relation };
   });
-  return { document, relationships, entries };
+  const findEntry = (slide: string | number) => {
+    const entry =
+      typeof slide === 'number'
+        ? Number.isInteger(slide) && slide >= 1
+          ? entries[slide - 1]
+          : undefined
+        : entries.find((item) => item.path === slide);
+    if (!entry) throw invalidTemplate();
+    return entry;
+  };
+  return { document, relationships, entries, findEntry };
 }

@@ -15,32 +15,33 @@ import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const [source] = await listSlides(zip);
 const copy = await duplicateSlide(zip, source);
-const { objects, slides } = await findNamedObjects(
-  zip,
-  ['GGO', 'TEXT_ME', 'TAB100'],
-  [copy],
-);
+const { objects, slides } = await findNamedObjects(zip, [
+  'GGO',
+  'TEXT_ME',
+  'TAB100',
+]);
+const copyObjects = objects.inSlide(copy);
 
 await fillCategoryChart(
   zip,
-  objects.get('GGO')!,
+  copyObjects.get('GGO')!,
   [
     [10, 20, 30],
     [40, 50, 60],
   ],
   { categories: ['January', 'February'] },
 );
-fillParagraphs(objects.get('TEXT_ME')!.element, [
+fillParagraphs(copyObjects.get('TEXT_ME')!.element, [
   'Results for {{customer}}',
   'Prepared for {{customer}}',
 ]);
 replaceParagraphText(
-  objects.get('TEXT_ME')!.element,
+  copyObjects.get('TEXT_ME')!.element,
   '{{customer}}',
   'Example Company',
 );
 fillTable(
-  objects.get('TAB100')!.element,
+  copyObjects.get('TAB100')!.element,
   [
     [1, 2, 3, 4],
     [5, 6, 7, 8],

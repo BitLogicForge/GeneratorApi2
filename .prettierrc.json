@@ -1,19 +1,58 @@
 {
   "$schema": "https://json.schemastore.org/prettierrc",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
   "singleQuote": true,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
   "endOfLine": "lf",
-  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+  "singleAttributePerLine": false,
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports"
+  ],
   "importOrder": [
-    "^react$",
-    "",
+    "^(react/(.*)$)|^(react$)",
+    "^(next/(.*)$)|^(next$)",
+    "<BUILTIN_MODULES>",
     "<THIRD_PARTY_MODULES>",
     "",
     "^@/(.*)$",
     "",
+    "^[../]",
     "^[./]",
     "",
     "<TYPES>",
     "<TYPES>^@/(.*)$",
-    "<TYPES>^[./]"
+    "<TYPES>^[./]",
+    "",
+    "^(?!.*[.]module[.]).*\\.(css|scss|less)$",
+    "\\.module\\.(css|scss|less)$"
+  ],
+  "importOrderParserPlugins": [
+    "typescript",
+    "jsx",
+    "decorators-legacy"
+  ],
+  "importOrderTypeScriptVersion": "5.0.0",
+  "importOrderCaseSensitive": false,
+  "overrides": [
+    {
+      "files": [
+        "*.json",
+        "*.md",
+        "*.yml",
+        "*.yaml"
+      ],
+      "options": {
+        "tabWidth": 2,
+        "printWidth": 80
+      }
+    }
   ]
 }

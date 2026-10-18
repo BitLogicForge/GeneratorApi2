@@ -1,8 +1,4 @@
-import {
-  modify,
-  toAutomizerChartData,
-  toAutomizerTableData,
-} from '@/pptx/automizer';
+import { modify, setTable, toAutomizerChartData } from '@/pptx/automizer';
 import { generateRandomData } from '@/utils/random-data';
 
 import { AutomizerPresentationService } from './automizer-service.ts';
@@ -67,9 +63,7 @@ export class DaaPresentationService extends AutomizerPresentationService<
     builder.addSlide(1, (slide) => {
       slide.modifyElement('TEXT_ME', modify.setText(prepared.text));
       slide.modifyElement('TAB100', [
-        modify.setTable(toAutomizerTableData(prepared.table), {
-          adjustHeight: true,
-        }),
+        setTable(prepared.table, { adjustHeight: true }),
       ]);
       slide.modifyElement('GGO', [
         modify.setChartData(

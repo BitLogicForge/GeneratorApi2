@@ -102,8 +102,8 @@ export abstract class AutomizerPresentationService<
 
     const automizer = new Automizer({
       removeExistingSlides: true,
-      autoImportSlideMasters: true,
-      cleanup: false,
+      autoImportSlideMasters: false,
+      cleanup: true,
       cleanupPlaceholders: false,
       verbosity: 0,
     });

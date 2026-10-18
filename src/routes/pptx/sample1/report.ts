@@ -12,7 +12,7 @@ export default definePptxReport({
   notConfiguredMessage: ReportErrorMessage.TemplateReportDemoNotConfigured,
   readRequestInput,
   prepareInput: (input) => ({
-    filename: 'aaa',
+    filename: 'aab',
     input,
   }),
   createService: () => new Sample1Service(templateFile(sourceFile)),

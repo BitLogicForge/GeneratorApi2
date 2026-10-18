@@ -1,8 +1,4 @@
-import {
-  modify,
-  toAutomizerChartData,
-  toAutomizerTableData,
-} from '@/pptx/automizer';
+import { modify, setTable, toAutomizerChartData } from '@/pptx/automizer';
 import { formatDateTime, generateTimeSeriesDates } from '@/utils/date-time';
 import {
   generateRandomData,
@@ -129,7 +125,7 @@ export class Sample1Service extends AutomizerPresentationService<
       x4Title: 'Page 4',
       x1Sub: formatDateTime(),
       x1Text: input.someText,
-      duplicateSlide2: input.duplicateSlide2,
+      duplicateSlide2: true,
       tab1: {
         data: zipLabelsAndValues(raw.timeseries),
       },
@@ -184,9 +180,7 @@ export class Sample1Service extends AutomizerPresentationService<
     builder.addSlide(2, (slide) => {
       slide.modifyElement('X2_TITLE', modify.setText(prepared.x2Title));
       slide.modifyElement('X2_TAB1', [
-        modify.setTable(toAutomizerTableData(prepared.tab1.data), {
-          adjustHeight: true,
-        }),
+        setTable(prepared.tab1.data, { adjustHeight: true }),
       ]);
       slide.modifyElement('X2_CHART1', [
         modify.setChartData(
@@ -206,9 +200,7 @@ export class Sample1Service extends AutomizerPresentationService<
           modify.setText(`${prepared.x2Title} (Duplicated Slide)`),
         );
         slide.modifyElement('X2_TAB1', [
-          modify.setTable(toAutomizerTableData(prepared.tab1.data), {
-            adjustHeight: true,
-          }),
+          setTable(prepared.tab1.data, { adjustHeight: true }),
         ]);
         slide.modifyElement('X2_CHART1', [
           modify.setChartData(
@@ -225,10 +217,10 @@ export class Sample1Service extends AutomizerPresentationService<
     builder.addSlide(3, (slide) => {
       slide.modifyElement('X3_TITLE', modify.setText(prepared.x3Title));
       slide.modifyElement('X3_TAB1', [
-        modify.setTable(
-          toAutomizerTableData(prepared.tab2.data, prepared.tab2.cellColors),
-          { adjustHeight: true },
-        ),
+        setTable(prepared.tab2.data, {
+          cellColors: prepared.tab2.cellColors,
+          adjustHeight: true,
+        }),
       ]);
       slide.modifyElement('X3_CHART1', [
         modify.setChartData(
@@ -240,10 +232,10 @@ export class Sample1Service extends AutomizerPresentationService<
         ),
       ]);
       slide.modifyElement('X3_TAB2', [
-        modify.setTable(
-          toAutomizerTableData(prepared.tab3.data, prepared.tab3.cellColors),
-          { adjustHeight: true },
-        ),
+        setTable(prepared.tab3.data, {
+          cellColors: prepared.tab3.cellColors,
+          adjustHeight: true,
+        }),
       ]);
       slide.modifyElement('X3_CHART2', [
         modify.setChartData(
@@ -260,14 +252,10 @@ export class Sample1Service extends AutomizerPresentationService<
     builder.addSlide(4, (slide) => {
       slide.modifyElement('X4_TITLE', modify.setText(prepared.x4Title));
       slide.modifyElement('X4_TAB1', [
-        modify.setTable(toAutomizerTableData(prepared.table4), {
-          adjustHeight: true,
-        }),
+        setTable(prepared.table4, { adjustHeight: true }),
       ]);
       slide.modifyElement('X4_TAB2', [
-        modify.setTable(toAutomizerTableData(prepared.table5), {
-          adjustHeight: true,
-        }),
+        setTable(prepared.table5, { adjustHeight: true }),
       ]);
     });
   }

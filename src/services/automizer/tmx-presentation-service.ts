@@ -1,51 +1,16 @@
 import { loadConfig } from '@/config';
+import { modify, toAutomizerChartData } from '@/pptx/automizer';
 import { DataApiClient } from '@/services/data-api-client';
 import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
 
-import { PresentationService } from './presentation-service.ts';
+import { AutomizerPresentationService } from './automizer-service.ts';
 
 import type {
   TmaBreakdownData,
   TmaSeriesData,
 } from '@/data-api/tma-data-schema';
 import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
-import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
-
-// Configure the authored template here; names are PowerPoint Selection Pane names.
-const templateSettings = {
-  charts: {
-    chartA: {
-      name: 'X_CHART_A',
-      options: {
-        firstRow: 2,
-      },
-    },
-    chartB: {
-      name: 'X_CHART_B',
-      options: {
-        firstColumn: 'B',
-        firstRow: 2,
-      },
-    },
-  },
-  texts: {
-    text0: {
-      name: 'X_T0',
-    },
-    text1: {
-      name: 'X_T1',
-    },
-    text2: {
-      name: 'X_T2',
-    },
-    subtitle: {
-      name: 'X_SUB',
-      options: {
-        replace: '{{ASOF}}',
-      },
-    },
-  },
-} satisfies TemplateSettings;
+import type { PresentationBuilder } from './automizer-service.ts';
 
 interface TmaRawData {
   series: TmaSeriesData;
@@ -69,19 +34,13 @@ interface TmaPreparedData {
   };
 }
 
-export class TmxPocPresentationService extends PresentationService<
-  typeof templateSettings,
+export class TmxPresentationService extends AutomizerPresentationService<
   TmaRequestInput,
   TmaRawData,
   TmaPreparedData
 > {
-  constructor(path: string) {
-    super(path, templateSettings);
-  }
-
   /** Step 1: Fetches raw series and breakdown data from the Data API using PP1 and PP2. */
   protected async fetchData(input: TmaRequestInput): Promise<TmaRawData> {
-    console.debug({ PP1: input.PP1, PP2: input.PP2 });
     const config = loadConfig();
     const api = new DataApiClient(config.dataApi);
     const [series, breakdown] = await Promise.all([
@@ -125,21 +84,48 @@ export class TmxPocPresentationService extends PresentationService<
     };
   }
 
-  /** Step 3: Populates the PowerPoint template with prepared values. */
-  protected async renderDeck(
-    deck: TemplateDeck<typeof templateSettings>,
+  /** Step 3: Populates template slides using declarative pptx-automizer modifiers. */
+  protected renderPresentation(
+    builder: PresentationBuilder,
     prepared: TmaPreparedData,
-  ): Promise<void> {
-    deck.texts.text0.fill(prepared.texts.text0);
-    deck.texts.text1.fill(prepared.texts.text1);
-    deck.texts.text2.fill(prepared.texts.text2);
-    deck.texts.subtitle.fill(prepared.texts.subtitle);
-
-    await deck.charts.chartA.fill(prepared.chartA.data, {
-      categories: prepared.chartA.categories,
+  ): void {
+    // Slide 1: Cover text & subtitle placeholder token
+    builder.addSlide(1, (slide) => {
+      slide.modifyElement('X_T0', modify.setText(prepared.texts.text0));
+      slide.modifyElement(
+        'X_SUB',
+        modify.replaceText([
+          { replace: 'ASOF', by: { text: prepared.texts.subtitle } },
+        ]),
+      );
     });
-    await deck.charts.chartB.fill(prepared.chartB.data, {
-      colors: prepared.chartB.colors,
+
+    // Slide 2: Series title and timeseries chart
+    builder.addSlide(2, (slide) => {
+      slide.modifyElement('X_T1', modify.setText(prepared.texts.text1));
+      slide.modifyElement(
+        'X_CHART_A',
+        modify.setChartData(
+          toAutomizerChartData({
+            categories: prepared.chartA.categories,
+            data: prepared.chartA.data,
+          }),
+        ),
+      );
+    });
+
+    // Slide 3: Breakdown title and pie chart with custom slice colors
+    builder.addSlide(3, (slide) => {
+      slide.modifyElement('X_T2', modify.setText(prepared.texts.text2));
+      slide.modifyElement(
+        'X_CHART_B',
+        modify.setChartData(
+          toAutomizerChartData({
+            data: prepared.chartB.data,
+            colors: prepared.chartB.colors,
+          }),
+        ),
+      );
     });
   }
 }

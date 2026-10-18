@@ -19,9 +19,6 @@ export const RelationshipType = {
 export type RelationshipType =
   (typeof RelationshipType)[keyof typeof RelationshipType];
 
-/** OpenXML English Metric Units per centimeter (`914,400 / 2.54 = 360,000`). */
-export const EMU_PER_CM = 360_000;
-
 export const TargetMode = {
   External: 'External',
 } as const;

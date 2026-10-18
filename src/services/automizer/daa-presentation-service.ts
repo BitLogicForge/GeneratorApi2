@@ -1,31 +1,14 @@
+import {
+  modify,
+  toAutomizerChartData,
+  toAutomizerTableData,
+} from '@/pptx/automizer';
 import { generateRandomData } from '@/utils/random-data';
 
-import { PresentationService } from './presentation-service.ts';
+import { AutomizerPresentationService } from './automizer-service.ts';
 
 import type { DaaRequestInput } from '@/routes/pptx/daa/schema';
-import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
-
-// Configure the authored template here; names are PowerPoint Selection Pane names.
-const templateSettings = {
-  tables: {
-    table: {
-      name: 'TAB100',
-      options: {
-        startRow: 1,
-      },
-    },
-  },
-  charts: {
-    chart: {
-      name: 'GGO',
-    },
-  },
-  texts: {
-    text: {
-      name: 'TEXT_ME',
-    },
-  },
-} satisfies TemplateSettings;
+import type { PresentationBuilder } from './automizer-service.ts';
 
 const demoData = {
   table: { rows: 3, columns: 4 },
@@ -46,19 +29,13 @@ interface DaaPreparedData {
   };
 }
 
-export class DaaPocPresentationService extends PresentationService<
-  typeof templateSettings,
+export class DaaPresentationService extends AutomizerPresentationService<
   DaaRequestInput,
   DaaRawData,
   DaaPreparedData
 > {
-  constructor(path: string) {
-    super(path, templateSettings);
-  }
-
   /** Step 1: Fetches raw data from Data API (currently returning placeholder demo series). */
   protected fetchData(_input: DaaRequestInput): DaaRawData {
-    // Placeholder for future Data API call.
     return {
       table: generateRandomData(demoData.table.rows, demoData.table.columns),
       chart: generateRandomData(demoData.chart.rows, demoData.chart.series),
@@ -82,15 +59,26 @@ export class DaaPocPresentationService extends PresentationService<
     };
   }
 
-  /** Step 3: Populates the PowerPoint template with prepared values. */
-  protected async renderDeck(
-    deck: TemplateDeck<typeof templateSettings>,
+  /** Step 3: Populates template slide elements using declarative pptx-automizer modifiers. */
+  protected renderPresentation(
+    builder: PresentationBuilder,
     prepared: DaaPreparedData,
-  ): Promise<void> {
-    deck.tables.table.fill(prepared.table);
-    deck.texts.text.fill(prepared.text);
-    await deck.charts.chart.fill(prepared.chart.data, {
-      categories: prepared.chart.categories,
+  ): void {
+    builder.addSlide(1, (slide) => {
+      slide.modifyElement('TEXT_ME', modify.setText(prepared.text));
+      slide.modifyElement('TAB100', [
+        modify.setTable(toAutomizerTableData(prepared.table), {
+          adjustHeight: true,
+        }),
+      ]);
+      slide.modifyElement('GGO', [
+        modify.setChartData(
+          toAutomizerChartData({
+            categories: prepared.chart.categories,
+            data: prepared.chart.data,
+          }),
+        ),
+      ]);
     });
   }
 }

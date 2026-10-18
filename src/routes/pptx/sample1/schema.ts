@@ -9,6 +9,7 @@ export const requestSchema = z
   .object({
     title: documentTextSchema.max(5000).default('Generated report'),
     someText: documentTextSchema.max(5000).default('Some default text'),
+    duplicateSlide2: z.coerce.boolean().default(false),
   })
   .strict();
 

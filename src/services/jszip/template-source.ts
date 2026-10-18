@@ -6,32 +6,16 @@ import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 import { PackagePath, PptxErrorMessage } from '@/pptx/jszip/package/constants';
 
-import { bindTemplateSettings } from './template-settings.ts';
-
-import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
-
 /** Retains validated source bytes; callers must load their own mutable archive. */
-export class TemplateSource<
-  Settings extends TemplateSettings = Record<never, never>,
-> {
+export class TemplateSource {
   private source: Promise<Buffer> | undefined;
-  private readonly settings: Settings | undefined;
   private readonly validateArchive: (zip: JSZip) => Promise<void>;
 
   constructor(
     private readonly path: string,
-    settingsOrValidate?: Settings | ((zip: JSZip) => Promise<void>),
+    validate?: (zip: JSZip) => Promise<void>,
   ) {
-    if (typeof settingsOrValidate === 'function') {
-      this.validateArchive = settingsOrValidate;
-    } else if (settingsOrValidate) {
-      this.settings = settingsOrValidate;
-      this.validateArchive = async (zip) => {
-        await bindTemplateSettings(zip, settingsOrValidate);
-      };
-    } else {
-      this.validateArchive = async () => {};
-    }
+    this.validateArchive = validate ?? (async () => {});
   }
 
   load(): Promise<Buffer> {
@@ -47,12 +31,6 @@ export class TemplateSource<
       throw failure;
     });
     return this.source;
-  }
-
-  /** Opens a fresh mutable copy of the validated template archive with bound handles for all configured `templateSettings` objects. */
-  async open(): Promise<TemplateDeck<Settings>> {
-    const zip = await JSZip.loadAsync(await this.load());
-    return bindTemplateSettings(zip, (this.settings ?? {}) as Settings);
   }
 
   private async read(): Promise<Buffer> {

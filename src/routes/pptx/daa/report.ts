@@ -1,7 +1,7 @@
 import { ReportErrorMessage } from '@/reports/constants';
 import { definePptxReport } from '@/reports/pptx';
 import { templateFile } from '@/reports/template';
-import { DaaPocPresentationService } from '@/services/jszip/daa-poc-presentation-service';
+import { DaaPresentationService } from '@/services/automizer/daa-presentation-service';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
@@ -15,5 +15,5 @@ export default definePptxReport({
     filename: 'demo-report',
     input,
   }),
-  createService: () => new DaaPocPresentationService(templateFile(sourceFile)),
+  createService: () => new DaaPresentationService(templateFile(sourceFile)),
 });

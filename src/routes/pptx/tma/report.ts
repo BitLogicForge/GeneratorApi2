@@ -1,7 +1,7 @@
 import { ReportErrorMessage } from '@/reports/constants';
 import { definePptxReport } from '@/reports/pptx';
 import { templateFile } from '@/reports/template';
-import { TmxPocPresentationService } from '@/services/jszip/tmx-poc-presentation-service';
+import { TmxPresentationService } from '@/services/automizer/tmx-presentation-service';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
@@ -15,5 +15,5 @@ export default definePptxReport({
     filename: 'tma',
     input,
   }),
-  createService: () => new TmxPocPresentationService(templateFile(sourceFile)),
+  createService: () => new TmxPresentationService(templateFile(sourceFile)),
 });

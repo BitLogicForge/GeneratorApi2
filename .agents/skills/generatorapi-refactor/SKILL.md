@@ -1,60 +1,54 @@
 ---
 name: generatorapi-refactor
-description: Simplify and organize existing Generator API code while preserving behavior. Use when asked to refactor, clean up duplication, move responsibilities, or remove unused code; avoid expanding ordinary feature work into a repository-wide cleanup.
+description: Simplify and organize existing Generator API code while preserving behavior. Use when the user asks to refactor, clean up duplication, move responsibilities, extract or inline helpers, reorganize modules, or remove unused code and exports in the Generator API codebase. Avoid expanding ordinary feature work into a repository-wide cleanup.
 ---
 
-# Generator API: focused refactoring
+# Generator API Refactor
 
-Use the repository's [AGENTS.md](../../../AGENTS.md) for architectural invariants,
-import rules, and verification policy. Inspect the affected code and callers
-before changing a shared function, type, or file location.
+Simplify and organize existing Generator API code while strictly preserving runtime behavior, contracts, and architectural boundaries.
 
-## Establish the benefit and scope
+## When to Use
 
-Identify the specific maintenance cost: repeated business rules, unclear resource
-ownership, mixed responsibilities, unnecessary indirection, or unused code.
-Choose a change that makes the current behavior easier to understand and modify.
-Do not treat fewer lines or more files as evidence of improvement.
+- Refactoring existing Generator API routes, reports, services, or PPTX utilities
+- Cleaning up duplicated business rules or consolidating shared logic
+- Moving responsibilities between route handlers, report definitions, services, and `src/pptx/jszip/`
+- Removing unused exports, files, dependencies, or dead code
 
-Keep behavior changes outside a cleanup unless the user requests them. Preserve
-defaults, parsing order, validation, error statuses, asynchronous ordering, and
-cleanup behavior, including the queue and document invariants in AGENTS.md.
+## Steps
 
-## Simplify with existing structure
+### 1. Establish the Benefit and Scope
 
-- Put route-specific schemas and report configuration near their report. Use the
-  existing report definitions and service registry; avoid growing central
-  conditionals or a global dependency interface for each new report.
-- Keep low-level PPTX XML/workbook operations in `src/pptx/jszip/` and orchestration
-  in reports/services. Do not make a route handler own document internals.
-- Share a helper only when its current callers share the same semantics. If
-  extraction needs caller-specific switches or callbacks, consider leaving the
-  logic local. Remove indirection when it adds no meaningful boundary.
-- Replace deeply nested code with explicit branches when that clarifies errors
-  and ownership. Preserve execution order and side effects.
-- Rename or move files only when the responsibility becomes easier to locate.
-  Update imports, examples, documentation, and dynamic registrations that depend
-  on their location. Do not create barrel files just to hide import paths.
+1. Read the repository's `AGENTS.md` to verify architectural invariants, import rules, and verification policies.
+2. Inspect the affected code and all callers before changing a shared function, type, or file location.
+3. Identify the concrete maintenance cost you are solving: repeated business rules, unclear resource ownership, mixed responsibilities, unnecessary indirection, or unused code.
+4. Keep behavior changes out of the cleanup unless explicitly requested. Preserve defaults, parsing order, validation, error statuses, asynchronous ordering, and cleanup behavior (including queue and document invariants in `AGENTS.md`).
 
-## Prove that deletion is safe
+### 2. Simplify Within Existing Structure
 
-Check callers and configuration before deleting an export, file, or dependency.
-Route `get.ts`, `post.ts`, schemas, and report modules may be discovered dynamically.
-Standalone scripts and examples may be entry points without source imports.
-Inspect discovery and npm scripts; a text search with no matches is insufficient.
+- **Co-locate report concerns:** Put route-specific schemas and report configuration near their report. Use existing report definitions and the service registry rather than growing central conditionals or global dependency interfaces for each report.
+- **Enforce PPTX boundaries:** Keep low-level PPTX XML and workbook operations inside `src/pptx/jszip/` and keep orchestration in reports and services. Never let a route handler own document internals.
+- **Extract helpers conservatively:** Share a helper only when current callers share identical semantics. If extraction requires caller-specific boolean flags, switches, or callbacks, leave the logic local. Remove thin wrapper functions that add no meaningful boundary.
+- **Flatten control flow:** Replace deeply nested conditions with explicit guard clauses and branches when that clarifies error handling and resource ownership, while strictly preserving execution order and side effects.
+- **Move or rename deliberately:** Rename or move files only when it makes responsibilities easier to locate. Update all imports, examples, documentation, and dynamic registrations that depend on the path. Do not introduce barrel (`index.ts`) files just to hide import paths.
 
-Run Knip for code, export, dependency, or entry-point changes. Investigate each
-finding against actual discovery and callers. Add a genuine standalone entry
-point to `knip.json` when needed; do not expand ignore lists to conceal a finding.
+### 3. Prove That Deletion Is Safe
 
-## Validate proportionally
+1. Check both static callers and dynamic configuration before deleting an export, file, or dependency.
+2. Inspect dynamic discovery mechanisms and `package.json` scripts (`get.ts`, `post.ts`, route schemas, report modules, standalone scripts, and examples often act as entry points without direct source imports).
+3. Run Knip whenever changing code structure, exports, dependencies, or entry points.
+4. Investigate each Knip finding against actual runtime discovery and callers. If a file is a genuine standalone entry point, register it in `knip.json` rather than expanding ignore lists to hide findings.
 
-Follow AGENTS.md: use type checking, code lint, Knip, and changed-file formatting
-as applicable. Build when changing compilation, import rewriting, or entry points.
-Tests are only added or run when explicitly requested. Do not create replacement
-tests for renamed private helpers or rerun a whole suite because files moved.
-Preserve existing tests and CI checks.
+### 4. Validate Proportionally and Report
 
-Review the final diff for accidental contract changes and unrelated cleanup.
-Explain the concrete maintenance benefit and report which checks ran. State any
-remaining runtime uncertainty without claiming behavior was tested.
+1. Run the verification tools specified in `AGENTS.md`: type checking, linting, Knip, and formatting on changed files.
+2. Run the build when modifying compilation settings, import resolution, or entry points.
+3. Preserve existing tests and CI checks. Do not add new tests, create replacement tests for renamed private helpers, or rerun the full test suite unless explicitly requested by the user.
+4. Review the final `git diff` to ensure no accidental contract changes or unrelated edits slipped in.
+5. Report the concrete maintenance benefit achieved, list the verification checks executed, and explicitly state any remaining runtime uncertainty without claiming untested behavior was verified.
+
+## Gotchas
+
+- **Line count is not a metric:** Do not treat fewer lines of code or a higher number of small files as automatic evidence of improvement.
+- **Text search is not enough for deletions:** A `grep` or text search returning zero matches does not prove a module is unused in a codebase with dynamic route and report discovery. Always verify discovery rules and run Knip.
+- **Scope creep during feature work:** Do not expand routine feature requests or bug fixes into repository-wide refactoring passes.
+- **Premature abstraction:** Combining two blocks of code that merely look similar today into a parameterized helper often couples unrelated reports. Keep them separate until semantics truly match.

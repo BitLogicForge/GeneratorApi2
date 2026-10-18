@@ -1,7 +1,8 @@
 import { queueDefaults } from '@/config';
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 
+import { QueueErrorMessage } from './constants.ts';
 import { queueOptionsSchema } from './schema.ts';
 
 import type { QueueOptions } from './schema.ts';
@@ -48,7 +49,7 @@ export class GenerationQueue {
         new AppError(
           503,
           ErrorCode.QueueClosed,
-          ErrorMessage.ServerShuttingDown,
+          QueueErrorMessage.ServerShuttingDown,
         ),
       );
     if (signal?.aborted)
@@ -56,7 +57,7 @@ export class GenerationQueue {
         new AppError(
           499,
           ErrorCode.RequestCancelled,
-          ErrorMessage.RequestCancelled,
+          QueueErrorMessage.RequestCancelled,
         ),
       );
     if (
@@ -64,7 +65,7 @@ export class GenerationQueue {
       this.pending.length >= this.options.maxPending
     ) {
       return Promise.reject(
-        new AppError(503, ErrorCode.QueueFull, ErrorMessage.QueueFull),
+        new AppError(503, ErrorCode.QueueFull, QueueErrorMessage.QueueFull),
       );
     }
     return new Promise<T>((resolve, reject) => {
@@ -81,7 +82,7 @@ export class GenerationQueue {
           new AppError(
             499,
             ErrorCode.RequestCancelled,
-            ErrorMessage.RequestCancelled,
+            QueueErrorMessage.RequestCancelled,
           ),
         );
       const job: PendingJob = {
@@ -113,7 +114,7 @@ export class GenerationQueue {
               new AppError(
                 503,
                 ErrorCode.QueueWaitTimeout,
-                ErrorMessage.QueueWaitTimeout,
+                QueueErrorMessage.QueueWaitTimeout,
               ),
             ),
           this.options.waitTimeoutMs,
@@ -136,7 +137,7 @@ export class GenerationQueue {
         new AppError(
           503,
           ErrorCode.QueueClosed,
-          ErrorMessage.ServerShuttingDown,
+          QueueErrorMessage.ServerShuttingDown,
         ),
       );
     }

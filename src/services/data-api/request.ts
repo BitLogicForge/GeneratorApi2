@@ -1,5 +1,7 @@
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
+
+import { DataApiErrorMessage } from './constants.ts';
 
 import type { z } from 'zod';
 import type { Config } from '@/config';
@@ -34,7 +36,7 @@ export async function requestDataApi<T>(
       throw new AppError(
         502,
         ErrorCode.DataApiInvalidResponse,
-        ErrorMessage.DataApiInvalidJson,
+        DataApiErrorMessage.InvalidJson,
       );
     }
     const result = schema.safeParse(body);
@@ -42,7 +44,7 @@ export async function requestDataApi<T>(
       throw new AppError(
         502,
         ErrorCode.DataApiInvalidResponse,
-        ErrorMessage.DataApiInvalidSchema,
+        DataApiErrorMessage.InvalidSchema,
       );
     return result.data;
   } catch (error) {
@@ -51,12 +53,12 @@ export async function requestDataApi<T>(
       throw new AppError(
         504,
         ErrorCode.DataApiTimeout,
-        ErrorMessage.DataApiTimeout,
+        DataApiErrorMessage.Timeout,
       );
     throw new AppError(
       502,
       ErrorCode.DataApiUnavailable,
-      ErrorMessage.DataApiUnavailable,
+      DataApiErrorMessage.Unavailable,
     );
   }
 }

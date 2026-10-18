@@ -1,7 +1,7 @@
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 
-import { HIDE_IMAGES_CSS } from './constants.ts';
+import { HIDE_IMAGES_CSS, PdfErrorMessage } from './constants.ts';
 import { resolvePdfPrintSettings } from './schema.ts';
 
 import type { Page } from 'playwright';
@@ -19,7 +19,7 @@ export async function renderPagePdf(
     throw new AppError(
       502,
       ErrorCode.UpstreamError,
-      ErrorMessage.UpstreamError,
+      PdfErrorMessage.UpstreamError,
     );
   }
   if (input.waitForSelector) {

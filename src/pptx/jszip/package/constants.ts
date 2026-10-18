@@ -36,3 +36,10 @@ export const TABLE_MERGE_ATTRIBUTES = [
   'hMerge',
   'vMerge',
 ] as const;
+
+export const PptxErrorMessage = {
+  InvalidTemplateObjects:
+    'Presentation template has missing, duplicate, or unsupported objects or data',
+  TemplateExceedsMaxSize: 'Template exceeds 20 MB',
+  TemplateInvalidPptx: 'Template must be a valid PPTX presentation',
+} as const;

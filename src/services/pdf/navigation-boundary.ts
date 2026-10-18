@@ -1,5 +1,7 @@
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
+
+import { PdfErrorMessage } from './constants.ts';
 
 import type { BrowserContext, Page } from 'playwright';
 
@@ -17,7 +19,7 @@ export async function navigationBoundary(
     new AppError(
       502,
       ErrorCode.NavigationBlocked,
-      ErrorMessage.NavigationBlocked,
+      PdfErrorMessage.NavigationBlocked,
     );
   // Popups can start navigating before a page-specific CDP session can attach.
   await context.route('**/*', async (route) => {

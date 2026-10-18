@@ -1,9 +1,11 @@
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 import { ExportFormat } from '@/http/constants';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
 import { filenameSchema } from '@/validation/schema';
+
+import { ReportErrorMessage } from './constants.ts';
 
 import type { Request } from 'express';
 import type { ZodType } from 'zod';
@@ -40,7 +42,7 @@ export function definePptxReport<Input, RenderInput>(
           404,
           ErrorCode.UnknownTemplate,
           definition.notConfiguredMessage ??
-            ErrorMessage.PowerPointReportNotConfigured,
+            ReportErrorMessage.PowerPointReportNotConfigured,
         );
       const prepared = definition.prepareInput(input, dependencies.config);
       const filename = filenameSchema.parse(prepared.filename);

@@ -33,4 +33,14 @@ export const ParserErrorType = {
   EncodingUnsupported: 'encoding.unsupported',
 } as const;
 
+export const HttpErrorMessage = {
+  EndpointNotFound: 'Endpoint not found',
+  InvalidRequestParameters: 'Invalid request parameters',
+  DocumentGenerationFailed: 'Document generation failed',
+  BodyTooLarge: 'Request body is too large',
+  InvalidJson: 'Invalid JSON body',
+  UnsupportedCharset: 'Unsupported JSON charset',
+  UnsupportedContentEncoding: 'Unsupported content encoding',
+} as const;
+
 export const UNMATCHED_ROUTE = 'unmatched';

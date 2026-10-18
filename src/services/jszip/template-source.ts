@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 
 import JSZip from 'jszip';
 
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
-import { PackagePath } from '@/pptx/jszip/package/constants';
+import { PackagePath, PptxErrorMessage } from '@/pptx/jszip/package/constants';
 
 /** Retains validated source bytes; callers must load their own mutable archive. */
 export class TemplateSource {
@@ -36,7 +36,7 @@ export class TemplateSource {
       throw new AppError(
         500,
         ErrorCode.InvalidTemplate,
-        ErrorMessage.TemplateExceedsMaxSize,
+        PptxErrorMessage.TemplateExceedsMaxSize,
       );
     const zip = await JSZip.loadAsync(source);
     if (
@@ -46,7 +46,7 @@ export class TemplateSource {
       throw new AppError(
         500,
         ErrorCode.InvalidTemplate,
-        ErrorMessage.TemplateInvalidPptx,
+        PptxErrorMessage.TemplateInvalidPptx,
       );
     await this.validateArchive(zip);
     return source;

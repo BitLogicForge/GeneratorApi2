@@ -4,9 +4,9 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { loadConfig } from './config.ts';
-import { ErrorCode, ErrorMessage } from './constants.ts';
+import { ErrorCode } from './constants.ts';
 import { AppError } from './errors.ts';
-import { HttpHeader } from './http/constants.ts';
+import { HttpErrorMessage, HttpHeader } from './http/constants.ts';
 import { createErrorHandler } from './http/error-handler.ts';
 import { createObservability } from './http/observability.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
@@ -38,7 +38,9 @@ export function createApp(
   app.use(express.json({ limit: '100kb' }));
   app.use(routerFactory(dependencies));
   app.use((req, res, next) =>
-    next(new AppError(404, ErrorCode.NotFound, ErrorMessage.EndpointNotFound)),
+    next(
+      new AppError(404, ErrorCode.NotFound, HttpErrorMessage.EndpointNotFound),
+    ),
   );
   app.use(createErrorHandler(logger));
   return app;

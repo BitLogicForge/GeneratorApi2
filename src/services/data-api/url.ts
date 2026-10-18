@@ -1,7 +1,8 @@
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 import { buildUrl } from '@/utils/url';
 
+import { DataApiErrorMessage } from './constants.ts';
 import {
   createDataApiUrlSchema,
   dataApiPathSchema,
@@ -20,7 +21,7 @@ export function buildDataApiUrl(
     throw new AppError(
       400,
       ErrorCode.InvalidDataApiPath,
-      ErrorMessage.InvalidDataApiRelativePath,
+      DataApiErrorMessage.InvalidRelativePath,
     );
   const base = new URL(baseUrl);
   base.pathname = `${base.pathname.replace(/\/$/, '')}/`;
@@ -29,13 +30,13 @@ export function buildDataApiUrl(
     throw new AppError(
       400,
       ErrorCode.InvalidDataApiPath,
-      ErrorMessage.InvalidDataApiPrefixPath,
+      DataApiErrorMessage.InvalidPrefixPath,
     );
   if (!dataApiQuerySchema.safeParse(query).success)
     throw new AppError(
       400,
       ErrorCode.InvalidDataApiQuery,
-      ErrorMessage.InvalidDataApiQuery,
+      DataApiErrorMessage.InvalidQuery,
     );
   return url;
 }

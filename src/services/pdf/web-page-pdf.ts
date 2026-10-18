@@ -1,10 +1,11 @@
 import { chromium, errors } from 'playwright';
 
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
 import { buildUrl } from '@/utils/url';
 
+import { PdfErrorMessage } from './constants.ts';
 import { navigationBoundary } from './navigation-boundary.ts';
 import { renderPagePdf } from './render-page.ts';
 import { pdfOriginSchema } from './schema.ts';
@@ -78,10 +79,10 @@ export class WebPagePdfService {
       throw new AppError(
         400,
         ErrorCode.InvalidRoute,
-        ErrorMessage.InvalidRoute,
+        PdfErrorMessage.InvalidRoute,
       );
     if (this.#active >= this.config.concurrency)
-      throw new AppError(503, ErrorCode.RenderBusy, ErrorMessage.RenderBusy);
+      throw new AppError(503, ErrorCode.RenderBusy, PdfErrorMessage.RenderBusy);
     this.#active++;
     let context: BrowserContext | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -106,7 +107,7 @@ export class WebPagePdfService {
                 new AppError(
                   504,
                   ErrorCode.RenderTimeout,
-                  ErrorMessage.RenderTimeout,
+                  PdfErrorMessage.RenderTimeout,
                 ),
               ),
             this.config.timeout,
@@ -118,7 +119,7 @@ export class WebPagePdfService {
         throw new AppError(
           504,
           ErrorCode.RenderTimeout,
-          ErrorMessage.RenderTimeout,
+          PdfErrorMessage.RenderTimeout,
         );
       throw error;
     } finally {

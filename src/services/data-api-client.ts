@@ -3,9 +3,10 @@ import { createHash } from 'node:crypto';
 import { LRUCache } from 'lru-cache';
 
 import { dataApiCacheDefaults } from '@/config';
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 
+import { DataApiErrorMessage } from './data-api/constants.ts';
 import { requestDataApi } from './data-api/request.ts';
 import { buildDataApiUrl } from './data-api/url.ts';
 
@@ -69,14 +70,14 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
       throw new AppError(
         503,
         ErrorCode.DataApiNotConfigured,
-        ErrorMessage.DataApiNotConfigured,
+        DataApiErrorMessage.NotConfigured,
       );
     const definition = this.config.endpoints[endpoint];
     if (!definition)
       throw new AppError(
         400,
         ErrorCode.UnknownDataApiEndpoint,
-        ErrorMessage.UnknownDataApiEndpoint,
+        DataApiErrorMessage.UnknownEndpoint,
       );
     const url = buildDataApiUrl(
       this.config.baseUrl,

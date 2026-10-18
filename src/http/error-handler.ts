@@ -1,10 +1,10 @@
 import { ZodError } from 'zod';
 
-import { ErrorCode, ErrorMessage } from '@/constants';
+import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 import { LogEvent } from '@/observability/constants';
 
-import { HttpHeader, ParserErrorType } from './constants.ts';
+import { HttpErrorMessage, HttpHeader, ParserErrorType } from './constants.ts';
 
 import type { ErrorRequestHandler } from 'express';
 
@@ -17,7 +17,7 @@ const parserErrors = new Map<
     {
       status: 413,
       code: ErrorCode.BodyTooLarge,
-      message: ErrorMessage.BodyTooLarge,
+      message: HttpErrorMessage.BodyTooLarge,
     },
   ],
   [
@@ -25,7 +25,7 @@ const parserErrors = new Map<
     {
       status: 400,
       code: ErrorCode.InvalidJson,
-      message: ErrorMessage.InvalidJson,
+      message: HttpErrorMessage.InvalidJson,
     },
   ],
   [
@@ -33,7 +33,7 @@ const parserErrors = new Map<
     {
       status: 415,
       code: ErrorCode.UnsupportedCharset,
-      message: ErrorMessage.UnsupportedCharset,
+      message: HttpErrorMessage.UnsupportedCharset,
     },
   ],
   [
@@ -41,7 +41,7 @@ const parserErrors = new Map<
     {
       status: 415,
       code: ErrorCode.UnsupportedContentEncoding,
-      message: ErrorMessage.UnsupportedContentEncoding,
+      message: HttpErrorMessage.UnsupportedContentEncoding,
     },
   ],
 ]);
@@ -58,14 +58,14 @@ export function createErrorHandler(
       ? {
           status: 400,
           code: ErrorCode.ValidationError,
-          message: ErrorMessage.InvalidRequestParameters,
+          message: HttpErrorMessage.InvalidRequestParameters,
         }
       : error instanceof AppError
         ? error
         : (parserErrors.get(error?.type) ?? {
             status: 500,
             code: ErrorCode.InternalError,
-            message: ErrorMessage.DocumentGenerationFailed,
+            message: HttpErrorMessage.DocumentGenerationFailed,
           });
     const { status, code, message } = publicError;
     if (status === 503) res.set(HttpHeader.RetryAfter, '5');

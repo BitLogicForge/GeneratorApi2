@@ -14,8 +14,7 @@
 | Environment validation and configuration assembly            | `src/config/environment.ts`, `src/config/index.ts`            |
 | Report helpers and owned service lifecycle                   | `src/reports/pdf.ts`, `pptx.ts`, `template.ts`, `services.ts` |
 | PDF URL/language settings, parameter mapping, and validation | `src/routes/pdf/**/{report,schema}.ts`                        |
-| URLs and endpoint-specific definitions                       | `src/routes/**/{get,post}.ts`, `report.ts`                    |
-| Discovery, ordering, duplicate detection                     | `src/http/file-routes/`                                       |
+| URLs and endpoint-specific definitions                       | `src/routes/router.ts`, route-local `report.ts`               |
 | Injected contracts, decoding, downloads, errors              | `src/http/`, `src/errors.ts`                                  |
 | Queues, timeouts, cancellation                               | `src/queue/generation-queue.ts`                               |
 | Chromium and PDF contracts                                   | `src/services/pdf/`                                           |
@@ -27,7 +26,7 @@
 
 ## Request and report flow
 
-Folders define URLs; method files re-export report factories. Discovery imports only supported method files, validates paths and duplicates, and registers static routes before parameters. It discovers compiled JavaScript in production. See [route conventions](../../src/routes/README.md).
+`src/routes/router.ts` registers URLs and methods with a standard Express router. It statically imports report factories; startup performs no route directory scanning or dynamic imports. Register static paths before parameter paths when they overlap. GET handlers also serve HEAD through Express, with shared download handling skipping generation. See [endpoint development](../guides/development.md).
 
 A PDF definition declares its request schema, input mapping, and optional print overrides. `definePdfReport` performs transport decoding, request and renderer validation, then calls the injected Chromium service through `sendDownload`. The renderer owns the navigation boundary, browser/context lifecycle, and merged print settings. Report-specific settings never mutate shared defaults.
 

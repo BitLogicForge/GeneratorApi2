@@ -1,3 +1,4 @@
+import type { RequestHandler } from 'express';
 import type { Config } from '@/config';
 import type { ReadinessState, RendererState } from '@/observability/constants';
 import type { GenerationQueues } from '@/queue/generation-queue';
@@ -28,3 +29,7 @@ export type RouteDependencies = AppOptions & {
   config: Pick<Config, 'defaultLanguage'>;
   queues: GenerationQueues;
 };
+
+export type RouteFactory = (
+  dependencies: RouteDependencies,
+) => RequestHandler<Record<string, string>>;

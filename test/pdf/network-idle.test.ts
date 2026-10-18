@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 
+import { Router } from 'express';
 import request from 'supertest';
 import { z } from 'zod';
 
@@ -139,7 +140,7 @@ test('route definitions forward both readiness options while HEAD skips renderin
       },
       logger: { error() {} },
     },
-    [{ method: 'get', path: '/report', file: 'report/get.ts', factory }],
+    (dependencies) => Router().get('/report', factory(dependencies)),
   );
   await request(app).get('/report').expect(200);
   assert.equal(inputs[0]?.waitForNetworkIdle, true);

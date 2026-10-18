@@ -447,10 +447,11 @@ See [README.md](../README.md) for configuration, deployment, and template regist
 
 ## Route source files
 
-Endpoint paths come from folders under `src/routes/`; method files such as
-`get.ts` and `post.ts` export factories that receive injected services.
-See [the file-routing guide](../src/routes/README.md) for adding endpoints. Existing
-URLs, query parameters and download contracts are unchanged.
+Endpoint paths and HTTP methods are registered explicitly in
+`src/routes/router.ts` using Express. Report factories receive injected services
+and keep validation, mapping, and download handling beside each report.
+See [the development guide](development.md#add-a-pdf-endpoint) for adding endpoints.
+Existing URLs, query parameters, HEAD behavior, and download contracts are unchanged.
 
 ## Internal observability
 

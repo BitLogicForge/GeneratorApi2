@@ -8,8 +8,7 @@ import {
 
 import type { Request } from 'express';
 import type { z, ZodType } from 'zod';
-import type { RouteFactory } from '@/http/file-routes/types';
-import type { RouteDependencies } from '@/http/types';
+import type { RouteDependencies, RouteFactory } from '@/http/types';
 import type { PdfPrintOverrides } from '@/services/pdf/contracts';
 
 // Report print settings have one owner: definition.print.

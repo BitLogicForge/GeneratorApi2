@@ -18,7 +18,7 @@ The following map identifies the main areas of responsibility:
 | Express, middleware, and request IDs                            | `src/app.ts`                                                                          |
 | Configuration and limits                                        | `src/config/`, `src/reports/document/settings.ts`                                     |
 | Input validation and document routes                            | `src/routes/**/{report,schema}.ts`, `src/services/**/contracts.ts`, `src/validation/` |
-| Endpoints                                                       | `src/routes/` (folders define URLs; `get.ts` and `post.ts` define methods)            |
+| Endpoints                                                       | `src/routes/router.ts` (explicit Express paths and methods)                           |
 | Service contracts, GET decoding, downloads, and errors          | `src/http/`, `src/errors.ts`                                                          |
 | Queues, timeouts, and cancellation of waiting jobs              | `src/queue/generation-queue.ts`                                                       |
 | Chromium and PDF rendering                                      | `src/services/pdf/web-page-pdf.ts`                                                    |

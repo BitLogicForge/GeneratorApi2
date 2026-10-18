@@ -6,8 +6,6 @@ import helmet from 'helmet';
 import { loadConfig } from './config.ts';
 import { AppError } from './errors.ts';
 import { createErrorHandler } from './http/error-handler.ts';
-import { discoverRoutes } from './http/file-routes/discover.ts';
-import { registerRoutes } from './http/file-routes/register.ts';
 import { createObservability } from './http/observability.ts';
 import {
   ManagedExternally,
@@ -15,16 +13,14 @@ import {
   TemplateState,
 } from './observability/constants.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
+import { createRouter } from './routes/router.ts';
 
-import type { FileRoute } from './http/file-routes/types.ts';
 import type { AppOptions } from './http/types.ts';
-
-const routes = await discoverRoutes(new URL('./routes/', import.meta.url));
 
 /** Assembles HTTP handling around injected services so routes can be tested independently. */
 export function createApp(
   options: AppOptions,
-  definitions: readonly FileRoute[] = routes,
+  routerFactory: typeof createRouter = createRouter,
 ) {
   const {
     config = options.reports?.config ?? loadConfig({}),
@@ -55,7 +51,7 @@ export function createApp(
   });
   app.use(observability.middleware);
   app.use(express.json({ limit: '100kb' }));
-  registerRoutes(app, definitions, dependencies);
+  app.use(routerFactory(dependencies));
   app.use((req, res, next) =>
     next(new AppError(404, 'NOT_FOUND', 'Endpoint not found')),
   );

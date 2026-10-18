@@ -47,17 +47,22 @@ export default definePdfReport({
 });
 ```
 
-Add `get.ts` and, if POST is needed, `post.ts`. Both contain:
+Import the factory in `src/routes/router.ts` and register it explicitly:
 
 ```ts
-export { default } from './report.ts';
+import sales from './pdf/sales/report.ts';
+
+// Inside createRouter:
+const salesHandler = sales(dependencies);
+router.get('/pdf/sales', salesHandler);
+router.post('/pdf/sales', salesHandler);
 ```
 
 This exposes `GET/POST /pdf/sales`. GET uses flat URL parameters; POST uses the same fields in a JSON object. The helper decodes transport, rejects duplicate parameters, validates requests and renderer input, and uses the shared PDF queue/download handling. HEAD validates input and returns attachment metadata without rendering.
 
 Report `print` overrides merge with shared defaults, including individual margin sides. They affect only that report's requests. The public request accepts only its schema's fields; print overrides in the definition are server-owned. Use `jsonFields` when specific GET fields contain JSON, or `readRequestInput` for path parameters or a custom transport shape. Keep unknown fields rejected with `.strict()`.
 
-The quarterly report is a complete example at `src/routes/pdf/quarterly/`, with validation in `schema.ts` and webapp mapping in `report.ts`. The factsheet and onepager folders each own their `schema.ts`, `report.ts`, and `get.ts`; external routes, supported query parameters, defaults, and parameter mapping are defined in those folders.
+The quarterly report is a complete example at `src/routes/pdf/quarterly/`, with validation in `schema.ts` and webapp mapping in `report.ts`. The factsheet and onepager folders each own their `schema.ts` and `report.ts`; external routes, supported query parameters, defaults, and parameter mapping are defined in those folders.
 
 ## Add a placeholder PowerPoint endpoint
 
@@ -65,7 +70,7 @@ Each PPTX route folder owns its public contract, target, mapping, and output fil
 
 - `schema.ts` declares allowed fields, validation, defaults, and GET/POST decoding.
 - `report.ts` selects the trusted template or generated design, maps validated fields in `prepareInput`, and configures its service.
-- `get.ts` and `post.ts` re-export the same report definition directly.
+- `src/routes/router.ts` registers the report factory with Express methods and explicit URL paths.
 
 Place `sales.pptx` in `templates/`, using placeholders such as `{{title}}`.
 Create `src/routes/pptx/jszip/sales/schema.ts`:
@@ -118,12 +123,14 @@ export const report = {
 export default definePptxReport(report);
 ```
 
-Both method files contain `export { default } from './report.ts';`.
-This exposes `GET/POST /pptx/jszip/sales`; HEAD validates without generating.
+Import the default factory into `src/routes/router.ts`, create its handler with
+`const salesHandler = sales(dependencies)`, and register it with
+`router.get('/pptx/jszip/sales', salesHandler)` and
+`router.post('/pptx/jszip/sales', salesHandler)`. HEAD validates without generating.
 `templateService` handles only trusted template loading, generation, and lifecycle.
 It does not choose the public schema, parameter mapping, or output filename.
-The route owns those choices. No startup or central registry edit is needed.
-See business and summary for working examples.
+The route owns those choices. Registering the route also registers its service before startup initialization.
+See DAA and TMA for working examples.
 
 ## Add a custom PowerPoint service
 
@@ -161,7 +168,7 @@ For agent tasks, follow the [verification policy in AGENTS.md](../../AGENTS.md#v
 2. When document verification is requested, inspect PDF forwarding/appearance or relevant PPTX ZIP/XML content. For chart changes, check the embedded workbook and editability too.
 3. Update `docs/guides/endpoints.md` and add an output example when useful.
 4. For TypeScript changes, run `npm run typecheck`, `npm run lint:code`, and `npm run knip`; check formatting of changed files. Run `npm run build` when compilation, import rewriting, or execution from `dist/` changes. Use `npm test` only when the requested verification requires the full suite.
-5. Restart after adding/moving method files. GitLab compiles `dist/` before packaging the ZIP; template `.pptx` files are included automatically.
+5. Restart after changing route registrations. GitLab compiles `dist/` before packaging the ZIP; template `.pptx` files are included automatically.
 
 For report tests, use the generic service container rather than adding a property to `AppOptions`:
 
@@ -172,9 +179,9 @@ const app = createApp({ reports, pdf: fakePdf });
 await reports.initialize();
 ```
 
-Import `createReportServices` from `@/reports/services` and `report` from the report module. The PDF service remains directly injectable. Override PowerPoint report services using `reports.override(report, fakeService)`. A test can pass discovered routes as the second argument to `createApp` to exercise a new report in isolation.
+Import `createReportServices` from `@/reports/services` and `report` from the report module. The PDF service remains directly injectable. Override PowerPoint report services using `reports.override(report, fakeService)`. A test can pass a router factory as the second argument to `createApp`, for example `(dependencies) => Router().get('/report', factory(dependencies))`, to exercise a report in isolation. Import `Router` from `express`.
 
-Adding a report requires its definition, method re-exports, optional service/template, and documentation; add tests when requested. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
+Adding a report requires its definition, explicit registration in `src/routes/router.ts`, optional service/template, and documentation; add tests when requested. It requires no changes to `index.ts`, global configuration, or a central dependency interface.
 
 ## Manual checks
 

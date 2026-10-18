@@ -5,8 +5,7 @@ import { filenameSchema } from '@/validation/filename';
 
 import type { Request } from 'express';
 import type { ZodType } from 'zod';
-import type { RouteFactory } from '@/http/file-routes/types';
-import type { RouteDependencies } from '@/http/types';
+import type { RouteDependencies, RouteFactory } from '@/http/types';
 import type { ServiceDefinition } from './services.ts';
 
 export interface PptxReport<

@@ -1,14 +1,10 @@
 # Generator API
 
-A TypeScript + Express proof of concept for generating PDFs from web pages and editable PowerPoint presentations. Requires Node.js 22+.
+Node.js 22+ TypeScript and Express service for rendering webapp pages to PDF
+(Playwright) and generating editable PowerPoint presentations (PptxGenJS and
+JSZip).
 
-- **PDF:** Playwright/Chromium renders a page from your configured webapp.
-- **PowerPoint:** PptxGenJS generates new decks; JSZip fills existing templates while preserving editable content.
-- **HTTP:** validated GET/POST inputs, attachment downloads, request IDs, and bounded generation queues.
-
-## Quick start
-
-Run these commands from the repository root:
+## Quick Start
 
 ```bash
 npm ci
@@ -17,48 +13,29 @@ cp .env.example .env
 npm run dev
 ```
 
-Set `WEBAPP_BASE_URL` in `.env` to your webapp's origin. The API defaults to port 3000. For a local demo webapp on port 3001, run `npm run demo` in another terminal.
-
-Browser installation includes Chromium's system libraries and may require sudo on Linux.
+For PDF routes that render local demo pages on port `3001`, start the demo
+webapp in a second terminal with `npm run demo`.
 
 ```bash
 curl http://localhost:3000/health
 curl http://localhost:3000/internal/ready
 curl http://localhost:3000/internal/metrics
-curl -X POST http://localhost:3000/api/exports/pdf/test \
+curl --fail-with-body http://localhost:3000/pptx/daa -o demo-report.pptx
+curl -X POST http://localhost:3000/pptxgenjs/brief \
   -H 'Content-Type: application/json' \
-  --data-binary @examples/pdf/quarterly-portrait.json --output report.pdf
+  --data-binary @examples/pptx/generated.json -o brief.pptx
 ```
 
 ## Documentation
 
-| Sector / Guide                                                 | Contents                                                                      |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [Documentation Overview](docs/README.md)                       | Complete index of technical guides, services, architecture, and reviews       |
-| [Getting started](docs/guides/getting-started.md)              | Local setup, configuration, Docker access, and sample requests                |
-| [API endpoints](docs/guides/endpoints.md)                      | Routes, inputs, download examples, responses, and errors                      |
-| [Architecture and code map](docs/architecture/architecture.md) | File responsibilities, services, routing, queues, and shutdown                |
-| [Development](docs/guides/development.md)                      | Adding endpoints, imports, tests, hooks, and builds                           |
-| [Data API](docs/services/data-api.md)                          | Upstream configuration, typed responses, single requests, chains, and batches |
-| [PDF](docs/services/pdf.md)                                    | Document URLs, IDs, language, and query forwarding                            |
-| [PowerPoint](docs/services/powerpoint.md)                      | File templates, placeholders, the DAA demo, and JSZip utilities               |
-| [Azure deployment](docs/deployment/azure.md)                   | Docker, ACR, GitLab CI, App Service configuration, and smoke tests            |
-
-All commands in the documentation run from the repository root.
-
-## Where to look
-
-Start with [src/runtime.ts](src/runtime.ts) for shared infrastructure and [src/app.ts](src/app.ts) for the HTTP flow. Explicit Express registrations live in [src/routes/router.ts](src/routes/router.ts), with handlers in [src/routes/](src/routes/), report definitions and helpers in [src/reports/](src/reports/) and route-local `report.ts` files, generation services in [src/services/](src/services/), and reusable PowerPoint helpers in [src/pptx/](src/pptx/). See the [full code map](docs/architecture/architecture.md#where-to-look) for individual files.
-
-Examples live in [examples/](examples/README.md), source presentations in [templates/](templates/), and tests in [test/](test/README.md).
-
-## Verification
-
-```bash
-npm run typecheck
-npm run knip
-npm test
-npm run build
-```
-
-This POC is intended for trusted webapps and internal use. See the [runtime limitations](docs/guides/development.md#verification-and-production-build) before deploying publicly.
+| Guide                                             | Purpose                                                           |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| [Documentation Index](docs/README.md)             | Overview of all documentation sections                            |
+| [Architecture](docs/architecture/architecture.md) | Request lifecycle, service registry, queues, and code map         |
+| [Getting Started](docs/guides/getting-started.md) | Local setup, `.env` variables, and Docker networking              |
+| [Development](docs/guides/development.md)         | Adding PDF/PPTX endpoints, URL mapping, and static checks         |
+| [API Endpoints](docs/guides/endpoints.md)         | Complete route contracts, parameters, error codes, and `curl`     |
+| [PDF Service](docs/services/pdf.md)               | Chromium lifecycle, origin boundaries, readiness, print settings  |
+| [PowerPoint Service](docs/services/powerpoint.md) | PptxGenJS, template services, and JSZip OpenXML utilities         |
+| [Data API Service](docs/services/data-api.md)     | Typed upstream client, LRU cache, and single/chain/batch examples |
+| [Azure Deployment](docs/deployment/azure.md)      | Standalone ZIP packaging, startup script, and GitLab CI           |

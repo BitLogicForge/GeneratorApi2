@@ -1,527 +1,132 @@
-# API endpoints
+# API Endpoints Reference
 
-[Back to overview](../../README.md)
+[Back to Documentation Index](../README.md)
 
-## Overview
+## Registered Routes (`src/routes/router.ts`)
 
-PDF route exports and the brief, business, and summary PowerPoint exports support GET and POST. The document-ID PDF link and DAA demo support GET. All GET exports also accept HEAD with the same query schemas: successful HEAD responses return download headers without generating a document or entering a queue, and omit the unknown `Content-Length`. HEAD checks request syntax and configured services; it does not fetch upstream data or confirm that generation will succeed. Text fields are query strings; `query`, `slides`, and `replacements` contain URL-encoded JSON, and `landscape` is `true` or `false`. Existing POST requests remain supported.
+All `GET` routes also accept `HEAD` (validating parameters and returning
+response headers without entering a generation queue or rendering a document).
 
-| Endpoint                     | Input                                                                                              | Result                           |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
-| `POST /pdf/test`             | Relative `route`, optional `query`, `filename`, `waitForSelector`, `format`, `landscape`           | PDF attachment                   |
-| `GET /pdf/factsheet/:id`     | Document ID; optional webapp query parameters                                                      | PDF attachment, always portrait  |
-| `GET /pdf/onepager/:id`      | Document ID; optional webapp query parameters                                                      | PDF attachment, always landscape |
-| `POST /pptx/pptxgenjs/brief` | Fixed brief design; `title`, `slides`, optional `subtitle`, `author`, `accent`, `filename` in JSON | Editable PPTX attachment         |
-| `GET /health`                | None                                                                                               | Process health                   |
+| Method            | Path                 | Purpose & Output                                                             |
+| ----------------- | -------------------- | ---------------------------------------------------------------------------- |
+| `GET, HEAD`       | `/health`            | Process liveness (`200 { "status": "ok" }`)                                  |
+| `GET, HEAD`       | `/internal/ready`    | Readiness probe (`200` when templates & renderer are ready, `503` otherwise) |
+| `GET, HEAD`       | `/internal/metrics`  | Queue, renderer, template, and per-route request metrics                     |
+| `GET, HEAD`       | `/pdf/example`       | Portrait PDF of `https://example.com/` (`example.pdf`)                       |
+| `GET, HEAD`       | `/pdf/factsheet/:id` | Portrait PDF of `/factsheet/:id` on `WEBAPP_BASE_URL` (`{id}.pdf`)           |
+| `GET, HEAD`       | `/pdf/onepager/:id`  | Landscape PDF of `/onepager/:id` (`onepager-YYYY-MM-DD-HH-mm-{id}.pdf`)      |
+| `GET, HEAD`       | `/pdf/quarterly`     | Portrait PDF of `/reports/quarterly` waiting for `[data-report-ready]`       |
+| `GET, HEAD`       | `/pptx/daa`          | Editable PPTX from `templates/daa.pptx` with table, chart, and text          |
+| `GET, HEAD`       | `/pptx/tma`          | Editable PPTX from `templates/Tmp1.pptx` with charts, dates, colors          |
+| `GET, HEAD, POST` | `/pptxgenjs/brief`   | Programmatic PPTX presentation (`brief` design) from query or JSON           |
 
-PowerPoint's `brief` template creates a dark cover and light numbered content slides. Each slide takes `title`, 1–6 `bullets`, and optional speaker `notes`. Accent is a six-digit hex color without `#`. Up to 30 content slides are supported. Filenames omit extensions and accept letters, numbers, underscores, and hyphens.
+## Endpoint Contracts
 
-The PDF endpoint combines the route with the configured origin. The base PDF endpoint accepts only declared webapp query fields: `language`, `year`, `quarter`, and `print`. It prints with background colors, A4 by default, and 12 mm margins. Use a visible readiness marker such as `[data-report-ready]` for asynchronously loaded reports. Your webapp controls print layout through `@media print`; server defaults are configured in `pdfPrintSettings` in `src/config/defaults.ts`. Browser cookies and authentication are isolated per request; caller credentials are not forwarded.
+### `GET /pdf/factsheet/:id`
 
-Errors use `{ "error": { "code", "message", "requestId", "details"? } }`. Validation and malformed JSON return 400, unknown endpoints/templates 404, unsupported JSON charsets/content encodings 415, upstream HTTP failures 502, queue capacity/wait timeout 503, and rendering timeouts 504. Unexpected errors return a generic 500 and are logged with the request ID. JSON requests are limited to 100 KB.
-
-PDF navigation, including every redirect hop and frame, must stay on `WEBAPP_BASE_URL`'s origin. Same-origin redirects are supported; popups and navigation outside that origin fail with 502 `NAVIGATION_BLOCKED` before the destination is requested. External assets and data requests are still allowed.
-
-All PowerPoint text fields must contain XML 1.0-compatible characters. Forbidden controls, lone UTF-16 surrogates, U+FFFE, and U+FFFF return 400 `VALIDATION_ERROR`. Tabs, line endings, and valid Unicode, including emoji, are accepted and preserved.
-
-See [examples/README.md](../../examples/README.md) for examples grouped by PDF, PowerPoint, and data API workflows.
-
-## Generate test output files
-
-```bash
-npm run browser:install
-npm run test:outputs
-```
-
-The test starts local HTTP servers, downloads real files from the routes, validates PDF/PPTX contents, and saves them in `output/routes/`:
-
-- `document-portrait.pdf` — portrait, default language, from `/pdf/factsheet/id2222`.
-- `document-portrait-de.pdf` — portrait, language override, from `/pdf/factsheet/id2222?language=de`.
-- `quarterly-2027-q2-pl.pdf` — fixed portrait page with forwarded GET parameters.
-- `document-landscape.pdf` — landscape, from `/pdf/onepager/id2222`.
-- `quarterly-report-portrait.pdf` and `quarterly-report-landscape.pdf` — POST payload examples from `examples/pdf/`.
-- `custom-report.pdf` — readiness selector and print options, from GET `/pdf/test`.
-- `quarterly-review.pptx` — editable presentation, from GET `/pptx/pptxgenjs/brief`.
-- `customer-proposal.pptx` — edited template, from GET `/pptx/jszip/business`.
-- `demo-report.pptx` — native table and line chart with random data, from GET `/pptx/jszip/daa`.
-- `manifest.json` — exact request URLs, output paths, and file sizes.
-
-The tests provide their own local webapp and need no running demo server. Output files are ignored by Git. The short `/id2222.pptx` route is not implemented yet; these tests cover the existing PowerPoint routes.
-
-## Simple PDF download
-
-Open this URL in your browser outside Docker:
-
-```text
-http://localhost:3000/pdf/factsheet/id2222?language=en
-```
-
-Factsheet uses the document ID as its filename; onepager includes the request's UTC timestamp when the name fits the filename limit. Factsheet accepts `language` and `year`. Onepager accepts `START`, `END`, and `BENCHMARK`:
-
-Query parameters are optional: `http://localhost:3000/pdf/factsheet/id2222` uses the route-local `defaultLanguage` (`en` by default). Change it in the endpoint's `report.ts` to choose a different default. An explicit `language` overrides the default unless the route pattern fixes the language itself. Other omitted parameters use the upstream webapp's defaults.
-
-```text
-http://localhost:3000/pdf/factsheet/id2222?language=en&year=2026
-```
-
-The API forwards those parameters to the configured webapp document route. No JSON is needed for this download URL.
-
-All endpoints currently registered by Generator API are listed below. Commands use the default API address, `http://localhost:3000`, and run from the repository root.
-
-## Start the servers
-
-Requires Node.js 22+.
+- **Path parameter**: `id` — `1..80` alphanumeric, `_`, or `-` characters.
+- **Query parameters**: None allowed (`.strict()`).
+- **Output**: `application/pdf` attachment named `{id}.pdf` (portrait).
 
 ```bash
-npm ci
-npm run browser:install
-cp .env.example .env
-npm run dev
+curl --fail-with-body http://localhost:3000/pdf/factsheet/id2222 -o factsheet.pdf
 ```
 
-In a second terminal, start the included webapp for the PDF examples:
+### `GET /pdf/onepager/:id`
+
+- **Path parameter**: `id` — `1..80` alphanumeric, `_`, or `-` characters.
+- **Query parameters** (all optional):
+  - `START`: ISO date `YYYY-MM-DD`
+  - `END`: ISO date `YYYY-MM-DD`
+  - `BENCHMARK`: `'SAA'` | `'REPORTING'`
+- **Output**: `application/pdf` attachment named
+  `onepager-YYYY-MM-DD-HH-mm-{id}.pdf` (or `{id}.pdf` if exceeding 80 chars),
+  always landscape.
 
 ```bash
-npm run demo
+curl --fail-with-body \
+  'http://localhost:3000/pdf/onepager/id2222?START=2026-01-01&END=2026-12-31&BENCHMARK=SAA' \
+  -o onepager.pdf
 ```
 
-The examples assume `WEBAPP_BASE_URL=http://localhost:3001` and the external routes defined in each PDF endpoint's `report.ts`. If you configured different hosts or routes, adjust the requests accordingly. PowerPoint generation does not require the demo webapp or Chromium.
+### `GET /pdf/quarterly`
 
-## Query parameter format
-
-Pass text fields directly. Encode `query` and `replacements` as JSON objects, `slides` as a JSON array, and `landscape` as `true` or `false`. Use `curl --get --data-urlencode` to encode spaces, punctuation, and JSON. Repeated parameters and unknown fields are rejected. GET requests do not require a JSON body. Existing POST endpoints remain supported for compatibility.
-
-Large presentations or replacement text may exceed URL limits imposed by browsers, proxies, or hosting servers; use POST with JSON for those larger requests.
-
-For testing from outside Docker, set `API_HOST=0.0.0.0` and publish port 3000. The included devcontainer publishes it to your computer's `127.0.0.1:3000`; rebuild the devcontainer to apply this setting. See [Docker access instructions](getting-started.md#access-from-outside-docker).
-
-## Endpoint list
-
-### Random table and chart download
-
-Open `http://localhost:3000/pptx/jszip/daa` or download it:
+- **Query parameters** (all optional):
+  - `year`: 4-digit year `2000..2100` (forwarded to webapp)
+  - `quarter`: `1..4` (forwarded to webapp)
+  - `language`: `'en'` | `'de'` | `'pl'` (defaults to `config.defaultLanguage` = `'en'`)
+- **Readiness**: Waits for `[data-report-ready]` to become visible.
+- **Output**: `application/pdf` attachment named
+  `quarterly-{year}-q{quarter}-{language}.pdf`.
 
 ```bash
-curl --fail-with-body http://localhost:3000/pptx/jszip/daa --output demo-report.pptx
+curl --fail-with-body \
+  'http://localhost:3000/pdf/quarterly?year=2026&quarter=2&language=de' \
+  -o quarterly.pdf
 ```
 
-No parameters are required. The objects are found by their Selection Pane names: `TAB100` (table), `GGO` (chart), and `TEXT_ME` (text). Set the text with `http://localhost:3000/pptx/jszip/daa?TEXT_ME=Hello%20world`; omitting `TEXT_ME` uses `Generated report`. The value accepts up to 5,000 characters and is inserted as literal text, preserving the first text run’s formatting. Object names must be unique across the presentation. The chart and embedded workbook are located through their relationships, so object order and chart filenames may change. The table must remain 4×4 and the chart must retain its three-series data layout. Every request preserves the first row of `templates/daa.pptx`'s 4×4 table and fills only the last three rows (12 cells) with random integers from 1–100. The line chart receives a separate set of 20 random rows across three series, with category labels `A1`–`A20`. Series names and styles are preserved; category labels and ranges expand to 20 rows. The chart cache and embedded Excel workbook are both updated so the chart remains native and editable using PowerPoint's **Edit Data**. This route uses the PowerPoint queue and leaves the source template unchanged.
+### `GET /pdf/example`
 
-### All routes
+- **Query parameters**: None allowed.
+- **Target**: Renders `https://example.com/` (`externalOrigin` override).
+- **Output**: `application/pdf` attachment named `example.pdf`.
 
-| Method          | Endpoint                | Successful GET/POST response                               |
-| --------------- | ----------------------- | ---------------------------------------------------------- |
-| GET, HEAD       | `/health`               | JSON process health (HEAD omits the body)                  |
-| GET, HEAD       | `/pptx/jszip/daa`       | Native table and line chart with random data               |
-| GET, HEAD       | `/pdf/factsheet/:id`    | PDF attachment for a document ID                           |
-| GET, HEAD       | `/pdf/quarterly`        | Fixed portrait quarterly report with direct GET parameters |
-| GET, HEAD       | `/pdf/onepager/:id`     | PDF attachment for a document ID, always landscape         |
-| GET, HEAD, POST | `/pdf/test`             | PDF attachment for a webapp route                          |
-| GET, HEAD, POST | `/pptx/pptxgenjs/brief` | Generated editable PowerPoint attachment                   |
-| GET, HEAD, POST | `/pptx/jszip/summary`   | PowerPoint attachment with summary template text replaced  |
-| GET, HEAD, POST | `/pptx/jszip/business`  | PowerPoint attachment with business template text replaced |
+### `GET /pptx/daa` and `GET /pptx/tma`
 
-PowerPoint template names are fixed route segments: `brief` uses PptxGenJS; `business`, `summary`, and `daa` use JSZip. Exposing another template requires a dedicated route. Unknown paths return 404 `NOT_FOUND`.
-
-## GET /health
+- **Query parameters**:
+  - `TEXT_ME` (optional): `1..5000` XML-valid characters (defaults to
+    `'Generated report'`).
+- **Behavior**:
+  - `/pptx/daa` populates `TAB100`, `GGO`, and `TEXT_ME` in
+    `templates/daa.pptx` and downloads `demo-report.pptx`.
+  - `/pptx/tma` populates `X_CHART_A`, `X_CHART_B`, `X_T0`, `X_T1`, `X_T2`,
+    and `X_SUB` in `templates/Tmp1.pptx` and downloads `tma.pptx`.
 
 ```bash
-curl --fail-with-body http://localhost:3000/health
+curl --fail-with-body 'http://localhost:3000/pptx/daa?TEXT_ME=Hello%20world' -o demo-report.pptx
+curl --fail-with-body 'http://localhost:3000/pptx/tma?TEXT_ME=Hello%20world' -o tma.pptx
 ```
 
-Response (200):
+### `GET, POST /pptxgenjs/brief`
 
-```json
-{ "status": "ok" }
-```
-
-This checks process availability; it does not check Chromium or the upstream webapp.
-
-## GET /pdf/factsheet/:id
-
-Renders `/factsheet/:id` on `WEBAPP_BASE_URL`, always in portrait orientation:
+- **Fields**:
+  - `title`: `1..120` characters (required)
+  - `subtitle`: `1..160` characters (optional)
+  - `author`: `1..80` characters (optional)
+  - `accent`: 6-digit hex color without `#`, e.g. `'0F766E'` (optional)
+  - `filename`: `1..80` alphanumeric, `_`, or `-` characters (defaults to `'presentation'`)
+  - `slides`: Array of `1..30` slides (JSON-encoded string on `GET`), each with
+    `title` (`1..120` chars), `bullets` (`1..6` items of `1..240` chars), and
+    optional `notes` (`1..2000` chars).
 
 ```bash
-curl --fail-with-body 'http://localhost:3000/pdf/factsheet/id2222?language=en' --output factsheet.pdf
-```
-
-The API URL has no `.pdf` suffix; its attachment filename is `id2222.pdf`.
-
-## GET /pdf/onepager/:id
-
-Renders `/onepager/:id` on `WEBAPP_BASE_URL`, always in landscape orientation:
-
-```bash
-curl --fail-with-body 'http://localhost:3000/pdf/onepager/id2222?START=2027-01-01&END=2027-12-31&BENCHMARK=SAA' --output onepager.pdf
-```
-
-This selects its own external page rather than reprinting the factsheet page. Both endpoints return `Content-Type: application/pdf`, attachment downloads, `Cache-Control: no-store`, and request IDs. Onepager names its attachment `onepager-YYYY-MM-DD-HH-mm-id2222.pdf` using the request's UTC date and time. If adding the prefix and timestamp would exceed the 80-character filename limit before `.pdf`, the filename is `{id}.pdf` without truncating the ID.
-
-Both routes support HEAD without rendering. IDs accept 1–80 letters, numbers, underscores, and hyphens. The allowed query parameters depend on the route:
-
-| Parameter   | Route     | Accepted values                            | Default                                                |
-| ----------- | --------- | ------------------------------------------ | ------------------------------------------------------ |
-| `language`  | Factsheet | Nonempty text, up to 100 characters        | Route-local default unless fixed by the external route |
-| `year`      | Factsheet | Four digits, 2000–2100                     | Omitted                                                |
-| `START`     | Onepager  | Valid calendar date in `YYYY-MM-DD` format | Omitted                                                |
-| `END`       | Onepager  | Valid calendar date in `YYYY-MM-DD` format | Omitted                                                |
-| `BENCHMARK` | Onepager  | `SAA` or `REPORTING`                       | Omitted                                                |
-
-Onepager forwards `START`, `END`, and `BENCHMARK` under those exact uppercase
-names. Each is independently optional; `language` and `year` are rejected on onepager.
-
-Unknown parameters, duplicate values, unsafe IDs, and invalid values return 400. Caller-supplied `landscape`, `route`, and `waitForSelector` are rejected. These routes use the shared renderer and queue; configured appearance applies with the endpoint's fixed orientation, defined only through `print.landscape` in its `report.ts`.
-
-Each endpoint folder owns its PDF definition:
-
-- `src/routes/pdf/onepager/schema.ts` declares the path ID and allowed query parameters.
-- `src/routes/pdf/onepager/report.ts` defines the external route, parameters, filename, and print settings.
-- `src/routes/router.ts` registers `/pdf/onepager/:id` with Express.
-
-The factsheet folder has the same structure and its own independent definition.
-`prepareInput` returns a trusted relative `route` such as `/onepager/:id`,
-`params: { id }`, and validated `query` fields. The shared URL builder uses
-`path-to-regexp` to encode path parameters and Node's `URLSearchParams` for query
-values. To put the ID in a query instead, return `route: '/document'` and
-`query: { id }`.
-
-Onepager maps public query names to external names with the `externalQueryNames`
-dictionary in `src/routes/pdf/onepager/schema.ts`, after validating the public
-fields. Change dictionary values to rename outgoing query parameters. Forward only validated public fields; fixed server-owned values belong
-in the same query object. Configure the shared origin through `WEBAPP_BASE_URL`.
-
-The former `/pdf/portrait/:id.pdf` and `/pdf/landscape/:id.pdf` document routes are removed.
-
-PDF report definitions may set `waitForNetworkIdle: true` alongside
-`waitForSelector` in `prepareInput`. After the readiness selector is visible,
-the renderer waits for 500 ms without active network connections before printing.
-The option is disabled when omitted or false; both waits share the configured
-render timeout. It is a server-owned setting, not a public query parameter on
-these fixed PDF routes.
-
-## GET /pdf/onet
-
-Test route that prints `https://example.com/` as a portrait PDF named `onet.pdf`.
-It accepts no query parameters. Its origin is fixed in `src/routes/pdf/onet/report.ts`
-and does not change `WEBAPP_BASE_URL` for the other PDF routes. HEAD returns
-attachment metadata without visiting the site. Shared queue limits, timeouts,
-credential isolation, and same-origin navigation restrictions still apply.
-
-```bash
-curl --fail-with-body http://localhost:3000/pdf/onet --output onet.pdf
-```
-
-## GET /pdf/quarterly
-
-Prints the fixed `/reports/quarterly` endpoint on `WEBAPP_BASE_URL`, always in
-portrait. Direct query parameters are validated and forwarded to that webapp
-endpoint through GET. The page must expose `[data-report-ready]` before printing.
-HEAD validates parameters and returns download headers without fetching the page.
-
-```bash
-curl --fail-with-body 'http://localhost:3000/pdf/quarterly?year=2027&quarter=2&language=pl' --output quarterly-2027-q2-pl.pdf
-```
-
-With the demo configuration, Chromium requests
-`http://localhost:3001/reports/quarterly?year=2027&quarter=2&language=pl`.
-The attachment filename is `quarterly-2027-q2-pl.pdf`.
-
-| Parameter  | Accepted values        | Default |
-| ---------- | ---------------------- | ------- |
-| `year`     | Four digits, 2000–2100 | 2026    |
-| `quarter`  | 1, 2, 3, 4             | 3       |
-| `language` | en, de, pl             | en      |
-
-Unknown keys, repeated values and invalid values return 400. The caller cannot
-change the target route or print orientation. This example's target is defined
-in `src/routes/pdf/quarterly/report.ts`; other print defaults remain shared.
-
-## GET /pdf/test
-
-Minimal request using the included demo:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pdf/test \
-  --data-urlencode 'route=/reports/quarterly' \
-  --output document.pdf
-```
-
-Request with all supported fields:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pdf/test \
-  --data-urlencode 'route=/reports/quarterly' \
-  --data-urlencode 'query={"year":2026,"quarter":3,"print":true}' \
-  --data-urlencode 'filename=quarterly-report' \
-  --data-urlencode 'waitForSelector=[data-report-ready]' \
-  --data-urlencode 'format=A4' \
-  --data-urlencode 'landscape=false' \
-  --output quarterly-report.pdf
-```
-
-Equivalent GET request using the values in `examples/pdf/quarterly-portrait.json`:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pdf/test \
-  --data-urlencode 'route=/reports/quarterly' \
-  --data-urlencode 'query={"year":2026,"quarter":3,"print":true}' \
-  --data-urlencode 'filename=quarterly-report' \
-  --data-urlencode 'waitForSelector=[data-report-ready]' \
-  --data-urlencode 'format=A4' \
-  --data-urlencode 'landscape=false' \
-  --output quarterly-report.pdf
-```
-
-| Field             | Required | Accepted values / default                                                                                                                       |
-| ----------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `route`           | Yes      | Relative webapp route starting with `/`, up to 2,000 characters; external URLs, `//` prefixes, backslashes, and control characters are rejected |
-| `query`           | No       | Strict object: optional `language`, `year`, `quarter`, `print`; default `{}`                                                                    |
-| `filename`        | No       | 1–80 letters, numbers, underscores, or hyphens, without extension; default `document`                                                           |
-| `waitForSelector` | No       | Nonempty selector, up to 300 characters; generation waits for it to be visible                                                                  |
-| `format`          | No       | `A3`, `A4`, `A5`, `A6`, `Letter`, `Legal`, `Tabloid`, `Ledger`; default from `pdfPrintSettings.format` (initially `A4`)                         |
-| `landscape`       | No       | Boolean; default from `pdfPrintSettings.landscape` (initially `false`)                                                                          |
-
-The `query` object accepts `language` (nonempty text, up to 100 characters),
-`year` (integer or four-digit string, 2000–2100), `quarter` (integer or string,
-1–4), and `print` (boolean). Unknown fields inside `query` and at the top level
-are rejected. The route must exist on `WEBAPP_BASE_URL`. Caller cookies and authentication are not forwarded to the webapp.
-
-Success returns 200 with `Content-Type: application/pdf` and the requested attachment filename plus `.pdf`.
-
-## PPTX route definitions
-
-Each folder under `src/routes/pptx/` is a complete endpoint definition.
-`schema.ts` lists its public parameters, defaults, validation, and transport decoding.
-`report.ts` defines the trusted source template or generated design, service,
-`prepareInput` mapping, and output filename. Method files re-export that report.
-
-`prepareInput` returns `{ filename, input }`: `filename` is the attachment name
-without `.pptx`, and `input` contains the mapped values passed to the generator.
-Business and summary map `filename` and `replacements` to their fixed template;
-brief maps its fields to the fixed generated design; DAA maps `TEXT_ME` to text
-and fixes the filename to `demo-report`. Shared helpers perform validation,
-service lifecycle handling, queueing, and downloads. Request parameters cannot
-select a template file or generated design.
-
-## GET /pptx/pptxgenjs/brief
-
-`brief` is a fixed route segment selecting the existing brief design. Both GET
-and POST use this template; other names return 404 `NOT_FOUND`.
-
-Generate a new editable presentation:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pptx/pptxgenjs/brief \
-  --data-urlencode 'filename=quarterly-review' \
-  --data-urlencode 'title=Quarterly review' \
-  --data-urlencode 'subtitle=Strategy and delivery' \
-  --data-urlencode 'author=Product team' \
-  --data-urlencode 'accent=2563EB' \
-  --data-urlencode 'slides=[{"title":"Results","bullets":["Delivered 12 projects","Customer satisfaction reached 96%"],"notes":"Discuss the results with the team."},{"title":"Next steps","bullets":["Validate with real reports","Measure performance"]}]' \
-  --output quarterly-review.pptx
-```
-
-Equivalent GET request using the existing example file values:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pptx/pptxgenjs/brief \
-  --data-urlencode 'filename=quarterly-review' \
-  --data-urlencode 'title=A clearer path forward' \
-  --data-urlencode 'subtitle=Quarterly review · Strategy and delivery' \
-  --data-urlencode 'author=Product team' \
-  --data-urlencode 'accent=2563EB' \
-  --data-urlencode 'slides=[{"title":"What we learned","bullets":["Customers value a simpler workflow","Reliable exports save teams time","Reusable templates keep communication consistent"],"notes":"Introduce the key findings and invite questions."},{"title":"Next steps","bullets":["Validate the proof of concept with real reports","Add templates for each team","Measure performance before scaling"]}]' \
-  --output quarterly-review.pptx
-```
-
-| Field              | Required | Accepted values / default                                |
-| ------------------ | -------- | -------------------------------------------------------- |
-| `title`            | Yes      | 1–100 characters                                         |
-| `slides`           | Yes      | 1–30 content slides                                      |
-| `slides[].title`   | Yes      | 1–100 characters                                         |
-| `slides[].bullets` | Yes      | 1–6 strings, each 1–220 characters                       |
-| `slides[].notes`   | No       | Speaker notes, up to 3,000 characters                    |
-| `subtitle`         | No       | Up to 180 characters; default empty string               |
-| `author`           | No       | Up to 100 characters; default `Generator API`            |
-| `accent`           | No       | Six hexadecimal characters without `#`; default `2563EB` |
-| `filename`         | No       | Same filename rules as PDF; default `presentation`       |
-
-Unknown query and slide fields are rejected. The `brief` template adds a cover followed by the supplied content slides.
-
-Success returns 200 with `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` and the attachment filename plus `.pptx`.
-
-## GET/POST /pptx/jszip/summary
-
-This fixed route fills `templates/summary.pptx` using the same replacement
-contract as business. Supply `title`, `subtitle`, and `customer`.
-
-```bash
-curl --fail-with-body http://localhost:3000/pptx/jszip/summary \
+curl -X POST http://localhost:3000/pptxgenjs/brief \
   -H 'Content-Type: application/json' \
-  --data '{"filename":"summary","replacements":{"title":"Quarterly summary","subtitle":"Results and outlook","customer":"Acme"}}' \
-  --output summary.pptx
+  --data-binary @examples/pptx/generated.json -o brief.pptx
 ```
 
-GET accepts `replacements` as a JSON query string and an optional `filename`.
-The source template remains unchanged. Missing replacements return 400.
+## Error Response Contract
 
-## GET /pptx/jszip/business
-
-`business` is a fixed route segment selecting the existing business template.
-Both GET and POST use this template; other names return 404 `NOT_FOUND`.
-
-Replace text placeholders in the included `templates/business.pptx`:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pptx/jszip/business \
-  --data-urlencode 'filename=customer-proposal' \
-  --data-urlencode 'replacements={"title":"A clearer path forward","subtitle":"A proposal built from our existing PowerPoint template","customer":"Acme Corporation"}' \
-  --output customer-proposal.pptx
-```
-
-Equivalent GET request using the existing example file values:
-
-```bash
-curl --fail-with-body --get http://localhost:3000/pptx/jszip/business \
-  --data-urlencode 'filename=customer-proposal' \
-  --data-urlencode 'replacements={"title":"A clearer path forward","subtitle":"A proposal built from our existing PowerPoint template","customer":"Acme Corporation"}' \
-  --output customer-proposal.pptx
-```
-
-| Field          | Required | Accepted values / default                                                |
-| -------------- | -------- | ------------------------------------------------------------------------ |
-| `replacements` | Yes      | Object containing 1–100 replacement strings, each up to 5,000 characters |
-| `filename`     | No       | Same filename rules as PDF; default `presentation`                       |
-
-Replacement keys must start with a letter and contain only letters, numbers, or underscores, up to 64 characters. Use keys without braces: `title` replaces `{{title}}`. The included business template requires exactly `title`, `subtitle`, and `customer`. Missing or unknown replacement keys return 400. Unknown query fields are rejected.
-
-Slide and speaker-note text is replaced while the original template file stays unchanged. Layout and text-box sizing remain as authored in the template.
-
-Success returns 200 with `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` and the attachment filename plus `.pptx`.
-
-DAA object names and demo data dimensions are configured together in `templateSettings` at the top of `src/services/jszip/daa-poc-presentation-service.ts`. The required-name list is derived from that configuration. The HTTP query parameter remains `TEXT_ME` even if the template’s text object is renamed.
-
-Source PPTX templates are validated and cached in memory per service instance. Restart the API after replacing a template file. Each generation uses a fresh archive and still produces new document data.
-
-## Responses and errors
-
-All responses include an `X-Request-Id` header. Generated attachments include `Cache-Control: no-store`. Generation requests keep the HTTP connection open while queued and return the file directly.
-
-Errors return JSON in this shape:
+All error responses return JSON with `X-Request-Id`:
 
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Invalid request parameters",
-    "details": [{ "path": ["route"], "message": "Example validation message" }],
-    "requestId": "request-specific-id"
+    "details": [{ "path": ["year"], "message": "Invalid input" }],
+    "requestId": "c3923fb2-..."
   }
 }
 ```
 
-`details` appears for validation errors. Actual details and request IDs vary.
-
-| HTTP status | Meaning                                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| 400         | Invalid parameters, malformed JSON, invalid replacement keys, or reserved GET PDF query keys          |
-| 404         | Unknown API endpoint or presentation template                                                         |
-| 413         | POST JSON body exceeds the 100 KB limit                                                               |
-| 415         | Unsupported JSON charset (`UNSUPPORTED_CHARSET`) or content encoding (`UNSUPPORTED_CONTENT_ENCODING`) |
-| 500         | Unexpected document generation failure                                                                |
-| 502         | Upstream webapp HTTP failure                                                                          |
-| 503         | Queue full, queue wait expired, or queue unavailable; includes `Retry-After: 5`                       |
-| 504         | Rendering timeout                                                                                     |
-
-With `curl --fail-with-body`, HTTP errors produce a nonzero exit code. When `--output` is supplied, the error response body is also written to that file, so check the command's exit status before opening it as a PDF or PPTX.
-
-## Demo webapp routes
-
-These run on the separate demo server at port 3001 and return HTML for PDF rendering:
-
-| Method | URL                                                           | Purpose                                                              |
-| ------ | ------------------------------------------------------------- | -------------------------------------------------------------------- |
-| GET    | `http://localhost:3001/reports/quarterly?year=2026&quarter=3` | Quarterly report; supports numeric `year` and `quarter` query values |
-| GET    | `http://localhost:3001/factsheet/id2222`                      | Factsheet page used by the portrait PDF route                        |
-
-See [README.md](../README.md) for configuration, deployment, and template registration instructions.
-
-## Route source files
-
-Endpoint paths and HTTP methods are registered explicitly in
-`src/routes/router.ts` using Express. The factsheet and onepager definitions live in
-`src/routes/pdf/factsheet/` and `src/routes/pdf/onepager/`; their `:id` path
-parameters are declared in the router and read through `req.params.id`. Report factories receive injected services
-and keep validation, mapping, and download handling beside each report.
-See [the development guide](development.md#add-a-pdf-endpoint) for adding endpoints.
-Existing URLs, query parameters, HEAD behavior, and download contracts are unchanged.
-
-PDF report definitions return a relative `route`, optional named `params` for
-path placeholders such as `:id`, and validated `query` values. The renderer uses
-`buildUrl` from `src/url.ts` to assemble the full URL on the configured origin.
-These are internal generation fields; public endpoint parameters are unchanged.
-
-## Internal observability
-
-`GET /internal/metrics` returns JSON containing process uptime and memory bytes,
-PDF and presentation queue stats (active, pending, concurrency, maxPending,
-accepting), browser state and launch/failure/disconnect counters, and cumulative
-request counts, failures, output bytes, queue wait milliseconds and generation
-milliseconds grouped by registered route, method and status. Counters reset on
-restart; scrape and store snapshots for trends. Metrics requests include only
-previous completed requests. HEAD is supported and returns no body.
-
-`GET /internal/ready` returns 200 when startup template validation and Chromium
-warmup have completed and both queues accept work; otherwise it returns 503.
-The body reports `ready`, `shuttingDown`, `templates`, and `renderer`. Chromium
-warms up once at startup without rendering a document. Disconnects make readiness
-fail until a PDF request successfully relaunches Chromium. Probes never render,
-launch a browser, read templates, or contact the webapp. `/health` stays an
-inexpensive process check. Injected services in `createApp` may supply their own
-readiness callback; otherwise their initialization is managed externally.
-
-Both internal endpoints send `Cache-Control: no-store`. Restrict `/internal/*`
-to your monitoring network at the reverse proxy; these endpoints have no built-in
-authentication. Completion logs contain request IDs, registered route patterns,
-format, status, durations and output bytes, excluding report text, tokens,
-filenames, document IDs and query strings. Server failure logs record safe error
-codes rather than raw exceptions. Disconnected responses use status 499; output
-bytes count generated attachments sent by completed responses, not wire delivery.
-PDF and PPTX capacity already have separate concurrency settings.
-
-## PDF print configuration
-
-Edit `pdfPrintSettings` in `src/config/defaults.ts` and rebuild/restart the application.
-These settings apply to all PDF endpoints. The factsheet endpoint always forces portrait and the onepager endpoint always forces landscape. GET/POST `/pdf/test` can
-still override `format` and `landscape` per request; omitted values use the
-configured defaults.
-
-| Setting                            | Purpose / default                                                                                                                                                           |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `format`, `landscape`              | A3, A4, A5, A6, Letter, Legal, Tabloid or Ledger; A4 portrait by default                                                                                                    |
-| `margin`                           | Separate top/right/bottom/left margins in mm, 0–200; each defaults to 12                                                                                                    |
-| `scale`                            | Content scale, 0.1–2; default 1                                                                                                                                             |
-| `printBackground`                  | Print background colors and images; default true                                                                                                                            |
-| `printImages`                      | Show images; default true. False hides img, picture, SVG, canvas, video and image inputs while preserving their layout space, and removes CSS background/list/border images |
-| `media`                            | CSS media mode: `print` (default) or `screen`                                                                                                                               |
-| `preferCSSPageSize`                | Let the webapp's CSS `@page` size take priority over paper format; default false                                                                                            |
-| `displayHeaderFooter`              | Enable Chromium headers and footers; default false                                                                                                                          |
-| `headerTemplate`, `footerTemplate` | HTML templates, empty by default. Supported classes: `date`, `title`, `url`, `pageNumber`, `totalPages`                                                                     |
-| `hideSelectors`                    | CSS selectors to remove from print layout, e.g. `['nav', '.print-hidden']`; default []                                                                                      |
-| `css`                              | Additional CSS applied after the webapp styles; default empty string                                                                                                        |
-
-Example adjustments inside the configuration section:
-
-```ts
-margin: { top: 15, right: 10, bottom: 20, left: 10 },
-printImages: false,
-hideSelectors: ['nav', '.toolbar'],
-displayHeaderFooter: true,
-footerTemplate: '<div style="font-size:9px;width:100%;text-align:center"><span class="pageNumber"></span> / <span class="totalPages"></span></div>',
-css: '@media print { body { font-size: 11pt; } h2 { break-after: avoid; } }',
-```
-
-Reserve sufficient top/bottom margins for headers/footers. Their templates do
-not inherit webapp styles and do not execute scripts. Image visibility applies
-to the main document; embedded iframe documents have their own styles. Hiding
-images affects appearance, not network loading. Settings are validated at startup.
+| Status | Error Codes                                                                    | Cause                                                            |
+| ------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `400`  | `VALIDATION_ERROR`, `INVALID_QUERY_PARAMETER`, `INVALID_JSON`, `INVALID_ROUTE` | Schema validation failure, duplicate query keys, bad JSON        |
+| `404`  | `NOT_FOUND`, `UNKNOWN_TEMPLATE`                                                | Unmatched route or unconfigured template                         |
+| `413`  | `BODY_TOO_LARGE`                                                               | JSON body exceeds `100kb`                                        |
+| `415`  | `UNSUPPORTED_CHARSET`, `UNSUPPORTED_CONTENT_ENCODING`                          | Unsupported request encoding                                     |
+| `502`  | `UPSTREAM_ERROR`, `NAVIGATION_BLOCKED`, `DATA_API_*`                           | Webapp non-2xx response, cross-origin redirect, Data API failure |
+| `503`  | `QUEUE_FULL`, `QUEUE_WAIT_TIMEOUT`, `QUEUE_CLOSED`, `RENDER_BUSY`              | Capacity limit reached (`Retry-After: 5` header set)             |
+| `504`  | `RENDER_TIMEOUT`, `DATA_API_TIMEOUT`                                           | Chromium render or upstream Data API timed out                   |
+| `500`  | `INTERNAL_ERROR`, `INVALID_TEMPLATE`                                           | Unexpected error or broken source `.pptx` template               |

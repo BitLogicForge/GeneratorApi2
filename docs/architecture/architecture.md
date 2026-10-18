@@ -1,49 +1,56 @@
-# Architecture and code map
+# Architecture & Request Flow
 
-[Back to overview](../../README.md)
+[Back to Documentation Index](../README.md)
 
-## Where to look
+## Code Map
 
-`src/index.ts` launches `src/runtime.ts`. Report-specific construction lives beside the route, so new reports do not change startup wiring.
+| Area                                 | Files                                                                                                                                          |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entrypoint & process lifecycle       | `src/index.ts`, `src/runtime.ts`                                                                                                               |
+| Express app, middleware, request IDs | `src/app.ts`, `src/http/`, `src/errors.ts`, `src/observability/`                                                                               |
+| Environment & shared defaults        | `src/config/defaults.ts`, `src/config/schema.ts`, `src/config/index.ts`                                                                        |
+| Explicit router & route definitions  | `src/routes/router.ts`, `src/routes/**/{report,schema}.ts`                                                                                     |
+| Report factories & service registry  | `src/reports/pdf.ts`, `src/reports/pptx.ts`, `src/reports/template.ts`, `src/reports/services.ts`                                              |
+| Admission queues                     | `src/queue/generation-queue.ts`, `src/queue/schema.ts`                                                                                         |
+| PDF rendering & navigation boundary  | `src/services/pdf/web-page-pdf.ts`, `src/services/pdf/render-page.ts`, `src/services/pdf/navigation-boundary.ts`, `src/services/pdf/schema.ts` |
+| PowerPoint services                  | `src/services/jszip/`, `src/services/pptxgenjs/`                                                                                               |
+| OpenXML & PptxGenJS utilities        | `src/pptx/jszip/`, `src/pptx/pptxgenjs/`                                                                                                       |
+| Upstream Data API client & schemas   | `src/services/data-api-client.ts`, `src/services/data-api/`, `src/data-api/`                                                                   |
 
-| Area                                                         | Files                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------- |
-| Startup, shared infrastructure, readiness, shutdown          | `src/runtime.ts`                                              |
-| Middleware, request IDs, HTTP assembly                       | `src/app.ts`                                                  |
-| Human-editable shared defaults                               | `src/config/defaults.ts`                                      |
-| Environment validation and configuration assembly            | `src/config/environment.ts`, `src/config/index.ts`            |
-| Report helpers and owned service lifecycle                   | `src/reports/pdf.ts`, `pptx.ts`, `template.ts`, `services.ts` |
-| PDF URL/language settings, parameter mapping, and validation | `src/routes/pdf/**/{report,schema}.ts`                        |
-| URLs and endpoint-specific definitions                       | `src/routes/router.ts`, route-local `report.ts`               |
-| Injected contracts, decoding, downloads, errors              | `src/http/`, `src/errors.ts`                                  |
-| Queues, timeouts, cancellation                               | `src/queue/generation-queue.ts`                               |
-| Chromium and PDF contracts                                   | `src/services/pdf/`                                           |
-| PowerPoint generation and template services/contracts        | `src/services/pptxgenjs/`, `src/services/jszip/`              |
-| Designs and XML/workbook utilities                           | `src/pptx/pptxgenjs/`, `src/pptx/jszip/`                      |
-| Typed upstream API registry/client                           | `src/data-api/`, `src/services/data-api-client.ts`            |
-| Source decks, examples, tests                                | `templates/`, `examples/`, `test/`                            |
-| Azure deployment and ZIP packaging                           | `.gitlab-ci.yml`, [Azure guide](../deployment/azure.md)       |
+## Request Lifecycle
 
-## Request and report flow
+1. **Routing (`src/routes/router.ts`)**: Statically imports and registers route
+   handlers on an Express router. No filesystem scanning or dynamic imports run
+   at startup. `GET` routes automatically support `HEAD` via Express.
+2. **Input Decoding (`src/http/input.ts`)**: `decodeExportInput` reads `req.body`
+   for `POST` or `req.query` for `GET`/`HEAD` (rejecting repeated query keys and
+   JSON-parsing only fields listed in `jsonFields`). Routes with path params or
+   custom query structures provide `readRequestInput`.
+3. **Validation & Preparation (`src/reports/pdf.ts`, `src/reports/pptx.ts`)**:
+   - `definePdfReport` validates input with the route's Zod `schema`, maps it
+     via `prepareInput`, merges report-owned `print` overrides, validates
+     against `pdfRenderSchema`, and dispatches through `sendDownload`.
+   - `definePptxReport` resolves the report's singleton service from
+     `ReportServices`, validates the request with `schema`, maps `{ filename, input }`
+     via `prepareInput`, validates `filename`, and dispatches through
+     `sendDownload`.
+4. **Queueing & Download (`src/http/download.ts`, `src/queue/generation-queue.ts`)**:
+   - `HEAD` sets `Cache-Control: no-store`, `Content-Disposition`, and
+     `Content-Type` without entering the queue or rendering.
+   - `GET`/`POST` enter `queues.pdf` (default concurrency `2`) or
+     `queues.presentations` (default concurrency `4`), each with `maxPending: 200`
+     and `waitTimeoutMs: 120000`.
+   - Client disconnects abort waiting jobs (`499 REQUEST_CANCELLED`); active
+     renders keep their concurrency slot until completion.
 
-`src/routes/router.ts` registers URLs and methods with a standard Express router. It statically imports report factories; startup performs no route directory scanning or dynamic imports. Report folders do not determine URLs: factsheet and onepager live directly under `src/routes/pdf/{factsheet,onepager}/`, while their Express paths include `:id`. Register static paths before parameter paths when they overlap. GET handlers also serve HEAD through Express, with shared download handling skipping generation. See [endpoint development](../guides/development.md).
+## Service Lifecycle & Shutdown
 
-A PDF definition declares its request schema, input mapping, and optional print overrides. `definePdfReport` performs transport decoding, request and renderer validation, then calls the injected Chromium service through `sendDownload`. The renderer owns the navigation boundary, browser/context lifecycle, and merged print settings. Report-specific settings never mutate shared defaults.
-
-Each PPTX folder declares its public fields and decoding in `schema.ts`, then its trusted target, `prepareInput` mapping, output filename, and `createService` factory in `report.ts`. The mapping returns `{ filename, input }`; shared HTTP handling sends only the mapped input to the generator. `ReportServices` creates and retains one generator per definition per application. GET and POST share that generator. Startup initializes every registered report; validation failures keep readiness unavailable. The `template_validation_failed` startup event includes every failed template, its source file, error code, stack, and original cause. Named-object errors identify missing names (with available names), duplicate objects, or unsupported shapes and their slide paths. Shutdown drains active HTTP requests before closing Chromium and owned report services. Test overrides are externally managed and do not start real generators.
-
-`templateService` registers a trusted template file with `PowerPointTemplateService`; route-local definitions own the public schema and mapping. Request parameters never select filesystem paths. Custom report factories receive validated config and a shared typed `DataApiClient`. Services return buffers and do not handle Express requests/responses.
-
-`createApp` retains service injection for HTTP tests. PowerPoint report services are injected and overridden using the generic typed `reports.override(report, fakeService)` API. Renderer contracts live in service modules and do not import HTTP route schemas.
-
-## Configuration
-
-Shared editable defaults live in `config/defaults.ts`; environment parsing and Zod validation live in `config/environment.ts`. The configuration assembly contains shared settings; each PDF route folder owns its external page, query schema, defaults, and mapping. The root `config.ts` is a compatibility export.
-
-Endpoint request schemas and business defaults stay with their report. The generic PDF test export independently lists its allowed webapp query fields. GET JSON decoding is declared by each report's `jsonFields` or input reader; the transport helper owns no global parameter registry.
-
-## Queues and rendering
-
-Both generation endpoints use separate bounded in-memory FIFO queues. `PDF_CONCURRENCY` defaults to 2 active PDF jobs and `PPTX_CONCURRENCY` to 4 active PowerPoint jobs per process. `QUEUE_MAX_PENDING` defaults to 200 waiting jobs **per queue**, in addition to active jobs. The endpoints still return the generated file directly; the HTTP connection stays open while waiting. `QUEUE_WAIT_TIMEOUT_MS` defaults to 120000 and limits waiting time before execution. Full queues and expired waits return 503 with `QUEUE_FULL` or `QUEUE_WAIT_TIMEOUT` and a `Retry-After: 5` header. Waiting jobs are removed when clients disconnect; already active jobs finish and retain their slot until completion. These limits are global per process, not per user. `RENDER_TIMEOUT_MS` defaults to 30000 and covers page navigation, readiness, fonts, and printing after browser setup. Every context closes on success or failure. Shutdown rejects waiting jobs, lets active requests finish, and closes Chromium, with a 15-second shutdown deadline.
-
-See [development](../guides/development.md) for the complete PDF, template-PPTX, and custom-service workflows. [Output tests](../../test/integration/output-routes.ts) produce sample artifacts for manual inspection.
+- `ReportServices` (`src/reports/services.ts`) instantiates one service per
+  report definition and runs `validate()` across all registered services at
+  startup. Template validation failures mark readiness as `failed` and log a
+  `template_validation_failed` event.
+- `createApp` accepts injected `reports`, `pdf`, `queues`, and `readiness` so
+  tests can override services via `reports.override(definition, mockService)`.
+- On `SIGINT`/`SIGTERM`, `src/runtime.ts` closes both admission queues, stops
+  accepting new HTTP connections, awaits `pdf.close()` and `reports.close()`,
+  and enforces a 15-second exit deadline.

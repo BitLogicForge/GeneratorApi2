@@ -1,8 +1,8 @@
-# Getting started
+# Getting Started
 
-[Back to overview](../../README.md)
+[Back to Documentation Index](../README.md)
 
-## Run
+## Local Setup
 
 ```bash
 npm ci
@@ -11,35 +11,39 @@ cp .env.example .env
 npm run dev
 ```
 
-`npm run browser:install` installs Chromium and its required system libraries. On Linux, installing system packages may require sudo access.
+- `npm run browser:install` installs headless Chromium and its Linux system
+  dependencies.
+- The API listens on `API_HOST:API_PORT` (default `0.0.0.0:3000`).
+- For PDF routes that render local demo pages (`/pdf/factsheet/:id`,
+  `/pdf/onepager/:id`, `/pdf/quarterly`), run `npm run demo` in a second
+  terminal (starts the demo webapp on `http://localhost:3001`).
 
-Set `WEBAPP_BASE_URL` to your webapp's origin. The API defaults to port 3000 and the webapp to port 3001. For a complete local demo, run `npm run demo` in another terminal.
-
-```bash
-curl http://localhost:3000/health
-curl -X POST http://localhost:3000/api/exports/pdf/test \
-  -H 'Content-Type: application/json' \
-  --data-binary @examples/pdf/quarterly-portrait.json --output report.pdf
-curl -X POST http://localhost:3000/api/exports/pptx/pptxgenjs/brief \
-  -H 'Content-Type: application/json' \
-  --data-binary @examples/pptx/generated.json --output presentation.pptx
-```
-
-## Access from outside Docker
-
-Set the API listening address in `.env`:
-
-```dotenv
-API_HOST=0.0.0.0
-API_PORT=3000
-```
-
-`API_HOST` defaults to `0.0.0.0` so the API accepts connections through the container's network interface. The devcontainer publishes container port 3000 to `127.0.0.1:3000` on your computer. Rebuild the devcontainer after changing its port configuration, then start the API with `npm run dev` and test from a terminal outside Docker:
+## Sample Requests
 
 ```bash
+# Health & readiness
 curl http://localhost:3000/health
+curl http://localhost:3000/internal/ready
+
+# PDF from local demo webapp (requires `npm run demo`)
+curl --fail-with-body http://localhost:3000/pdf/factsheet/id2222 -o factsheet.pdf
+curl --fail-with-body 'http://localhost:3000/pdf/quarterly?year=2026&quarter=2&language=en' -o quarterly.pdf
+
+# PowerPoint from JSZip template
+curl --fail-with-body 'http://localhost:3000/pptx/daa?TEXT_ME=Quarterly%20Update' -o daa.pptx
+curl --fail-with-body 'http://localhost:3000/pptx/tma?TEXT_ME=Summary' -o tma.pptx
+
+# PowerPoint generated via PptxGenJS
+curl -X POST http://localhost:3000/pptxgenjs/brief \
+  -H 'Content-Type: application/json' \
+  --data-binary @examples/pptx/generated.json -o brief.pptx
 ```
 
-For a container started manually, use `docker run -p 127.0.0.1:3000:3000 ...`. If you change `API_PORT`, change the Docker port mapping to match. To connect from another computer, publish to the host's network interface (for example `-p 3000:3000`) and use `http://<docker-host-ip>:3000`.
+## Docker & Devcontainer Networking
 
-`WEBAPP_BASE_URL` is the address Chromium uses from inside the container. If your webapp runs on your computer rather than in the container, configure an address reachable from Docker, such as `http://host.docker.internal:3001` on Docker Desktop. On Linux Docker Engine, add `--add-host=host.docker.internal:host-gateway`; the webapp must listen on an interface reachable from Docker.
+- `API_HOST=0.0.0.0` allows connections from outside the container when port
+  `3000` is published (`-p 127.0.0.1:3000:3000`).
+- `WEBAPP_BASE_URL` and `DATA_API_BASE_URL` are resolved from inside the
+  container. When targeting a server running on the host machine, use
+  `http://host.docker.internal:<port>` (with `--add-host=host.docker.internal:host-gateway`
+  on Linux Docker Engine).

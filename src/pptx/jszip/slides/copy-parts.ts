@@ -25,19 +25,13 @@ const COPIED_SLIDE_PART_TYPES: readonly string[] = [
   'comments',
 ];
 
-/**
- * Regenerates slide/shape/chart tracking IDs in cloned XML parts so they never
- * collide with the source slide/chart when p15:chartTrackingRefBased is active.
- */
 function refreshClonedXmlIds(doc: Document): void {
   const elements = Array.from(doc.getElementsByTagName('*'));
   for (const el of elements) {
     const tag = el.localName ?? el.tagName.split(':').at(-1);
     if (tag === 'uniqueId' && el.hasAttribute('val')) {
-      // c16:uniqueId requires {UPPERCASE-UUID}
       el.setAttribute('val', `{${randomUUID().toUpperCase()}}`);
     } else if (tag === 'creationId') {
-      // a16:creationId uses id="{GUID}", p14:creationId uses val="uint32"
       if (el.hasAttribute('id')) {
         el.setAttribute('id', `{${randomUUID().toUpperCase()}}`);
       }
@@ -103,7 +97,6 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
         if (relation.getAttribute('TargetMode') === TargetMode.External) continue;
         const target = targetPath(path, relation.getAttribute('Target') ?? '');
         const type = relation.getAttribute('Type')?.split('/').at(-1);
-        // Notes point back to their owning slide. Other slide hyperlinks stay unchanged.
         const outputTarget =
           copies.get(target) ??
           (COPIED_SLIDE_PART_TYPES.includes(type ?? '') ? await copy(target) : target);

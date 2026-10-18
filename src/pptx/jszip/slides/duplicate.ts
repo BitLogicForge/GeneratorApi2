@@ -1,11 +1,7 @@
 import { posix } from 'node:path';
 
 import { PackagePath } from '@/pptx/jszip/package/constants';
-import {
-  packageNs,
-  presentationNs,
-  relationshipNs,
-} from '@/pptx/jszip/package/namespaces';
+import { packageNs, presentationNs, relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 
 import { copySlideParts } from './copy-parts.ts';
@@ -16,17 +12,11 @@ import type JSZip from 'jszip';
 const MIN_SLIDE_ID = 256;
 const MAX_SLIDE_ID = 2147483647; // 2^31 - 1 (ST_SlideId is xsd:unsignedInt < 0x80000000)
 
-/**
- * Inserts after the source. Copies mutable charts, embedded files and notes, sharing layouts/media.
- * @param zip The JSZip archive instance.
- * @param sourceSlide The slide path or 1-based index to duplicate.
- * @param count Number of times to duplicate the source slide (defaults to 1).
- * @returns An array of output paths for all newly created duplicate slides.
- */
-export async function duplicateSlide(
+/** Inserts count copies sequentially after the source. Copies mutable charts, embedded files and notes, sharing layouts/media. */
+export async function duplicateSlides(
   zip: JSZip,
   sourceSlide: string | number,
-  count = 1,
+  count: number,
 ): Promise<string[]> {
   if (count <= 0) return [];
 
@@ -54,9 +44,7 @@ export async function duplicateSlide(
       presentation.relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
     );
     const usedRIds = new Set(
-      existingRels
-        .map((item) => item.getAttribute('Id'))
-        .filter((id): id is string => Boolean(id)),
+      existingRels.map((item) => item.getAttribute('Id')).filter((id): id is string => Boolean(id)),
     );
 
     let rIdNum = 1;
@@ -94,7 +82,10 @@ export async function duplicateSlide(
       source.element.getAttributeNode('r:id');
     const relQualifiedName = existingRelAttr?.name ?? 'r:id';
 
-    if (source.element.hasAttribute('r:id') && !source.element.hasAttributeNS(relationshipNs, 'id')) {
+    if (
+      source.element.hasAttribute('r:id') &&
+      !source.element.hasAttributeNS(relationshipNs, 'id')
+    ) {
       slideId.setAttribute('r:id', nextRId);
     } else {
       slideId.setAttributeNS(relationshipNs, relQualifiedName, nextRId);
@@ -116,4 +107,38 @@ export async function duplicateSlide(
   writeXml(zip, PackagePath.PresentationRels, presentation.relationships);
 
   return createdOutputs;
+}
+
+export async function duplicateSlide(
+  zip: JSZip,
+  sourceSlide: string | number,
+  count?: number,
+): Promise<string>;
+export async function duplicateSlide(
+  zip: JSZip,
+  sourceSlide: readonly (string | number)[],
+  count?: number,
+): Promise<string[]>;
+/**
+ * Inserts after the source. Copies mutable charts, embedded files and notes, sharing layouts/media.
+ * @param zip The JSZip archive instance.
+ * @param sourceSlide The slide path, 1-based index, or an array of slide paths/indices to duplicate.
+ * @param count Number of times to duplicate each source slide (defaults to 1).
+ * @returns The output path (if single source) or an array of output paths (if array of sources).
+ */
+export async function duplicateSlide(
+  zip: JSZip,
+  sourceSlide: string | number | readonly (string | number)[],
+  count = 1,
+): Promise<string | string[]> {
+  if (typeof sourceSlide !== 'string' && typeof sourceSlide !== 'number') {
+    const results: string[] = [];
+    for (const src of sourceSlide) {
+      results.push(...(await duplicateSlides(zip, src, count)));
+    }
+    return results;
+  }
+
+  const outputs = await duplicateSlides(zip, sourceSlide, count);
+  return outputs[0] ?? '';
 }

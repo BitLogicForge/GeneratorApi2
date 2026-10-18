@@ -13,11 +13,6 @@ import { readXml } from '@/pptx/jszip/package/read-xml';
 import { relsPath } from '@/pptx/jszip/package/relationship-path';
 import { targetPath } from '@/pptx/jszip/package/target-path';
 
-import {
-  refreshChartIdentifiers,
-  refreshSlideIdentifiers,
-} from './refresh-identifiers.ts';
-
 import type JSZip from 'jszip';
 
 const COPIED_SLIDE_PART_TYPES: readonly string[] = [
@@ -53,17 +48,7 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
     if (!file) throw invalidTemplate();
     const output = allocate(path);
     copies.set(path, output);
-    if (path.startsWith('ppt/slides/') && path.endsWith('.xml')) {
-      const doc = await readXml(zip, path);
-      refreshSlideIdentifiers(doc);
-      staged.set(output, new XMLSerializer().serializeToString(doc));
-    } else if (path.startsWith('ppt/charts/') && path.endsWith('.xml')) {
-      const doc = await readXml(zip, path);
-      refreshChartIdentifiers(doc);
-      staged.set(output, new XMLSerializer().serializeToString(doc));
-    } else {
-      staged.set(output, await file.async('nodebuffer'));
-    }
+    staged.set(output, await file.async('nodebuffer'));
     const override = Array.from(
       contentTypes.getElementsByTagNameNS(contentNs, 'Override'),
     ).find((item) => item.getAttribute('PartName') === `/${path}`);

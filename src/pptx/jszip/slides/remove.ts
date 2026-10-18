@@ -3,7 +3,6 @@ import { invalidTemplate } from '@/pptx/jszip/package/invalid-template';
 import { relationshipNs } from '@/pptx/jszip/package/namespaces';
 import { writeXml } from '@/pptx/jszip/package/write-xml';
 
-import { updateAppPropertiesSlideCount } from './app-properties.ts';
 import { deck } from './deck.ts';
 
 import type JSZip from 'jszip';
@@ -33,5 +32,4 @@ export async function removeSlide(
   }
   writeXml(zip, PackagePath.Presentation, presentation.document);
   writeXml(zip, PackagePath.PresentationRels, presentation.relationships);
-  await updateAppPropertiesSlideCount(zip, -1);
 }

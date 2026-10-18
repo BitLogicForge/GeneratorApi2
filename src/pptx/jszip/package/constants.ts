@@ -3,7 +3,6 @@ export const PackagePath = {
   Presentation: 'ppt/presentation.xml',
   PresentationRels: 'ppt/_rels/presentation.xml.rels',
   Workbook: 'xl/workbook.xml',
-  AppProperties: 'docProps/app.xml',
 } as const;
 
 export const RelationshipType = {

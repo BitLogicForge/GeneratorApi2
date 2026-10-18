@@ -182,8 +182,6 @@ export class Sample1Service extends PresentationService<
     deck.texts.x1Sub.fill(prepared.x1Sub);
     deck.texts.x1Text.fill(prepared.x1Text);
     deck.texts.x2Title.fill(prepared.x2Title);
-    const slide2Copy = await deck.duplicateSlide(2);
-    slide2Copy.texts.x2Title.fill('YYY');
     deck.texts.x3Title.fill(prepared.x3Title);
     deck.texts.x4Title.fill(prepared.x4Title);
 

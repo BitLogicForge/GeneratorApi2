@@ -18,7 +18,7 @@ Factsheet and onepager URLs use the bare ID, without a `.pdf` suffix. Factsheet 
 Configure the external origin with `WEBAPP_BASE_URL`. Each endpoint folder owns
 its `schema.ts` (path and query validation), `report.ts` (external URL, parameter
 mapping, default language, filename, and print settings), and `get.ts` (registration).
-For example, edit `src/routes/pdf/onepager/[id]/report.ts` to change
+For example, edit `src/routes/pdf/onepager/report.ts` to change
 `externalRoute` or the mapping passed to `mapPdfRoute`. Mapping keys are public
 input names and values are external query names; absent values are omitted. The
 shared helper lives in `src/reports/pdf-route.ts` and also handles fixed-query

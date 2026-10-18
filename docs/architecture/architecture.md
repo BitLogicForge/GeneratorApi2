@@ -26,7 +26,7 @@
 
 ## Request and report flow
 
-`src/routes/router.ts` registers URLs and methods with a standard Express router. It statically imports report factories; startup performs no route directory scanning or dynamic imports. Register static paths before parameter paths when they overlap. GET handlers also serve HEAD through Express, with shared download handling skipping generation. See [endpoint development](../guides/development.md).
+`src/routes/router.ts` registers URLs and methods with a standard Express router. It statically imports report factories; startup performs no route directory scanning or dynamic imports. Report folders do not determine URLs: factsheet and onepager live directly under `src/routes/pdf/{factsheet,onepager}/`, while their Express paths include `:id`. Register static paths before parameter paths when they overlap. GET handlers also serve HEAD through Express, with shared download handling skipping generation. See [endpoint development](../guides/development.md).
 
 A PDF definition declares its request schema, input mapping, and optional print overrides. `definePdfReport` performs transport decoding, request and renderer validation, then calls the injected Chromium service through `sendDownload`. The renderer owns the navigation boundary, browser/context lifecycle, and merged print settings. Report-specific settings never mutate shared defaults.
 

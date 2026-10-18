@@ -448,7 +448,9 @@ See [README.md](../README.md) for configuration, deployment, and template regist
 ## Route source files
 
 Endpoint paths and HTTP methods are registered explicitly in
-`src/routes/router.ts` using Express. Report factories receive injected services
+`src/routes/router.ts` using Express. The factsheet and onepager definitions live in
+`src/routes/pdf/factsheet/` and `src/routes/pdf/onepager/`; their `:id` path
+parameters are declared in the router and read through `req.params.id`. Report factories receive injected services
 and keep validation, mapping, and download handling beside each report.
 See [the development guide](development.md#add-a-pdf-endpoint) for adding endpoints.
 Existing URLs, query parameters, HEAD behavior, and download contracts are unchanged.

@@ -62,7 +62,7 @@ This exposes `GET/POST /pdf/sales`. GET uses flat URL parameters; POST uses the 
 
 Report `print` overrides merge with shared defaults, including individual margin sides. They affect only that report's requests. The public request accepts only its schema's fields; print overrides in the definition are server-owned. Use `jsonFields` when specific GET fields contain JSON, or `readRequestInput` for path parameters or a custom transport shape. Keep unknown fields rejected with `.strict()`.
 
-The quarterly report is a complete example at `src/routes/pdf/quarterly/`, with validation in `schema.ts` and webapp mapping in `report.ts`. The factsheet and onepager folders each own their `schema.ts` and `report.ts`; external routes, supported query parameters, defaults, and parameter mapping are defined in those folders.
+The quarterly report is a complete example at `src/routes/pdf/quarterly/`, with validation in `schema.ts` and webapp mapping in `report.ts`. Factsheet and onepager use `src/routes/pdf/factsheet/` and `src/routes/pdf/onepager/`, each with `schema.ts` and `report.ts`. Their public paths, `/pdf/factsheet/:id` and `/pdf/onepager/:id`, are registered in `src/routes/router.ts`; handlers read the ID from `req.params.id`. Folder names do not define URL parameters. External page patterns, supported query parameters, defaults, and parameter mapping stay beside the report.
 
 ## Add a placeholder PowerPoint endpoint
 

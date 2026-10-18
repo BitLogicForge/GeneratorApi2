@@ -49,11 +49,11 @@ const { objects, slides } = await findNamedObjects(zip, [
 ]);
 const copyObjects = objects.inSlide(copy);
 
-await fillCategoryChart(zip, copyObjects.get('GGO')!, [[10, 20, 30]], {
+await fillCategoryChart(zip, copyObjects.get('GGO'), [[10, 20, 30]], {
   categories: ['Q1'],
 });
-fillTextShape(copyObjects.get('TEXT_ME')!.element, 'Quarterly results');
-fillTable(copyObjects.get('TAB100')!.element, [[1, 2, 3, 4]], {
+fillTextShape(copyObjects.get('TEXT_ME').element, 'Quarterly results');
+fillTable(copyObjects.get('TAB100').element, [[1, 2, 3, 4]], {
   startRow: 1,
   resizeRows: true,
 });

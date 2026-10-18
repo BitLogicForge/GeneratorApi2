@@ -1,43 +1,61 @@
 import { randomInt } from 'node:crypto';
 
-import JSZip from 'jszip';
-
-import { fillCategoryChart } from '@/pptx/jszip/charts';
-import { findNamedObjects } from '@/pptx/jszip/objects';
-import { writeXml } from '@/pptx/jszip/package/write-xml';
-import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
-import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
 import { createRandomDataGenerator } from '@/utils/random-data';
 
 import { TemplateSource } from './template-source.ts';
 
 import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
+import type { TemplateSettings } from './template-settings.ts';
 
 // Configure the authored template here; names are PowerPoint Selection Pane names.
 const templateSettings = {
-  objects: {
-    chartA: 'X_CHART_A',
-    chartB: 'X_CHART_B',
-    text0: 'X_T0',
-    text1: 'X_T1',
-    text2: 'X_T2',
-    subtitile: 'X_SUB',
+  charts: {
+    chartA: {
+      name: 'X_CHART_A',
+      options: {
+        firstRow: 2,
+      },
+    },
+    chartB: {
+      name: 'X_CHART_B',
+      options: {
+        firstColumn: 'B',
+        firstRow: 2,
+      },
+    },
   },
+  texts: {
+    text0: {
+      name: 'X_T0',
+    },
+    text1: {
+      name: 'X_T1',
+    },
+    text2: {
+      name: 'X_T2',
+    },
+    subtitle: {
+      name: 'X_SUB',
+      options: {
+        replace: '{{ASOF}}',
+      },
+    },
+  },
+} satisfies TemplateSettings;
+
+const demoData = {
   chartA: { rows: 20 },
   chartB: { rows: 4 },
-};
-const objectNames = Object.values(templateSettings.objects);
+} as const;
 
 export class TmxPocPresentationService {
-  private readonly source: TemplateSource;
+  private readonly source: TemplateSource<typeof templateSettings>;
   private readonly generateData: (rows: number) => number[][];
 
   constructor(path: string, nextNumber?: () => number) {
     this.generateData = createRandomDataGenerator(1, nextNumber);
-    this.source = new TemplateSource(path, async (zip) => {
-      await findNamedObjects(zip, objectNames);
-    });
+    this.source = new TemplateSource(path, templateSettings);
   }
 
   async validate() {
@@ -47,27 +65,18 @@ export class TmxPocPresentationService {
   /** Populates named template objects with demo data while retaining native editable tables and charts. */
   async generate(input: TmaRequestInput): Promise<Buffer> {
     console.debug({ PP1: input.PP1, PP2: input.PP2 });
-    const zip = await JSZip.loadAsync(await this.source.load());
-    const { slides, objects } = await findNamedObjects(zip, objectNames);
-    const chartA = objects.get(templateSettings.objects.chartA)!;
-    const chartB = objects.get(templateSettings.objects.chartB)!;
-    const text0 = objects.get(templateSettings.objects.text0)!;
-    const text1 = objects.get(templateSettings.objects.text1)!;
-    const text2 = objects.get(templateSettings.objects.text2)!;
-
+    const deck = await this.source.open();
     const now = new Date();
 
-    fillTextShape(text0.element, input.TEXT_ME);
-    fillTextShape(text1.element, 'CHART A');
-    fillTextShape(text2.element, 'CHART B');
+    deck.texts.text0.fill(input.TEXT_ME);
+    deck.texts.text1.fill('CHART A');
+    deck.texts.text2.fill('CHART B');
+    deck.texts.subtitle.fill(formatDateTime(now));
 
-    const subtitile = objects.get(templateSettings.objects.subtitile)!;
-    replaceParagraphText(subtitile.element, '{{ASOF}}', formatDateTime(now));
-
-    const chartDataA = this.generateData(templateSettings.chartA.rows);
+    const chartDataA = this.generateData(demoData.chartA.rows);
     //dates YYYY-MM-DD from today backwards
     const chartRowsNames = Array.from(
-      { length: templateSettings.chartA.rows },
+      { length: demoData.chartA.rows },
       (_, index) => {
         const date = new Date(now);
         date.setUTCDate(date.getUTCDate() - index);
@@ -75,24 +84,18 @@ export class TmxPocPresentationService {
       },
     );
 
-    await fillCategoryChart(zip, chartA, chartDataA, {
+    await deck.charts.chartA.fill(chartDataA, {
       categories: chartRowsNames,
-      firstRow: 2,
     });
 
-    const chartDataB = this.generateData(templateSettings.chartB.rows);
-
+    const chartDataB = this.generateData(demoData.chartB.rows);
     const colors = chartDataB.map(() =>
       randomInt(0x1000000).toString(16).padStart(6, '0'),
     );
-    await fillCategoryChart(zip, chartB, chartDataB, {
-      firstColumn: 'B',
-      firstRow: 2,
+    await deck.charts.chartB.fill(chartDataB, {
       colors,
     });
 
-    for (const [path, document] of slides) writeXml(zip, path, document);
-
-    return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+    return deck.toBuffer();
   }
 }

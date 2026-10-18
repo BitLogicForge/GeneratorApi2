@@ -24,24 +24,24 @@ const copyObjects = objects.inSlide(copy);
 
 await fillCategoryChart(
   zip,
-  copyObjects.get('GGO')!,
+  copyObjects.get('GGO'),
   [
     [10, 20, 30],
     [40, 50, 60],
   ],
   { categories: ['January', 'February'] },
 );
-fillParagraphs(copyObjects.get('TEXT_ME')!.element, [
+fillParagraphs(copyObjects.get('TEXT_ME').element, [
   'Results for {{customer}}',
   'Prepared for {{customer}}',
 ]);
 replaceParagraphText(
-  copyObjects.get('TEXT_ME')!.element,
+  copyObjects.get('TEXT_ME').element,
   '{{customer}}',
   'Example Company',
 );
 fillTable(
-  copyObjects.get('TAB100')!.element,
+  copyObjects.get('TAB100').element,
   [
     [1, 2, 3, 4],
     [5, 6, 7, 8],

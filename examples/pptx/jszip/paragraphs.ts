@@ -9,7 +9,7 @@ import { replaceParagraphText } from '@/pptx/jszip/text/replace-paragraph-text';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects, slides } = await findNamedObjects(zip, ['TEXT_ME']);
-const shape = objects.get('TEXT_ME')!.element;
+const shape = objects.get('TEXT_ME').element;
 fillParagraphs(shape, [
   'Prepared for {{customer}}',
   'Results for {{customer}}',

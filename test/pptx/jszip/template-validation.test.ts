@@ -62,7 +62,7 @@ test('duplicate and unsupported-object errors identify the object and slide', as
 
 test('valid named objects remain usable', async () => {
   const { objects } = await findNamedObjects(presentation(['TEXT']), ['TEXT']);
-  assert.equal(objects.get('TEXT')?.element.localName, 'sp');
+  assert.equal(objects.get('TEXT').element.localName, 'sp');
 });
 
 test('template errors include the source file, retain their code, and preserve the original cause', async () => {

@@ -12,7 +12,7 @@ const { objects, slides } = await findNamedObjects(zip, ['TAB100']);
 // Demonstrates 2D table resizing: growing to 5 columns and shrinking to 2 data rows,
 // while preserving the original header row (startRow: 1).
 fillTable(
-  objects.get('TAB100')!.element,
+  objects.get('TAB100').element,
   [
     [10, 20, 30, 40, 50],
     [60, 70, 80, 90, 100],

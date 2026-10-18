@@ -11,21 +11,22 @@ export interface NamedObject {
   element: Element;
 }
 
-interface SlideObjects {
-  get(name: string): NamedObject | undefined;
+interface SlideObjects<Name extends string> {
+  get(name: Name): NamedObject;
 }
 
-interface NamedObjects {
-  get(name: string, slide?: string | number): NamedObject | undefined;
-  inSlide(slide: string | number): SlideObjects;
+interface NamedObjects<Name extends string> {
+  get(name: Name, slide?: string | number): NamedObject;
+  inSlide(slide: string | number): SlideObjects<Name>;
 }
 
 /** Finds objects by their PowerPoint Selection Pane names and rejects missing or same-slide duplicate matches. */
-export async function findNamedObjects(
+export async function findNamedObjects<const Name extends string>(
   zip: JSZip,
-  names: string[],
-  slidePaths?: (string | number)[],
+  names: readonly Name[],
+  slidePaths?: readonly (string | number)[],
 ) {
+  const requestedNames: readonly string[] = names;
   const slides = new Map<string, Awaited<ReturnType<typeof readXml>>>();
   const byName = new Map<string, Map<string, NamedObject>>();
   const activeSlides = await listSlides(zip);
@@ -52,7 +53,7 @@ export async function findNamedObjects(
     )) {
       const name = properties.getAttribute('name') ?? '';
       if (name) availableNames.add(name);
-      if (!names.includes(name)) continue;
+      if (!requestedNames.includes(name)) continue;
       let slideMatches = byName.get(name);
       if (!slideMatches) {
         slideMatches = new Map();
@@ -84,10 +85,11 @@ export async function findNamedObjects(
     return path;
   };
 
-  const objects: NamedObjects = {
-    get(name: string, slide?: string | number): NamedObject | undefined {
+  const objects: NamedObjects<Name> = {
+    get(name: Name, slide?: string | number): NamedObject {
       const slideMatches = byName.get(name);
-      if (!slideMatches) return undefined;
+      if (!slideMatches)
+        throw invalidTemplate(`Object "${name}" was not requested`);
       if (slide !== undefined) {
         const targetPath = resolveSearchedSlide(slide);
         const match = slideMatches.get(targetPath);
@@ -99,12 +101,12 @@ export async function findNamedObjects(
         throw invalidTemplate(
           `Ambiguous object "${name}" in ${[...slideMatches.keys()].join(' and ')}; specify a slide`,
         );
-      return slideMatches.values().next().value;
+      return slideMatches.values().next().value!;
     },
-    inSlide(slide: string | number): SlideObjects {
+    inSlide(slide: string | number): SlideObjects<Name> {
       const targetPath = resolveSearchedSlide(slide);
       return {
-        get: (name: string) => objects.get(name, targetPath),
+        get: (name: Name) => objects.get(name, targetPath),
       };
     },
   };

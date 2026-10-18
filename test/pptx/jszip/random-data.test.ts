@@ -51,7 +51,7 @@ test('DAA fills its table and all chart series without changing the source', asy
   });
   const zip = await JSZip.loadAsync(output);
   const { objects } = await findNamedObjects(zip, ['TAB100', 'GGO']);
-  const table = objects.get('TAB100')!;
+  const table = objects.get('TAB100');
   const rows = Array.from(table.element.getElementsByTagNameNS(drawing, 'tr'));
   assert.equal(rows.length, 4);
   for (const row of rows.slice(1)) {
@@ -63,7 +63,7 @@ test('DAA fills its table and all chart series without changing the source', asy
         '42',
       );
   }
-  const object = objects.get('GGO')!;
+  const object = objects.get('GGO');
   const reference = object.element.getElementsByTagNameNS(chartNs, 'chart')[0];
   const chartPath = await resolveRelationship(
     zip,

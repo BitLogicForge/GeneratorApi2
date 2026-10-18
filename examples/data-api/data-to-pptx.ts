@@ -33,15 +33,15 @@ const { objects, slides } = await findNamedObjects(zip, [
 ]);
 
 fillTextShape(
-  objects.get('TEXT_ME')!.element,
+  objects.get('TEXT_ME').element,
   `Report ${data.id} - ${data.language.toUpperCase()} ${data.year}`,
 );
 
-fillTable(objects.get('TAB100')!.element, data.tableData, {
+fillTable(objects.get('TAB100').element, data.tableData, {
   startRow: 1,
 });
 
-await fillCategoryChart(zip, objects.get('GGO')!, data.chartData, {
+await fillCategoryChart(zip, objects.get('GGO'), data.chartData, {
   categories: data.categories,
 });
 

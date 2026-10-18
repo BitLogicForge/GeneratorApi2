@@ -14,7 +14,7 @@ test('growing a native table preserves styles and original IDs and gives clones 
   const before = await readFile(path);
   const zip = await JSZip.loadAsync(before);
   const { objects } = await findNamedObjects(zip, ['TAB100']);
-  const element = objects.get('TAB100')!.element;
+  const element = objects.get('TAB100').element;
   const namespace = 'http://schemas.microsoft.com/office/drawing/2014/main';
   const ids = (name: string) =>
     Array.from(element.getElementsByTagNameNS(namespace, name)).map((node) =>

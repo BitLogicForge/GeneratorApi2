@@ -8,7 +8,7 @@ import { fillTextShape } from '@/pptx/jszip/text/fill-shape';
 
 const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects, slides } = await findNamedObjects(zip, ['TEXT_ME']);
-fillTextShape(objects.get('TEXT_ME')!.element, 'Quarterly results');
+fillTextShape(objects.get('TEXT_ME').element, 'Quarterly results');
 for (const [path, document] of slides) writeXml(zip, path, document);
 
 await mkdir('output/jszip', { recursive: true });

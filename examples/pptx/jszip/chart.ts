@@ -9,7 +9,7 @@ const zip = await JSZip.loadAsync(await readFile('templates/daa.pptx'));
 const { objects } = await findNamedObjects(zip, ['GGO']);
 await fillCategoryChart(
   zip,
-  objects.get('GGO')!,
+  objects.get('GGO'),
   [
     [10, 20, 30],
     [40, 50, 60],

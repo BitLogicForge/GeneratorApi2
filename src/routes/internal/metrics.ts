@@ -1,12 +1,8 @@
-import type { RequestHandler } from 'express';
-import type { RouteDependencies } from '@/http/types';
+import type { RouteFactory } from '@/http/types';
 
-export default function createHandler({
-  queues,
-  pdf,
-  observability,
-}: RouteDependencies): RequestHandler {
-  return (req, res) => {
+const metrics: RouteFactory =
+  ({ queues, pdf, observability }) =>
+  (_req, res) => {
     res.set('Cache-Control', 'no-store').json({
       uptimeSeconds: process.uptime(),
       memory: process.memoryUsage(),
@@ -18,4 +14,5 @@ export default function createHandler({
       requests: observability.snapshot(),
     });
   };
-}
+
+export default metrics;

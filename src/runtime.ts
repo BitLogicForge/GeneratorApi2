@@ -1,10 +1,6 @@
 import { createApp } from './app.ts';
 import { loadConfig } from './config.ts';
-import {
-  LogEvent,
-  RendererState,
-  TemplateState,
-} from './observability/constants.ts';
+import { LogEvent } from './observability/constants.ts';
 import { logTemplateValidationFailure } from './observability/template-validation.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 import { createReportServices } from './reports/services.ts';
@@ -28,15 +24,6 @@ export function startServer() {
     .catch(() => console.error({ event: LogEvent.BrowserWarmupFailed }));
   const server = createApp({
     reports,
-    readiness: () => ({
-      ready:
-        !stopping &&
-        reports.stats.state === TemplateState.Ready &&
-        pdf.stats.state === RendererState.Ready,
-      shuttingDown: stopping,
-      templates: reports.stats.state,
-      renderer: pdf.stats.state,
-    }),
     config,
     queues,
     pdf,

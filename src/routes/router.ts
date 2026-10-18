@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
-import createHealthHandler from './health/get.ts';
-import createMetricsHandler from './internal/metrics/get.ts';
-import createReadyHandler from './internal/ready/get.ts';
+import health from './health.ts';
+import metrics from './internal/metrics.ts';
+import ready from './internal/ready.ts';
 import example from './pdf/example/report.ts';
 import factsheet from './pdf/factsheet/report.ts';
 import onepager from './pdf/onepager/report.ts';
@@ -16,9 +16,9 @@ import type { RouteDependencies } from '@/http/types';
 /** Registers public URLs explicitly; report factories own validation and downloads. */
 export function createRouter(dependencies: RouteDependencies) {
   const router = Router();
-  router.get('/health', createHealthHandler());
-  router.get('/internal/metrics', createMetricsHandler(dependencies));
-  router.get('/internal/ready', createReadyHandler(dependencies));
+  router.get('/health', health(dependencies));
+  router.get('/internal/metrics', metrics(dependencies));
+  router.get('/internal/ready', ready(dependencies));
   router.get('/pdf/example', example(dependencies));
   router.get('/pdf/factsheet/:id', factsheet(dependencies));
   router.get('/pdf/onepager/:id', onepager(dependencies));

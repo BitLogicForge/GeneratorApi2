@@ -7,11 +7,6 @@ import { loadConfig } from './config.ts';
 import { AppError } from './errors.ts';
 import { createErrorHandler } from './http/error-handler.ts';
 import { createObservability } from './http/observability.ts';
-import {
-  ManagedExternally,
-  RendererState,
-  TemplateState,
-} from './observability/constants.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
 import { createRouter } from './routes/router.ts';
 
@@ -27,20 +22,8 @@ export function createApp(
     queues = createGenerationQueues(),
     logger = console,
   } = options;
-  const { reports, pdf } = options;
   const observability = createObservability(logger);
-  const readiness =
-    options.readiness ??
-    (reports &&
-      (() => ({
-        ready:
-          reports.stats.state === TemplateState.Ready &&
-          (pdf.stats === undefined || pdf.stats.state === RendererState.Ready),
-        shuttingDown: false,
-        templates: reports.stats.state,
-        renderer: pdf.stats?.state ?? ManagedExternally,
-      })));
-  const dependencies = { ...options, config, queues, observability, readiness };
+  const dependencies = { ...options, config, queues, observability };
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());

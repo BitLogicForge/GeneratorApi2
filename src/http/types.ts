@@ -20,16 +20,28 @@ export interface AppOptions {
   };
   config?: Pick<Config, 'defaultLanguage'> &
     Partial<
-      Pick<Config, 'concurrency' | 'presentationConcurrency' | 'maxPending' | 'waitTimeoutMs'>
+      Pick<
+        Config,
+        | 'concurrency'
+        | 'presentationConcurrency'
+        | 'maxPending'
+        | 'waitTimeoutMs'
+        | 'baseUrl'
+        | 'allowHttp404'
+        | 'logIgnoreUnmatched'
+        | 'logExcludeRoutes'
+        | 'pdfLogRequests'
+        | 'logVerbose'
+      >
     >;
   queues?: GenerationQueues;
-  logger?: Pick<Console, 'error'> & Partial<Pick<Console, 'info'>>;
+  logger?: Pick<Console, 'error'> & Partial<Pick<Console, 'info' | 'warn'>>;
   readiness?: () => ReadinessState;
 }
 
 export type RouteDependencies = AppOptions & {
   observability: Pick<ReturnType<typeof createObservability>, 'snapshot'>;
-  config: Pick<Config, 'defaultLanguage'>;
+  config: Pick<Config, 'defaultLanguage'> & Partial<Pick<Config, 'baseUrl' | 'allowHttp404'>>;
   queues: GenerationQueues;
 };
 

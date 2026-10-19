@@ -88,6 +88,7 @@ export const pdfRenderSchema = z
     format: z.enum(PdfFormat).default(() => resolvePdfPrintSettings().format),
     landscape: z.boolean().default(() => resolvePdfPrintSettings().landscape),
     print: pdfPrintOverridesSchema.optional(),
+    allowHttp404: z.boolean().optional(),
   })
   .strict();
 

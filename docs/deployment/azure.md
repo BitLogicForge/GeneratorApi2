@@ -34,11 +34,51 @@ Configure the App Service with the following settings:
 | `WEBSITE_WARMUP_PATH`                 | `/internal/ready`            | Warmup probe path                                         |
 | `WEBSITE_WARMUP_STATUSES`             | `200`                        | Warmup probe success status                               |
 | `WEBAPP_BASE_URL`                     | `https://YOUR_WEBAPP_ORIGIN` | Origin for webapp PDF page rendering                      |
+| `PDF_ALLOW_HTTP_404`                  | `true`                       | Accept HTTP 404 from Azure Blob Storage React SPA routing |
+| `LOG_IGNORE_UNMATCHED`                | `true`                       | Suppress logs for Always On pings and bot scanner probes  |
+| `PDF_LOG_REQUESTS`                    | `true`                       | Verbose logging: log webapp target URL and status for PDF |
 
 The App Service startup command must be set to:
 
 ```bash
 bash scripts/start-azure.sh
+```
+
+## Azure App Service log noise and bot scanners
+
+Public Azure App Services (`*.azurewebsites.net`) routinely receive high volumes of requests that generate `route: "unmatched"` (404) log entries:
+
+1. **App Service Always On**: Azure's Always On mechanism periodically sends HTTP pings (typically `GET /` or `HEAD /`) to keep the container awake. Because Generator API only registers `/health`, `/internal/*`, and export routes, root pings return 404.
+2. **Automated internet scanners**: Botnets and vulnerability scanners constantly probe public Azure domains for common exploit paths (e.g. `/.env`, `/wp-login.php`, `/favicon.ico`, `/robots.txt`).
+3. **Health and load balancer probes**: Default health probes that check `/` rather than `/internal/ready` or `/health`.
+
+To prevent these unmatched requests from flooding your App Service log stream, set:
+
+```bash
+LOG_IGNORE_UNMATCHED=true
+```
+
+Unmatched requests will still be tracked in internal performance metrics (`/internal/metrics`), but will not be logged to stdout. If you also wish to silence specific probe routes from logs, configure:
+
+```bash
+LOG_EXCLUDE_ROUTES=/health,/internal/ready
+```
+
+## Azure Blob Storage static website hosting for React SPAs
+
+When hosting a React SPA on Azure Blob Storage static website hosting (`$web`):
+
+1. Deep client-side routes (e.g. `/reports/quarterly`) do not exist as physical files on blob storage.
+2. A standard SPA technique on Azure Blob Storage is setting the **Error document path** to `index.html`.
+3. When requesting a client route, Azure Blob Storage serves `index.html` but sends an **HTTP 404 Not Found** status code. The browser executes the React bundle and React Router renders the view.
+4. By default, Generator API enforces strict 2xx responses (`response.ok()`), rejecting 404 responses with `502 UpstreamError`.
+5. Setting `PDF_ALLOW_HTTP_404=true` allows the PDF renderer to accept 404 status codes, wait for your readiness selector (`waitForSelector`), and render the React SPA cleanly. This can also be set per report using `allowHttp404: true` in `definePdfReport`.
+
+Every PDF render logs the exact upstream URL requested and its response status:
+
+```json
+{"event":"pdf_page_requested","url":"https://mystorage.z6.web.core.windows.net/reports/quarterly?company=Acme"}
+{"event":"pdf_page_loaded","url":"https://mystorage.z6.web.core.windows.net/reports/quarterly?company=Acme","status":404,"durationMs":142}
 ```
 
 ## Azure setup and deployment

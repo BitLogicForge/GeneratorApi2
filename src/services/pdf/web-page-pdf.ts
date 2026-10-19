@@ -35,7 +35,14 @@ export class WebPagePdfService {
   constructor(
     private readonly config: Pick<Config, 'baseUrl' | 'concurrency' | 'timeout' | 'port'> & {
       pdfPrint?: Config['pdfPrint'];
+      allowHttp404?: boolean;
+      pdfLogRequests?: boolean;
+      logVerbose?: boolean;
     },
+    private readonly logger: {
+      info?: (event: unknown) => void;
+      warn?: (event: unknown) => void;
+    } = console,
   ) {}
 
   /** Shares one Chromium launch across requests and permits relaunch after failure or disconnect. */
@@ -84,8 +91,14 @@ export class WebPagePdfService {
       const page = await context.newPage();
       const { failure: navigationFailure } = await navigationBoundary(context, page, origin);
       page.setDefaultTimeout(this.config.timeout);
+      const allowHttp404 = input.allowHttp404 ?? this.config.allowHttp404 ?? false;
+      const logRequests = this.config.pdfLogRequests ?? true;
       return await Promise.race([
-        renderPagePdf(page, url, input, this.config.pdfPrint),
+        renderPagePdf(page, url, input, this.config.pdfPrint, {
+          allowHttp404,
+          logger: this.logger,
+          logRequests,
+        }),
         navigationFailure,
         new Promise<never>((_resolve, reject) => {
           timer = setTimeout(

@@ -70,6 +70,7 @@ export function createErrorHandler(logger: Pick<Console, 'error'>): ErrorRequest
         requestId: res.locals.requestId,
         status,
         code,
+        ...(typeof res.locals.targetUrl === 'string' ? { targetUrl: res.locals.targetUrl } : {}),
       });
     res.status(status).json({
       error: {

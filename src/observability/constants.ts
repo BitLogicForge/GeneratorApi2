@@ -25,6 +25,9 @@ export const LogEvent = {
   RequestFailed: 'request_failed',
   TemplateValidationFailed: 'template_validation_failed',
   BrowserWarmupFailed: 'browser_warmup_failed',
+  PdfPageRequested: 'pdf_page_requested',
+  PdfPageLoaded: 'pdf_page_loaded',
+  PdfPageNavigationFailed: 'pdf_page_navigation_failed',
 } as const;
 
 export interface ReadinessState {

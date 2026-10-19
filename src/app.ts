@@ -20,7 +20,10 @@ export function createApp(options: AppOptions, routerFactory: typeof createRoute
     queues = createGenerationQueues(config),
     logger = console,
   } = options;
-  const observability = createObservability(logger);
+  const observability = createObservability(logger, {
+    ignoreUnmatched: config.logIgnoreUnmatched,
+    excludeRoutes: config.logExcludeRoutes,
+  });
   const dependencies = { ...options, config, queues, observability };
   const app = express();
   app.disable('x-powered-by');

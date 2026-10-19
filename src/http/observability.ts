@@ -4,8 +4,16 @@ import { ExportFormat, UNMATCHED_ROUTE } from './constants.ts';
 
 import type { RequestHandler } from 'express';
 
+export interface ObservabilityOptions {
+  ignoreUnmatched?: boolean;
+  excludeRoutes?: readonly string[];
+}
+
 /** Aggregates only registered route patterns; never URLs or payloads. */
-export function createObservability(logger: { info?: (event: unknown) => void }) {
+export function createObservability(
+  logger: { info?: (event: unknown) => void },
+  options: ObservabilityOptions = {},
+) {
   const totals = new Map<
     string,
     {
@@ -29,7 +37,7 @@ export function createObservability(logger: { info?: (event: unknown) => void })
           ? ExportFormat.Pdf
           : null;
       const status = res.writableFinished ? res.statusCode : 499;
-      const event = {
+      const event: Record<string, unknown> = {
         event: LogEvent.RequestCompleted,
         requestId: res.locals.requestId,
         method: req.method,
@@ -41,6 +49,9 @@ export function createObservability(logger: { info?: (event: unknown) => void })
         generationMs: res.locals.generationMs ?? 0,
         outputBytes: res.writableFinished ? (res.locals.outputBytes ?? 0) : 0,
       };
+      if (typeof res.locals.targetUrl === 'string') {
+        event.targetUrl = res.locals.targetUrl;
+      }
       const key = JSON.stringify([route, req.method, status]);
       const total = totals.get(key) ?? {
         requests: 0,
@@ -51,10 +62,16 @@ export function createObservability(logger: { info?: (event: unknown) => void })
       };
       total.requests++;
       if (status >= 400) total.failures++;
-      total.outputBytes += event.outputBytes;
-      total.queueWaitMs += event.queueWaitMs;
-      total.generationMs += event.generationMs;
+      total.outputBytes += Number(event.outputBytes);
+      total.queueWaitMs += Number(event.queueWaitMs);
+      total.generationMs += Number(event.generationMs);
       totals.set(key, total);
+      if (
+        (options.ignoreUnmatched && route === UNMATCHED_ROUTE) ||
+        (options.excludeRoutes && options.excludeRoutes.includes(route))
+      ) {
+        return;
+      }
       logger.info?.(event);
     };
     res.once('finish', complete);

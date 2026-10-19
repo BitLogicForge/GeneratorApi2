@@ -10,7 +10,7 @@
     "test": "tsx --test \"test/**/*.test.ts\"",
     "browser:install": "playwright install --with-deps chromium",
     "build": "node scripts/build.mjs",
-    "start:azure": "bash scripts/start-azure.sh",
+    "start:azure": "sh scripts/start-azure.sh",
     "check:imports": "oxlint --config .oxlint-imports.json --deny-warnings src test examples",
     "lint:code": "oxlint --type-aware --deny-warnings src test examples scripts",
     "lint": "npm run lint:code && npm run typecheck && npm run knip && npm run format:check",

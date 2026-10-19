@@ -20,7 +20,9 @@ zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scr
 
 ## Runtime configuration and startup
 
-The package starts through [scripts/start-azure.sh](../../scripts/start-azure.sh). It configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries into `/home/playwright` on first run, and finally starts `node dist/index.js`.
+The Ubuntu Azure Web App package starts through [scripts/start-azure.sh](../../scripts/start-azure.sh). It ensures the Ubuntu `ca-certificates` package is available, configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries into `/home/playwright` on first run, and finally starts `node dist/index.js`.
+
+The application defaults to `API_HOST=0.0.0.0` and `API_PORT=3000`; the startup script does not set either variable or map `PORT` to `API_PORT`. Set `API_PORT` explicitly if your App Service requires a different listening port.
 
 Configure the App Service with the following settings:
 
@@ -41,7 +43,7 @@ Configure the App Service with the following settings:
 The App Service startup command must be set to:
 
 ```bash
-bash scripts/start-azure.sh
+sh scripts/start-azure.sh
 ```
 
 ## Azure App Service log noise and bot scanners
@@ -101,7 +103,7 @@ az webapp deploy \
 az webapp config set \
   --resource-group "$AZURE_RESOURCE_GROUP" \
   --name "$AZURE_WEBAPP_NAME" \
-  --startup-file 'bash scripts/start-azure.sh'
+  --startup-file 'sh scripts/start-azure.sh'
 
 # Restart the app
 az webapp restart \

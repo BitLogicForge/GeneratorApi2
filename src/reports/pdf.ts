@@ -2,7 +2,6 @@ import { ExportFormat } from '@/http/constants';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
 import { pdfOriginSchema, pdfPrintOverridesSchema, pdfRenderSchema } from '@/services/pdf/schema';
-import { buildUrl } from '@/utils/url';
 
 import { preparedInputSchema } from './schema.ts';
 
@@ -47,17 +46,6 @@ export function definePdfReport<Input>(definition: PdfReport<Input>): RouteFacto
         print,
         allowHttp404,
       });
-      const origin = externalOrigin ?? dependencies.config.baseUrl;
-      if (origin) {
-        try {
-          res.locals.targetUrl = buildUrl(origin, input.route, {
-            params: input.params,
-            query: input.query,
-          }).href;
-        } catch {
-          // If URL compilation fails, keep targetUrl unset.
-        }
-      }
       await sendDownload(
         res,
         dependencies.queues.pdf,

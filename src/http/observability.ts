@@ -37,7 +37,7 @@ export function createObservability(
           ? ExportFormat.Pdf
           : null;
       const status = res.writableFinished ? res.statusCode : 499;
-      const event: Record<string, unknown> = {
+      const event = {
         event: LogEvent.RequestCompleted,
         requestId: res.locals.requestId,
         method: req.method,
@@ -49,9 +49,6 @@ export function createObservability(
         generationMs: res.locals.generationMs ?? 0,
         outputBytes: res.writableFinished ? (res.locals.outputBytes ?? 0) : 0,
       };
-      if (typeof res.locals.targetUrl === 'string') {
-        event.targetUrl = res.locals.targetUrl;
-      }
       const key = JSON.stringify([route, req.method, status]);
       const total = totals.get(key) ?? {
         requests: 0,
@@ -62,9 +59,9 @@ export function createObservability(
       };
       total.requests++;
       if (status >= 400) total.failures++;
-      total.outputBytes += Number(event.outputBytes);
-      total.queueWaitMs += Number(event.queueWaitMs);
-      total.generationMs += Number(event.generationMs);
+      total.outputBytes += event.outputBytes;
+      total.queueWaitMs += event.queueWaitMs;
+      total.generationMs += event.generationMs;
       totals.set(key, total);
       if (
         (options.ignoreUnmatched && route === UNMATCHED_ROUTE) ||

@@ -74,7 +74,7 @@ When hosting a React SPA on Azure Blob Storage static website hosting (`$web`):
 4. By default, Generator API enforces strict 2xx responses (`response.ok()`), rejecting 404 responses with `502 UpstreamError`.
 5. Setting `PDF_ALLOW_HTTP_404=true` allows the PDF renderer to accept 404 status codes, wait for your readiness selector (`waitForSelector`), and render the React SPA cleanly. This can also be set per report using `allowHttp404: true` in `definePdfReport`.
 
-Every PDF render logs the exact upstream URL requested and its response status:
+With `PDF_LOG_REQUESTS=true` (the default), every PDF render logs the exact upstream URL requested and its response status. Set `PDF_LOG_REQUESTS=false` to disable these logs:
 
 ```json
 {"event":"pdf_page_requested","url":"https://mystorage.z6.web.core.windows.net/reports/quarterly?company=Acme"}

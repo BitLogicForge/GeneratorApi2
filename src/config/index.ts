@@ -27,11 +27,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     presentationConcurrency: c.PPTX_CONCURRENCY,
     maxPending: c.QUEUE_MAX_PENDING,
     waitTimeoutMs: c.QUEUE_WAIT_TIMEOUT_MS,
-    allowHttp404: c.allowHttp404,
-    logIgnoreUnmatched: c.logIgnoreUnmatched,
-    logExcludeRoutes: c.logExcludeRoutes,
-    pdfLogRequests: c.pdfLogRequests,
-    logVerbose: c.logVerbose,
+    allowHttp404: c.PDF_ALLOW_HTTP_404,
+    logIgnoreUnmatched: c.LOG_IGNORE_UNMATCHED,
+    logExcludeRoutes: c.LOG_EXCLUDE_ROUTES,
+    pdfLogRequests: c.PDF_LOG_REQUESTS,
   };
 }
 

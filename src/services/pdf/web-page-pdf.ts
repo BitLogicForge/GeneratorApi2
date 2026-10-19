@@ -37,7 +37,6 @@ export class WebPagePdfService {
       pdfPrint?: Config['pdfPrint'];
       allowHttp404?: boolean;
       pdfLogRequests?: boolean;
-      logVerbose?: boolean;
     },
     private readonly logger: {
       info?: (event: unknown) => void;

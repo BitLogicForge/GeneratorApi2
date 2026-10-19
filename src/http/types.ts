@@ -31,7 +31,6 @@ export interface AppOptions {
         | 'logIgnoreUnmatched'
         | 'logExcludeRoutes'
         | 'pdfLogRequests'
-        | 'logVerbose'
       >
     >;
   queues?: GenerationQueues;

@@ -39,7 +39,7 @@ export interface AppOptions {
 }
 
 export type RouteDependencies = AppOptions & {
-  observability: Pick<ReturnType<typeof createObservability>, 'snapshot'>;
+  observability: Pick<ReturnType<typeof createObservability>, 'snapshot' | 'endpointSnapshot'>;
   config: Pick<Config, 'defaultLanguage'> & Partial<Pick<Config, 'baseUrl' | 'allowHttp404'>>;
   queues: GenerationQueues;
 };

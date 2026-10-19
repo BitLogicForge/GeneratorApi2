@@ -14,6 +14,7 @@ const metrics: RouteFactory =
       },
       browser: pdf.stats ?? null,
       requests: observability.snapshot(),
+      endpoints: observability.endpointSnapshot(),
     });
   };
 

@@ -20,6 +20,30 @@ response headers without entering a generation queue or rendering a document).
 | `GET, HEAD`       | `/pptx/tma`          | Editable PPTX from `templates/Tmp1.pptx` with charts, dates, colors          |
 | `GET, HEAD, POST` | `/pptxgenjs/brief`   | Programmatic PPTX presentation (`brief` design) from query or JSON           |
 
+## Request metrics
+
+`GET /internal/metrics` retains the `requests` array grouped by route, method,
+and status, and adds `endpoints`, grouped by route pattern and HTTP method.
+Parameter values, query strings, and bodies are never included in these summaries.
+Only endpoints with observed traffic appear.
+
+Each endpoint includes:
+
+- `requests`: completed requests, including aborted responses.
+- `byStatus`, `failures`: status counts and the number with status >= 400.
+- `abortedRequests`: responses closed before finishing (reported as status `499`).
+- `inFlight`: requests still being handled.
+- `lastRequestedAt`: latest request start time as a UTC ISO timestamp.
+- `durationMs`, `queueWaitMs`, `generationMs`, `outputBytes`: `total`, `average`,
+  and `max` across completed requests. Aborted responses contribute zero output bytes.
+- `durationMs.p95`: nearest-rank 95th percentile of the latest 256 completions
+  (or all completions when fewer); `null` before the first completion.
+
+Counters are local to each application instance and reset on restart. Log
+exclusions do not exclude metrics: health checks and metrics requests also count.
+A request without a matched route, including one rejected before routing, uses
+`unmatched`; in-flight requests use this label until routing resolves.
+
 ## Endpoint Contracts
 
 ### `GET /pdf/factsheet/:id`

@@ -1,4 +1,5 @@
 import { LogEvent } from '@/observability/constants';
+import { createEndpointMetrics } from '@/observability/endpoint-metrics';
 
 import { ExportFormat, UNMATCHED_ROUTE } from './constants.ts';
 
@@ -14,6 +15,7 @@ export function createObservability(
   logger: { info?: (event: unknown) => void },
   options: ObservabilityOptions = {},
 ) {
+  const endpoints = createEndpointMetrics();
   const totals = new Map<
     string,
     {
@@ -26,6 +28,7 @@ export function createObservability(
   >();
   const middleware: RequestHandler = (req, res, next) => {
     const started = performance.now();
+    const finishEndpoint = endpoints.start(req);
     let recorded = false;
     const complete = () => {
       if (recorded) return;
@@ -49,6 +52,7 @@ export function createObservability(
         generationMs: res.locals.generationMs ?? 0,
         outputBytes: res.writableFinished ? (res.locals.outputBytes ?? 0) : 0,
       };
+      finishEndpoint(event, !res.writableFinished);
       const key = JSON.stringify([route, req.method, status]);
       const total = totals.get(key) ?? {
         requests: 0,
@@ -77,6 +81,7 @@ export function createObservability(
   };
   return {
     middleware,
+    endpointSnapshot: () => endpoints.snapshot(),
     snapshot: () =>
       Array.from(totals, ([key, total]) => {
         const [route, method, status] = JSON.parse(key);

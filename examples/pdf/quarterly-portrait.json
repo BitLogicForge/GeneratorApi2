@@ -1,8 +1,0 @@
-{
-  "route": "/reports/quarterly",
-  "query": { "year": 2026, "quarter": 3, "print": true },
-  "filename": "quarterly-report-portrait",
-  "waitForSelector": "[data-report-ready]",
-  "format": "A4",
-  "landscape": false
-}

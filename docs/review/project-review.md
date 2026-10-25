@@ -1,5 +1,12 @@
 # Generator API — Project Review
 
+[Back to Documentation Index](../README.md)
+
+> **Status (2026-10-25):** H1, H2, H3, M1, M2, M3, M4, M5, L1, L5, L7 and L9
+> have been fixed. The `/pptx/generated` point in L1 was a false finding: the
+> match was the example file `examples/pptx/generated.json`, not a documented
+> route.
+
 _Reviewed: 2026-10-25 · Branch `auto3` @ `d89431a` · Scope: `src/`, `scripts/`, CI, docs, tests_
 
 ## Summary

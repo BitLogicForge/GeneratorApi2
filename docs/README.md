@@ -22,3 +22,8 @@ Technical reference for developers and AI agents working on Generator API.
   registry (`src/data-api/endpoints.ts`), LRU caching, and example workflows.
 - **[Azure Deployment](deployment/azure.md)**: Linux App Service ZIP packaging,
   CA certificate collection, and GitLab CI pipeline stages.
+- **[PowerPoint Roadmap](roadmap/powerpoint.md)**: Prioritized ideas for
+  extending PPTX generation (images, paginated tables, conditional slides,
+  charts, rich text).
+- **[Project Review](review/project-review.md)**: Code review findings with
+  severity, fix status, and suggested order of work.

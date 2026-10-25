@@ -1,3 +1,5 @@
+import { throwIfCancelled } from '@/queue/cancellation';
+
 import { TemplateSource } from './template-source.ts';
 
 import type JSZip from 'jszip';
@@ -25,19 +27,24 @@ export abstract class PresentationService<
   }
 
   /** Orchestrates upstream data fetching, data transformation, and PowerPoint rendering. */
-  async generate(input: Input): Promise<Buffer> {
-    const raw = await this.fetchData(input);
+  async generate(input: Input, signal?: AbortSignal): Promise<Buffer> {
+    throwIfCancelled(signal, 'fetchData');
+    const raw = await this.fetchData(input, signal);
+    throwIfCancelled(signal, 'prepareData');
     const prepared = await this.prepareData(input, raw);
+    throwIfCancelled(signal, 'openTemplate');
     const deck = await this.source.open();
+    throwIfCancelled(signal, 'renderDeck');
     await this.renderDeck(deck, prepared);
+    throwIfCancelled(signal, 'serialize');
     return deck.toBuffer();
   }
 
   /** Modifies the template archive (e.g. duplicating slides) before binding handles. */
   protected prepareTemplate(_zip: JSZip): Promise<void> | void {}
 
-  /** Step 1: Fetches raw data for the presentation. */
-  protected abstract fetchData(input: Input): Promise<RawData> | RawData;
+  /** Step 1: Fetches raw data for the presentation; pass `signal` to upstream requests. */
+  protected abstract fetchData(input: Input, signal?: AbortSignal): Promise<RawData> | RawData;
 
   /** Step 2: Transforms request input and raw data into presentation-ready values. */
   protected abstract prepareData(input: Input, raw: RawData): Promise<PreparedData> | PreparedData;

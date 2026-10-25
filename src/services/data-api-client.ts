@@ -4,6 +4,7 @@ import { LRUCache } from 'lru-cache';
 import { dataApiCacheDefaults } from '@/config';
 import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
+import { QueueErrorMessage } from '@/queue/constants';
 
 import { DataApiErrorMessage } from './data-api/constants.ts';
 import { requestDataApi } from './data-api/request.ts';
@@ -50,11 +51,15 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
     }
   }
 
-  /** Keeps requests within the configured API prefix and validates responses under one fetch/read timeout. */
+  /**
+   * Keeps requests within the configured API prefix and validates responses under one fetch/read timeout.
+   * `signal` cancels uncached requests; cached loads are shared, so callers only stop waiting.
+   */
   async get<Key extends keyof Endpoints>(
     endpoint: Key,
     params: Parameters<Endpoints[Key]['path']>[0],
     query: DataApiQuery = {},
+    { signal }: { signal?: AbortSignal } = {},
   ): Promise<z.output<Endpoints[Key]['response']>> {
     if (!this.config.baseUrl)
       throw new AppError(503, ErrorCode.DataApiNotConfigured, DataApiErrorMessage.NotConfigured);
@@ -64,22 +69,28 @@ export class DataApiClient<Endpoints extends EndpointRegistry> {
         400,
         ErrorCode.UnknownDataApiEndpoint,
         DataApiErrorMessage.UnknownEndpoint,
+        { details: { endpoint: String(endpoint) } },
       );
     const url = buildDataApiUrl(this.config.baseUrl, definition.path(params as never), query);
-    const load = () =>
+    const load = (loadSignal?: AbortSignal) =>
       requestDataApi(
         url,
         this.config,
         definition.response as z.ZodType<z.output<Endpoints[Key]['response']>>,
+        loadSignal,
       );
-    if (!this.cache) return load();
+    if (!this.cache) return load(signal);
     const canonicalUrl = new URL(url);
     canonicalUrl.searchParams.sort();
     const scope = createHash('sha256')
       .update(this.config.token ?? '')
       .digest('hex');
     const key = JSON.stringify([endpoint, canonicalUrl.href, scope]);
-    const value = await this.cache.fetch(key, { context: { load } });
+    const value = await this.cache.fetch(key, { context: { load: () => load() } });
+    if (signal?.aborted)
+      throw new AppError(499, ErrorCode.RequestCancelled, QueueErrorMessage.RequestCancelled, {
+        details: { endpoint: String(endpoint) },
+      });
     return structuredClone(value!.data) as z.output<Endpoints[Key]['response']>;
   }
 }

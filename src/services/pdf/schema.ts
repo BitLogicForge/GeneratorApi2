@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { pdfPrintSettings } from '@/config/defaults';
 import { hasControlCharacters } from '@/utils/control-characters';
+import { parseInternal } from '@/validation/internal';
 import { filenameSchema } from '@/validation/schema';
 
 import { HTTP_PROTOCOLS, PdfFormat, PdfMedia } from './constants.ts';
@@ -35,11 +36,15 @@ export function resolvePdfPrintSettings(
   settings: PdfPrintSettings = pdfPrintSettings,
   overrides: PdfPrintOverrides = {},
 ) {
-  return pdfPrintSettingsSchema.parse({
-    ...settings,
-    ...overrides,
-    margin: { ...settings.margin, ...overrides.margin },
-  });
+  return parseInternal(
+    pdfPrintSettingsSchema,
+    {
+      ...settings,
+      ...overrides,
+      margin: { ...settings.margin, ...overrides.margin },
+    },
+    'PDF print settings',
+  );
 }
 
 export type PdfPrintSettings = z.infer<typeof pdfPrintSettingsSchema>;

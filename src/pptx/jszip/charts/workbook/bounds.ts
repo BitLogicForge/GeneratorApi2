@@ -18,7 +18,9 @@ export function readWorksheetBounds(sheet: Document): WorksheetBounds {
   for (const rowElement of Array.from(sheet.getElementsByTagNameNS(spreadsheet, 'row'))) {
     rowNumber = Number(rowElement.getAttribute('r') || rowNumber + 1);
     if (!Number.isInteger(rowNumber) || rowNumber < 1 || rowNumber > MAX_WORKSHEET_ROWS)
-      throw invalidTemplate();
+      throw invalidTemplate(
+        `Chart worksheet row number "${rowElement.getAttribute('r')}" is out of range 1..${MAX_WORKSHEET_ROWS}`,
+      );
     let column = 0;
     for (const cell of Array.from(rowElement.getElementsByTagNameNS(spreadsheet, 'c'))) {
       const address = readCellAddress(cell, column, rowNumber);

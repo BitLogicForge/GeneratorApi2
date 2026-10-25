@@ -9,7 +9,7 @@ import type { createObservability } from './observability.ts';
 export interface AppOptions {
   reports?: ReportServices;
   pdf: {
-    generate(input: PdfRenderInput, externalOrigin?: string): Promise<Buffer>;
+    generate(input: PdfRenderInput, externalOrigin?: string, signal?: AbortSignal): Promise<Buffer>;
     readonly stats?: {
       state: RendererState;
       launches: number;
@@ -39,7 +39,7 @@ export interface AppOptions {
 }
 
 export type RouteDependencies = AppOptions & {
-  observability: Pick<ReturnType<typeof createObservability>, 'snapshot' | 'endpointSnapshot'>;
+  observability: Pick<ReturnType<typeof createObservability>, 'endpointSnapshot'>;
   config: Pick<Config, 'defaultLanguage'> & Partial<Pick<Config, 'baseUrl' | 'allowHttp404'>>;
   queues: GenerationQueues;
 };

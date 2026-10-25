@@ -1,4 +1,5 @@
 import { LogEvent } from './constants.ts';
+import { serializeError } from './serialize-error.ts';
 
 /** Include every failed template and its original error details in startup logs. */
 export function logTemplateValidationFailure(
@@ -7,6 +8,8 @@ export function logTemplateValidationFailure(
 ) {
   logger.error({
     event: LogEvent.TemplateValidationFailed,
-    errors: error instanceof AggregateError ? error.errors : [error],
+    errors: (error instanceof AggregateError ? error.errors : [error]).map((item: unknown) =>
+      serializeError(item),
+    ),
   });
 }

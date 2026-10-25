@@ -11,20 +11,24 @@ export async function navigationBoundary(context: BrowserContext, page: Page, or
   const failure = new Promise<never>((_resolve, reject) => {
     rejectNavigation = reject;
   });
-  const blocked = () =>
-    new AppError(502, ErrorCode.NavigationBlocked, PdfErrorMessage.NavigationBlocked);
+  const blocked = (blockedUrl: string, reason: string) =>
+    new AppError(502, ErrorCode.NavigationBlocked, PdfErrorMessage.NavigationBlocked, {
+      details: { blockedUrl, allowedOrigin: origin, reason },
+    });
   // Popups can start navigating before a page-specific CDP session can attach.
   await context.route('**/*', async (route) => {
     const request = route.request();
     if (request.isNavigationRequest()) {
-      let permitted = false;
+      let reason: string | undefined;
       try {
-        permitted = new URL(request.url()).origin === origin && request.frame().page() === page;
+        if (new URL(request.url()).origin !== origin) reason = 'cross_origin_navigation';
+        else if (request.frame().page() !== page) reason = 'popup_or_other_page';
       } catch {
         // A navigation without an attached frame is not safe to admit.
+        reason = 'detached_frame';
       }
-      if (!permitted) {
-        rejectNavigation(blocked());
+      if (reason) {
+        rejectNavigation(blocked(request.url(), reason));
         await route.abort('blockedbyclient');
         return;
       }
@@ -35,7 +39,7 @@ export async function navigationBoundary(context: BrowserContext, page: Page, or
   session.on('Fetch.requestPaused', (event: { requestId: string; request: { url: string } }) => {
     const resume = async () => {
       if (new URL(event.request.url).origin !== origin) {
-        rejectNavigation(blocked());
+        rejectNavigation(blocked(event.request.url, 'cross_origin_document_or_redirect'));
         await session.send('Fetch.failRequest', {
           requestId: event.requestId,
           errorReason: 'BlockedByClient',

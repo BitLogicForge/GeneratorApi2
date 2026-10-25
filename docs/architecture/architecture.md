@@ -41,8 +41,10 @@
    - `GET`/`POST` enter `queues.pdf` (default concurrency `2`) or
      `queues.presentations` (default concurrency `4`), each with `maxPending: 200`
      and `waitTimeoutMs: 120000`.
-   - Client disconnects abort waiting jobs (`499 REQUEST_CANCELLED`); active
-     renders keep their concurrency slot until completion.
+   - Client disconnects abort waiting jobs (`499 REQUEST_CANCELLED`) and signal
+     running generators, which stop at their next step (PDF: the browser context
+     is closed; PPTX: between fetch, prepare, render and serialize). A slot is
+     released only after the generator has settled and cleaned up.
 
 ## Service Lifecycle & Shutdown
 
@@ -54,4 +56,6 @@
   tests can override services via `reports.override(definition, mockService)`.
 - On `SIGINT`/`SIGTERM`, `src/runtime.ts` closes both admission queues, stops
   accepting new HTTP connections, awaits `pdf.close()` and `reports.close()`,
-  and enforces a 15-second exit deadline.
+  and enforces an exit deadline of `RENDER_TIMEOUT_MS` + 5 seconds so active
+  renders can finish. `shutdown_started`, `shutdown_completed` and
+  `shutdown_deadline_exceeded` log events record queue and browser state.

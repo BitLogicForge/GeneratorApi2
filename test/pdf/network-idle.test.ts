@@ -87,7 +87,6 @@ test('network-idle timeout reports RENDER_TIMEOUT and releases the renderer slot
   const service = new WebPagePdfService({
     ...loadConfig({}),
     timeout: 900,
-    concurrency: 1,
   });
   try {
     await assert.rejects(

@@ -6,7 +6,7 @@
 
 PDF generation is handled by `WebPagePdfService`
 (`src/services/pdf/web-page-pdf.ts`), which manages the shared headless Chromium
-browser and concurrency slots, and `renderPagePdf`
+browser (concurrency is bounded only by the PDF generation queue), and `renderPagePdf`
 (`src/services/pdf/render-page.ts`), which navigates an isolated page, applies
 print styles, and prints to PDF.
 
@@ -52,3 +52,11 @@ npm run demo
 npm run example:render-pdf -- examples/pdf/quarterly-portrait.json
 npm run example:render-pdf -- examples/pdf/quarterly-landscape.json
 ```
+
+## Timeouts & Cancellation
+
+`RENDER_TIMEOUT_MS` covers the whole pipeline: browser launch, context creation,
+navigation, readiness waits and printing. A timeout returns `504 RENDER_TIMEOUT`
+and logs the `phase` it stopped in, the target `url` and `elapsedMs`. If the
+client disconnects, the render stops and the browser context is closed before
+the queue slot is released.

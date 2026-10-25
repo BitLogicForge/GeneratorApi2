@@ -2,6 +2,7 @@ import { ExportFormat } from '@/http/constants';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
 import { pdfOriginSchema, pdfPrintOverridesSchema, pdfRenderSchema } from '@/services/pdf/schema';
+import { parseInternal } from '@/validation/internal';
 
 import { preparedInputSchema } from './schema.ts';
 
@@ -34,22 +35,28 @@ export function definePdfReport<Input>(definition: PdfReport<Input>): RouteFacto
         ? definition.readRequestInput(req)
         : decodeExportInput(req, definition.jsonFields ?? []);
       const parsed = definition.schema.parse(raw);
-      const prepared = preparedInputSchema.parse(
+      const prepared = parseInternal(
+        preparedInputSchema,
         definition.prepareInput(parsed, dependencies.config),
+        `PDF report input for ${req.route?.path ?? req.path}`,
       );
       const allowHttp404 =
         prepared.allowHttp404 ?? definition.allowHttp404 ?? dependencies.config.allowHttp404;
-      const input = pdfRenderSchema.parse({
-        ...prepared,
-        format: print?.format ?? prepared.format,
-        landscape: print?.landscape,
-        print,
-        allowHttp404,
-      });
+      const input = parseInternal(
+        pdfRenderSchema,
+        {
+          ...prepared,
+          format: print?.format ?? prepared.format,
+          landscape: print?.landscape,
+          print,
+          allowHttp404,
+        },
+        `PDF render input for ${req.route?.path ?? req.path}`,
+      );
       await sendDownload(
         res,
         dependencies.queues.pdf,
-        () => dependencies.pdf.generate(input, externalOrigin),
+        (signal) => dependencies.pdf.generate(input, externalOrigin, signal),
         input.filename,
         ExportFormat.Pdf,
       );

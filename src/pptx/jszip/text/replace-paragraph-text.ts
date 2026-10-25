@@ -11,7 +11,7 @@ export function replaceParagraphText(
   search: string,
   replacement: string,
 ): number {
-  if (!search) throw invalidTemplate();
+  if (!search) throw invalidTemplate('Text replacement search string must not be empty');
   const paragraphs =
     element.namespaceURI === drawing && element.localName === 'p'
       ? [element]

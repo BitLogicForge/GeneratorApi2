@@ -67,7 +67,10 @@ export async function copySlideParts(zip: JSZip, sourcePath: string) {
     const existing = copies.get(path);
     if (existing) return existing;
     const file = zip.file(path);
-    if (!file) throw invalidTemplate();
+    if (!file)
+      throw invalidTemplate(`Cannot duplicate slide: related part "${path}" is missing`, {
+        sourcePath,
+      });
 
     const output = allocate(path);
     copies.set(path, output);

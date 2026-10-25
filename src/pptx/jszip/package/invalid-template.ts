@@ -3,5 +3,8 @@ import { AppError } from '@/errors';
 
 import { PptxErrorMessage } from './constants.ts';
 
-export const invalidTemplate = (message: string = PptxErrorMessage.InvalidTemplateObjects) =>
-  new AppError(500, ErrorCode.InvalidTemplate, message);
+/** Template or document-structure failure; `details` is logged, never sent to clients. */
+export const invalidTemplate = (
+  message: string = PptxErrorMessage.InvalidTemplateObjects,
+  details?: Record<string, unknown>,
+) => new AppError(500, ErrorCode.InvalidTemplate, message, { details });

@@ -22,7 +22,8 @@ export async function loadChartWorkbook(
     RelationshipType.Package,
   );
   const embedded = zip.file(workbookPath);
-  if (!embedded) throw invalidTemplate();
+  if (!embedded)
+    throw invalidTemplate(`Embedded chart workbook "${workbookPath}" is missing`, { chartPath });
   const workbook = await JSZip.loadAsync(await embedded.async('nodebuffer'));
   const workbookDocument = await readXml(workbook, PackagePath.Workbook);
   const sheetReference = Array.from(

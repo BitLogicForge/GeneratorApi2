@@ -6,9 +6,11 @@ import type { Element } from '@xmldom/xmldom';
 /** Replaces body paragraphs, cloning the last paragraph's bullets and run style when growing. */
 export function fillParagraphs(element: Element, values: string[]): void {
   const body = element.getElementsByTagNameNS(presentationNs, 'txBody')[0];
-  if (!body || !values.length) throw invalidTemplate();
+  if (!body) throw invalidTemplate('Shape has no <p:txBody>; cannot fill paragraphs');
+  if (!values.length) throw invalidTemplate('fillParagraphs requires at least one value');
   const paragraphs = Array.from(body.getElementsByTagNameNS(drawing, 'p'));
-  if (!paragraphs.length) throw invalidTemplate();
+  if (!paragraphs.length)
+    throw invalidTemplate('Shape text body has no <a:p> paragraph to use as a style template');
   for (let index = paragraphs.length; index < values.length; index++) {
     const clone = paragraphs.at(-1)!.cloneNode(true) as Element;
     body.appendChild(clone);

@@ -31,7 +31,10 @@ export function fillChartSeries(
     const values = item.getElementsByTagNameNS(chartNs, 'val')[0];
     const formula = values?.getElementsByTagNameNS(chartNs, 'f')[0];
     const cache = values?.getElementsByTagNameNS(chartNs, 'numCache')[0];
-    if (!cache) throw invalidTemplate();
+    if (!cache)
+      throw invalidTemplate(
+        `Chart series ${seriesIndex + 1} has no numeric value cache (<c:val>/<c:numCache>)`,
+      );
     resizeFormula(formula, column);
     fillCache(
       cache,
@@ -53,7 +56,10 @@ export function fillChartSeries(
         (name) => `${name}!$${column}$${firstRow - 1}`,
       );
       if (!titleCache || !expected.includes(titleFormula?.textContent ?? ''))
-        throw invalidTemplate();
+        throw invalidTemplate(
+          `Chart series ${seriesIndex + 1} name must reference ${expected[0]} to apply seriesNames; found "${titleFormula?.textContent ?? '(no formula)'}"`,
+          { hasTitleCache: Boolean(titleCache) },
+        );
       fillCache(titleCache, [seriesNames[seriesIndex]]);
       setWorksheetCell(sheet, `${column}${firstRow - 1}`, seriesNames[seriesIndex]);
     }

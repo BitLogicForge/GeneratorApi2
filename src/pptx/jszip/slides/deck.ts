@@ -14,14 +14,20 @@ export async function deck(zip: JSZip) {
     const relation = Array.from(
       relationships.getElementsByTagNameNS(packageNs, 'Relationship'),
     ).find((item) => item.getAttribute('Id') === element.getAttributeNS(relationshipNs, 'id'));
+    const relationId = element.getAttributeNS(relationshipNs, 'id');
+    if (!relation)
+      throw invalidTemplate(
+        `Slide id ${element.getAttribute('id')} references relationship "${relationId}" missing from ${PackagePath.PresentationRels}`,
+      );
     if (
-      !relation ||
       !relation.getAttribute('Type')?.endsWith(`/${RelationshipType.Slide}`) ||
       relation.getAttribute('TargetMode') === TargetMode.External
     )
-      throw invalidTemplate();
+      throw invalidTemplate(
+        `Relationship "${relationId}" is not an internal slide relationship (type "${relation.getAttribute('Type')}")`,
+      );
     const path = targetPath(PackagePath.Presentation, relation.getAttribute('Target') ?? '');
-    if (!zip.file(path)) throw invalidTemplate();
+    if (!zip.file(path)) throw invalidTemplate(`Slide part "${path}" is missing from the package`);
     return { path, element, relation };
   });
   const findEntry = (slide: string | number) => {
@@ -31,7 +37,10 @@ export async function deck(zip: JSZip) {
           ? entries[slide - 1]
           : undefined
         : entries.find((item) => item.path === slide);
-    if (!entry) throw invalidTemplate();
+    if (!entry)
+      throw invalidTemplate(
+        `Slide ${typeof slide === 'number' ? `number ${slide}` : `"${slide}"`} not found (presentation has ${entries.length} slides)`,
+      );
     return entry;
   };
   return { document, relationships, entries, findEntry };

@@ -10,7 +10,8 @@ export interface ReportContext {
 }
 
 export interface ReportService<Input> {
-  generate(input: Input): Promise<Buffer>;
+  /** `signal` aborts when the client disconnects; services should stop between steps. */
+  generate(input: Input, signal?: AbortSignal): Promise<Buffer>;
   validate?(): Promise<void>;
   close?(): Promise<void>;
 }

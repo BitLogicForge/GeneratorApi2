@@ -23,7 +23,13 @@ export const ManagedExternally = 'managed-externally';
 export const LogEvent = {
   RequestCompleted: 'request_completed',
   RequestFailed: 'request_failed',
+  RequestRejected: 'request_rejected',
+  RequestAbandoned: 'request_abandoned',
   TemplateValidationFailed: 'template_validation_failed',
+  ShutdownStarted: 'shutdown_started',
+  ShutdownCompleted: 'shutdown_completed',
+  ShutdownFailed: 'shutdown_failed',
+  ShutdownDeadlineExceeded: 'shutdown_deadline_exceeded',
   BrowserWarmupFailed: 'browser_warmup_failed',
   PdfPageRequested: 'pdf_page_requested',
   PdfPageLoaded: 'pdf_page_loaded',

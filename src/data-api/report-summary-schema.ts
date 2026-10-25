@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
+import { documentTextSchema } from '@/validation/schema';
+
 export const reportSummarySchema = z.object({
-  id: z.string(),
-  customerId: z.string(),
-  language: z.string(),
+  id: documentTextSchema,
+  customerId: documentTextSchema,
+  language: documentTextSchema,
   year: z.number().int(),
   totalRevenue: z.number().nonnegative(),
   growthPercent: z.number(),

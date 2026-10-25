@@ -22,20 +22,34 @@ function createChartColorsSchema(expectedLength: number) {
     .length(expectedLength, 'Chart colors require one six-digit RGB hex color per data row');
 }
 
+/** Returns the first problem found, phrased for logs, so callers can report exactly what failed. */
 export function validateCategoryChartInput(
   data: number[][],
   options: CategoryChartOptions,
-): { valid: true } | { valid: false; colorsError?: boolean } {
-  if (!chartDataSchema.safeParse(data).success) return { valid: false };
+): { valid: true } | { valid: false; reason: string } {
+  if (!chartDataSchema.safeParse(data).success)
+    return {
+      valid: false,
+      reason: `Chart data must be a non-empty matrix of finite numbers with equal row lengths (row lengths: ${JSON.stringify(data.map((row) => row.length))})`,
+    };
   if (options.categories && options.categories.length !== data.length) {
-    return { valid: false };
+    return {
+      valid: false,
+      reason: `Chart categories count ${options.categories.length} does not match ${data.length} data rows`,
+    };
   }
   if (options.seriesNames && options.seriesNames.length !== data[0].length) {
-    return { valid: false };
+    return {
+      valid: false,
+      reason: `Chart seriesNames count ${options.seriesNames.length} does not match ${data[0].length} data columns`,
+    };
   }
   if (options.colors) {
     if (!createChartColorsSchema(data.length).safeParse(options.colors).success) {
-      return { valid: false, colorsError: true };
+      return {
+        valid: false,
+        reason: `Chart colors require one six-digit RGB hex color per data row (${options.colors.length} colors for ${data.length} rows)`,
+      };
     }
   }
   return { valid: true };

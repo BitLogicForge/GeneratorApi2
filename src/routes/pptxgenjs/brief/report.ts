@@ -1,6 +1,5 @@
 import { definePptxReport } from '@/reports/pptx';
 import { PowerPointGenerationService } from '@/services/pptxgenjs/power-point-generation-service';
-import { briefInputSchema } from '@/services/pptxgenjs/schema';
 
 import { readRequestInput, requestSchema } from './schema.ts';
 
@@ -14,17 +13,8 @@ const layout = 'brief';
 const report = {
   schema: requestSchema,
   readRequestInput,
-  prepareInput: ({ filename, title, subtitle, author, accent, slides }) => ({
-    filename,
-    input: briefInputSchema.parse({
-      filename,
-      title,
-      subtitle,
-      author,
-      accent,
-      slides,
-    }),
-  }),
+  // The request schema already applies every renderer default, so no second parse is needed.
+  prepareInput: (input) => ({ filename: input.filename, input }),
   createService: () => {
     const service = new PowerPointGenerationService();
     return { generate: (input) => service.generate(layout, input) };

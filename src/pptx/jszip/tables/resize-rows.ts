@@ -13,11 +13,14 @@ export function resizeTableRows(
   startRow: number,
   rowCount: number,
 ) {
-  if (!Number.isInteger(startRow) || startRow < 0 || startRow >= rows.length || !rowCount)
-    throw invalidTemplate();
+  if (!Number.isInteger(startRow) || startRow < 0 || startRow >= rows.length)
+    throw invalidTemplate(
+      `Table startRow ${startRow} is outside the template's ${rows.length} rows`,
+    );
+  if (!rowCount) throw invalidTemplate('Table data must contain at least one row to resize rows');
   for (const cell of Array.from(table.getElementsByTagNameNS(drawing, 'tc'))) {
     if (TABLE_MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute)))
-      throw invalidTemplate();
+      throw invalidTemplate('Tables with merged cells cannot be resized (resizeRows)');
   }
   const oldHeight = rows.reduce((sum, row) => sum + Number(row.getAttribute('h')), 0);
   const targetCount = startRow + rowCount;

@@ -14,17 +14,24 @@ export function resizeTableColumns(
   columnCount: number,
 ) {
   const grid = table.getElementsByTagNameNS(drawing, 'tblGrid')[0];
-  if (!grid) throw invalidTemplate();
+  if (!grid) throw invalidTemplate('Table is missing <a:tblGrid>; cannot resize columns');
   const columns = Array.from(grid.getElementsByTagNameNS(drawing, 'gridCol'));
   const cellsByRow = rows.map((row) => Array.from(row.getElementsByTagNameNS(drawing, 'tc')));
+  if (startColumn >= columns.length)
+    throw invalidTemplate(
+      `Table startColumn ${startColumn} is outside the template's ${columns.length} columns`,
+    );
+  if (cellsByRow.some((cells) => cells.length !== columns.length))
+    throw invalidTemplate('Table rows have a different cell count than <a:tblGrid>', {
+      gridColumns: columns.length,
+      rowCellCounts: cellsByRow.map((cells) => cells.length),
+    });
   if (
-    startColumn >= columns.length ||
-    cellsByRow.some((cells) => cells.length !== columns.length) ||
     cellsByRow
       .flat()
       .some((cell) => TABLE_MERGE_ATTRIBUTES.some((attribute) => cell.hasAttribute(attribute)))
   )
-    throw invalidTemplate();
+    throw invalidTemplate('Tables with merged cells cannot be resized (resizeColumns)');
   const oldWidth = columns.reduce((sum, column) => sum + Number(column.getAttribute('w')), 0);
   const targetCount = startColumn + columnCount;
   const refreshIdentifiers = createTableIdentifierRefresher(table);

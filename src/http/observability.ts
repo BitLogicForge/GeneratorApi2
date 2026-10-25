@@ -16,16 +16,6 @@ export function createObservability(
   options: ObservabilityOptions = {},
 ) {
   const endpoints = createEndpointMetrics();
-  const totals = new Map<
-    string,
-    {
-      requests: number;
-      failures: number;
-      outputBytes: number;
-      queueWaitMs: number;
-      generationMs: number;
-    }
-  >();
   const middleware: RequestHandler = (req, res, next) => {
     const started = performance.now();
     const finishEndpoint = endpoints.start(req);
@@ -53,20 +43,6 @@ export function createObservability(
         outputBytes: res.writableFinished ? (res.locals.outputBytes ?? 0) : 0,
       };
       finishEndpoint(event, !res.writableFinished);
-      const key = JSON.stringify([route, req.method, status]);
-      const total = totals.get(key) ?? {
-        requests: 0,
-        failures: 0,
-        outputBytes: 0,
-        queueWaitMs: 0,
-        generationMs: 0,
-      };
-      total.requests++;
-      if (status >= 400) total.failures++;
-      total.outputBytes += event.outputBytes;
-      total.queueWaitMs += event.queueWaitMs;
-      total.generationMs += event.generationMs;
-      totals.set(key, total);
       if (
         (options.ignoreUnmatched && route === UNMATCHED_ROUTE) ||
         (options.excludeRoutes && options.excludeRoutes.includes(route))
@@ -82,10 +58,5 @@ export function createObservability(
   return {
     middleware,
     endpointSnapshot: () => endpoints.snapshot(),
-    snapshot: () =>
-      Array.from(totals, ([key, total]) => {
-        const [route, method, status] = JSON.parse(key);
-        return { route, method, status, ...total };
-      }),
   };
 }

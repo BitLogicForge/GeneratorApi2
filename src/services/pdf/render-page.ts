@@ -15,7 +15,19 @@ export interface RenderPagePdfOptions {
     warn?: (event: unknown) => void;
   };
   logRequests?: boolean;
+  /** Reports the current step so timeouts and failures can name where rendering stopped. */
+  onPhase?: (phase: RenderPhase) => void;
 }
+
+export type RenderPhase =
+  | 'launch'
+  | 'context'
+  | 'navigate'
+  | 'waitForSelector'
+  | 'waitForNetworkIdle'
+  | 'applyStyles'
+  | 'waitForFonts'
+  | 'print';
 
 /** Navigates an isolated page, applies print media/style overrides, and prints to PDF. */
 export async function renderPagePdf(
@@ -25,7 +37,7 @@ export async function renderPagePdf(
   defaultPrintSettings?: PdfPrintSettings,
   options: RenderPagePdfOptions = {},
 ): Promise<Buffer> {
-  const { allowHttp404 = false, logger, logRequests = true } = options;
+  const { allowHttp404 = false, logger, logRequests = true, onPhase } = options;
   if (logRequests) {
     logger?.info?.({
       event: LogEvent.PdfPageRequested,
@@ -34,6 +46,7 @@ export async function renderPagePdf(
   }
   const started = performance.now();
   let response;
+  onPhase?.('navigate');
   try {
     response = await page.goto(url.href, { waitUntil: 'load' });
   } catch (error) {
@@ -57,7 +70,15 @@ export async function renderPagePdf(
         allowHttp404,
       });
     }
-    throw new AppError(502, ErrorCode.UpstreamError, PdfErrorMessage.UpstreamError);
+    throw new AppError(502, ErrorCode.UpstreamError, PdfErrorMessage.UpstreamError, {
+      details: {
+        url: url.href,
+        status: status ?? null,
+        statusText: response?.statusText() ?? null,
+        allowHttp404,
+        reason: response ? 'unsuccessful_status' : 'no_response',
+      },
+    });
   }
   if (logRequests) {
     logger?.info?.({
@@ -68,11 +89,14 @@ export async function renderPagePdf(
     });
   }
   if (input.waitForSelector) {
+    onPhase?.('waitForSelector');
     await page.locator(input.waitForSelector).waitFor({ state: 'visible' });
   }
   if (input.waitForNetworkIdle) {
+    onPhase?.('waitForNetworkIdle');
     await page.waitForLoadState('networkidle');
   }
+  onPhase?.('applyStyles');
   const settings = resolvePdfPrintSettings(defaultPrintSettings, input.print);
   await page.emulateMedia({ media: settings.media });
   const styles = [settings.css];
@@ -85,7 +109,9 @@ export async function renderPagePdf(
   if (styles.some(Boolean)) {
     await page.addStyleTag({ content: styles.join('\n') });
   }
+  onPhase?.('waitForFonts');
   await page.evaluate(() => document.fonts.ready);
+  onPhase?.('print');
   return page.pdf({
     format: input.format,
     landscape: input.landscape,

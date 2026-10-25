@@ -61,11 +61,7 @@ export async function fillCategoryChart(
 
   const validation = validateCategoryChartInput(data, options);
   if (!validation.valid) {
-    throw invalidTemplate(
-      validation.colorsError
-        ? 'Chart colors require one six-digit RGB hex color per data row'
-        : 'Invalid category chart input data or options',
-    );
+    throw invalidTemplate(validation.reason, { slidePath: chartObject.path });
   }
 
   const chartReference = chartObject.element.getElementsByTagNameNS(chartNs, 'chart')[0];
@@ -78,6 +74,7 @@ export async function fillCategoryChart(
   if (series.length !== data[0]?.length) {
     throw invalidTemplate(
       `Series count mismatch: template has ${series.length}, data has ${data[0]?.length ?? 0}`,
+      { slidePath: chartObject.path, chartPath },
     );
   }
 

@@ -12,7 +12,6 @@ export const ErrorCode = {
   QueueFull: 'QUEUE_FULL',
   QueueWaitTimeout: 'QUEUE_WAIT_TIMEOUT',
   InvalidRoute: 'INVALID_ROUTE',
-  RenderBusy: 'RENDER_BUSY',
   RenderTimeout: 'RENDER_TIMEOUT',
   NavigationBlocked: 'NAVIGATION_BLOCKED',
   UpstreamError: 'UPSTREAM_ERROR',

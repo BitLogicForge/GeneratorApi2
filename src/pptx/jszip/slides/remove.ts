@@ -10,7 +10,8 @@ import type JSZip from 'jszip';
 /** Removes a slide from the deck. Retains package assets to preserve shared relationships. */
 export async function removeSlide(zip: JSZip, slide: string | number): Promise<void> {
   const presentation = await deck(zip);
-  if (presentation.entries.length < 2) throw invalidTemplate();
+  if (presentation.entries.length < 2)
+    throw invalidTemplate('Cannot remove the only slide in the presentation');
   const entry = presentation.findEntry(slide);
   const id = entry.element.getAttribute('id');
   entry.element.parentNode!.removeChild(entry.element);

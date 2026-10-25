@@ -19,16 +19,23 @@ export const resolveRelationship = async (
   const relation = Array.from(relationships.getElementsByTagNameNS(packageNs, 'Relationship')).find(
     (item) => item.getAttribute('Id') === id,
   );
-  if (
-    !id ||
-    !relation ||
-    relation.getAttribute('TargetMode') === TargetMode.External ||
-    !relation.getAttribute('Type')?.endsWith(`/${type}`)
-  )
-    throw invalidTemplate();
+  if (!id) throw invalidTemplate(`"${owner}" has no ${type} relationship id`);
+  if (!relation)
+    throw invalidTemplate(`Relationship "${id}" (${type}) not found in ${relsPath(owner)}`);
+  if (relation.getAttribute('TargetMode') === TargetMode.External)
+    throw invalidTemplate(
+      `Relationship "${id}" in ${relsPath(owner)} points to an external target`,
+    );
+  if (!relation.getAttribute('Type')?.endsWith(`/${type}`))
+    throw invalidTemplate(
+      `Relationship "${id}" in ${relsPath(owner)} has type "${relation.getAttribute('Type')}", expected ${type}`,
+    );
   const target = relation.getAttribute('Target');
-  if (!target) throw invalidTemplate();
+  if (!target) throw invalidTemplate(`Relationship "${id}" in ${relsPath(owner)} has no Target`);
   const path = targetPath(owner, target);
-  if (!archive.file(path)) throw invalidTemplate();
+  if (!archive.file(path))
+    throw invalidTemplate(
+      `Relationship "${id}" in ${relsPath(owner)} targets missing part "${path}"`,
+    );
   return path;
 };

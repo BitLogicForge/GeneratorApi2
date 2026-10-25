@@ -20,7 +20,7 @@ zip -q -r output/azure/generator-api.zip dist package.json package-lock.json scr
 
 ## Runtime configuration and startup
 
-The Ubuntu Azure Web App package starts through [scripts/start-azure.sh](../../scripts/start-azure.sh). It ensures the Ubuntu `ca-certificates` package is available, configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries into `/home/playwright` on first run, and finally starts `node dist/index.js`.
+The Ubuntu Azure Web App package starts through [scripts/start-azure.sh](../../scripts/start-azure.sh). It ensures the Ubuntu `ca-certificates` package is available, configures the container CA certificates into `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` (and updates the system CA store if permissions permit) before installing Chromium and its Linux libraries, and finally starts `node dist/index.js`. Chromium is downloaded into `/home/playwright` once and reused across restarts, but `--with-deps` runs `apt-get` on every start, so each start needs network access to the Ubuntu package mirrors.
 
 The application defaults to `API_HOST=0.0.0.0` and `API_PORT=3000`; the startup script does not set either variable or map `PORT` to `API_PORT`. Set `API_PORT` explicitly if your App Service requires a different listening port.
 

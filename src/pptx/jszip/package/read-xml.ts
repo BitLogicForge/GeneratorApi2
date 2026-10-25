@@ -6,6 +6,6 @@ import type JSZip from 'jszip';
 
 export const readXml = async (archive: JSZip, path: string) => {
   const file = archive.file(path);
-  if (!file) throw invalidTemplate();
+  if (!file) throw invalidTemplate(`Package part "${path}" is missing`);
   return new DOMParser().parseFromString(await file.async('string'), 'application/xml');
 };

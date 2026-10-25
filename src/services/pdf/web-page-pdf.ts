@@ -3,6 +3,7 @@ import { chromium, errors } from 'playwright';
 import { ErrorCode } from '@/constants';
 import { AppError } from '@/errors';
 import { RendererState } from '@/observability/constants';
+import { requestCancelled } from '@/queue/cancellation';
 import { buildUrl } from '@/utils/url';
 
 import { PdfErrorMessage } from './constants.ts';
@@ -12,6 +13,7 @@ import { pdfOriginSchema } from './schema.ts';
 
 import type { Browser, BrowserContext } from 'playwright';
 import type { Config } from '@/config';
+import type { RenderPhase } from './render-page.ts';
 import type { PdfRenderInput } from './schema.ts';
 
 export class WebPagePdfService {
@@ -33,7 +35,7 @@ export class WebPagePdfService {
   }
 
   constructor(
-    private readonly config: Pick<Config, 'baseUrl' | 'concurrency' | 'timeout' | 'port'> & {
+    private readonly config: Pick<Config, 'baseUrl' | 'timeout' | 'port'> & {
       pdfPrint?: Config['pdfPrint'];
       allowHttp404?: boolean;
       pdfLogRequests?: boolean;
@@ -49,7 +51,7 @@ export class WebPagePdfService {
     if (!this.#browserPromise) {
       this.#state = RendererState.Starting;
       this.#browserPromise = chromium
-        .launch()
+        .launch({ timeout: this.config.timeout })
         .then((browser) => {
           this.#launches++;
           this.#state = RendererState.Ready;
@@ -70,8 +72,11 @@ export class WebPagePdfService {
     return this.#browserPromise;
   }
 
-  /** Prints in an isolated context, restricts navigation to the webapp, and always releases rendering resources. */
-  async generate(input: PdfRenderInput, externalOrigin?: string) {
+  /**
+   * Prints in an isolated context and restricts navigation to the webapp. The render timeout
+   * covers the whole pipeline, browser launch included. Concurrency is bounded by the PDF queue.
+   */
+  async generate(input: PdfRenderInput, externalOrigin?: string, signal?: AbortSignal) {
     const origin =
       externalOrigin === undefined ? this.config.baseUrl : pdfOriginSchema.parse(externalOrigin);
     const url = buildUrl(origin, input.route, {
@@ -79,39 +84,83 @@ export class WebPagePdfService {
       query: input.query,
     });
     if (url.origin !== origin)
-      throw new AppError(400, ErrorCode.InvalidRoute, PdfErrorMessage.InvalidRoute);
-    if (this.#active >= this.config.concurrency)
-      throw new AppError(503, ErrorCode.RenderBusy, PdfErrorMessage.RenderBusy);
+      throw new AppError(400, ErrorCode.InvalidRoute, PdfErrorMessage.InvalidRoute, {
+        details: { route: input.route, resolvedUrl: url.href, allowedOrigin: origin },
+      });
     this.#active++;
+    const started = performance.now();
+    let phase: RenderPhase = 'launch';
+    let finished = false;
     let context: BrowserContext | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      context = await (await this.browser()).newContext({ serviceWorkers: 'block' });
+    let onAbort: (() => void) | undefined;
+    const diagnostics = () => ({
+      url: url.href,
+      phase,
+      timeoutMs: this.config.timeout,
+      elapsedMs: Math.round(performance.now() - started),
+      browserState: this.#state,
+    });
+    const render = async () => {
+      const browser = await this.browser();
+      phase = 'context';
+      const created = await browser.newContext({ serviceWorkers: 'block' });
+      // The timeout or a disconnect may have won the race while the context was being created.
+      if (finished) {
+        await created.close().catch(() => {});
+        return Promise.reject(new Error('Render already settled'));
+      }
+      context = created;
       const page = await context.newPage();
       const { failure: navigationFailure } = await navigationBoundary(context, page, origin);
       page.setDefaultTimeout(this.config.timeout);
-      const allowHttp404 = input.allowHttp404 ?? this.config.allowHttp404 ?? false;
-      const logRequests = this.config.pdfLogRequests ?? true;
-      return await Promise.race([
+      return Promise.race([
         renderPagePdf(page, url, input, this.config.pdfPrint, {
-          allowHttp404,
+          allowHttp404: input.allowHttp404 ?? this.config.allowHttp404 ?? false,
           logger: this.logger,
-          logRequests,
+          logRequests: this.config.pdfLogRequests ?? true,
+          onPhase: (next) => (phase = next),
         }),
         navigationFailure,
+      ]);
+    };
+    try {
+      return await Promise.race([
+        render(),
         new Promise<never>((_resolve, reject) => {
           timer = setTimeout(
-            () => reject(new AppError(504, ErrorCode.RenderTimeout, PdfErrorMessage.RenderTimeout)),
+            () =>
+              reject(
+                new AppError(504, ErrorCode.RenderTimeout, PdfErrorMessage.RenderTimeout, {
+                  details: diagnostics(),
+                }),
+              ),
             this.config.timeout,
           );
+        }),
+        new Promise<never>((_resolve, reject) => {
+          if (!signal) return;
+          onAbort = () => reject(requestCancelled(`pdf:${phase}`));
+          if (signal.aborted) onAbort();
+          else signal.addEventListener('abort', onAbort, { once: true });
         }),
       ]);
     } catch (error) {
       if (error instanceof errors.TimeoutError)
-        throw new AppError(504, ErrorCode.RenderTimeout, PdfErrorMessage.RenderTimeout);
-      throw error;
+        throw new AppError(504, ErrorCode.RenderTimeout, PdfErrorMessage.RenderTimeout, {
+          cause: error,
+          details: diagnostics(),
+        });
+      if (error instanceof AppError) throw error;
+      throw new AppError(500, ErrorCode.InternalError, `PDF rendering failed during ${phase}`, {
+        cause: error,
+        details: diagnostics(),
+      });
     } finally {
+      finished = true;
       clearTimeout(timer);
+      if (onAbort) signal?.removeEventListener('abort', onAbort);
+      // Closing the context stops any in-flight page work before the queue slot is released.
       if (context) await context.close().catch(() => {});
       this.#active--;
     }

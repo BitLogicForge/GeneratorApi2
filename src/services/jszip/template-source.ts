@@ -60,13 +60,12 @@ export class TemplateSource<Settings extends TemplateSettings = Record<never, ne
     this.source ??= this.read().catch((error: unknown) => {
       this.source = undefined;
       const message = error instanceof Error ? error.message : String(error);
-      const failure = new AppError(
+      throw new AppError(
         error instanceof AppError ? error.status : 500,
         error instanceof AppError ? error.code : ErrorCode.InvalidTemplate,
         `Template "${this.path}": ${message}`,
+        { cause: error, details: { templatePath: this.path } },
       );
-      failure.cause = error;
-      throw failure;
     });
     return this.source;
   }

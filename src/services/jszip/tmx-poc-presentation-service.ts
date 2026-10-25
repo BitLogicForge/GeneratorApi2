@@ -1,10 +1,9 @@
-import { loadConfig } from '@/config';
-import { DataApiClient } from '@/services/data-api-client';
 import { DateTimeFormat, formatDateTime } from '@/utils/date-time';
 
 import { PresentationService } from './presentation-service.ts';
 
 import type { TmaBreakdownData, TmaSeriesData } from '@/data-api/tma-data-schema';
+import type { ReportContext } from '@/reports/services';
 import type { TmaRequestInput } from '@/routes/pptx/tma/schema';
 import type { TemplateDeck, TemplateSettings } from './template-settings.ts';
 
@@ -72,18 +71,19 @@ export class TmxPocPresentationService extends PresentationService<
   TmaRawData,
   TmaPreparedData
 > {
-  constructor(path: string) {
+  /** Uses the application's shared Data API client so its response cache applies. */
+  constructor(
+    path: string,
+    private readonly dataApi: ReportContext['dataApi'],
+  ) {
     super(path, templateSettings);
   }
 
   /** Step 1: Fetches raw series and breakdown data from the Data API using PP1 and PP2. */
-  protected async fetchData(input: TmaRequestInput): Promise<TmaRawData> {
-    console.debug({ PP1: input.PP1, PP2: input.PP2 });
-    const config = loadConfig();
-    const api = new DataApiClient(config.dataApi);
+  protected async fetchData(input: TmaRequestInput, signal?: AbortSignal): Promise<TmaRawData> {
     const [series, breakdown] = await Promise.all([
-      api.get('tmaSeries', {}, { pp1: input.PP1 }),
-      api.get('tmaBreakdown', {}, { pp2: input.PP2 }),
+      this.dataApi.get('tmaSeries', {}, { pp1: input.PP1 }, { signal }),
+      this.dataApi.get('tmaBreakdown', {}, { pp2: input.PP2 }, { signal }),
     ]);
     return { series, breakdown };
   }

@@ -34,8 +34,13 @@ export function resolveSeriesCategories(
     category?.getElementsByTagNameNS(chartNs, 'multiLvlStrCache')[0] ??
     category?.getElementsByTagNameNS(chartNs, 'numCache')[0];
   const categoryFormula = category?.getElementsByTagNameNS(chartNs, 'f')[0];
-  if (!categoryCache || categoryCache.getElementsByTagNameNS(chartNs, 'lvl').length > 1) {
-    throw invalidTemplate();
+  if (!categoryCache) {
+    throw invalidTemplate(
+      'Chart series has no category cache (<c:strCache>, <c:multiLvlStrCache> or <c:numCache> in <c:cat>)',
+    );
+  }
+  if (categoryCache.getElementsByTagNameNS(chartNs, 'lvl').length > 1) {
+    throw invalidTemplate('Chart series uses multi-level categories, which are not supported');
   }
   const rawValues =
     categories ??
@@ -46,6 +51,10 @@ export function resolveSeriesCategories(
     categoryCache.localName === 'numCache'
       ? rawValues.map((value) => toNumericCategory(value, date1904))
       : rawValues.map(String);
-  if (labels.length !== rowCount) throw invalidTemplate();
+  if (labels.length !== rowCount)
+    throw invalidTemplate(
+      `Chart category count mismatch: ${labels.length} categories for ${rowCount} data rows${categories ? '' : ' (categories taken from the template cache; pass options.categories)'}`,
+      { categoryCount: labels.length, rowCount },
+    );
   return { categoryCache, categoryFormula, labels };
 }

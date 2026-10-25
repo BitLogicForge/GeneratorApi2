@@ -9,7 +9,8 @@ export function setText(element: Element, value: string) {
   let texts = Array.from(element.getElementsByTagNameNS(drawing, 't'));
   if (!texts.length) {
     const paragraph = element.getElementsByTagNameNS(drawing, 'p')[0];
-    if (!paragraph) throw invalidTemplate();
+    if (!paragraph)
+      throw invalidTemplate(`<${element.localName}> has no <a:p> paragraph to receive text`);
     const run = document.createElementNS(drawing, 'a:r');
     const endProperties = paragraph.getElementsByTagNameNS(drawing, 'endParaRPr')[0];
     if (endProperties) {

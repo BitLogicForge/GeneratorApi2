@@ -11,19 +11,23 @@ export { MAX_WORKSHEET_COLUMNS, MAX_WORKSHEET_ROWS };
 
 /** Converts an Excel column name (e.g. 'A', 'Z', 'AA', 'XFD') to a 1-based column index. */
 export function columnNameToNumber(column: string): number {
-  if (!columnNameSchema.safeParse(column).success) throw invalidTemplate();
+  if (!columnNameSchema.safeParse(column).success)
+    throw invalidTemplate(`Invalid worksheet column name "${column}" (expected A..XFD)`);
   let number = 0;
   for (let i = 0; i < column.length; i++) {
     number = number * 26 + column.charCodeAt(i) - 64;
   }
-  if (!columnNumberSchema.safeParse(number).success) throw invalidTemplate();
+  if (!columnNumberSchema.safeParse(number).success)
+    throw invalidTemplate(`Worksheet column "${column}" exceeds ${MAX_WORKSHEET_COLUMNS} columns`);
   return number;
 }
 
 /** Converts a 1-based column index to an Excel column name (e.g. 1 -> 'A', 27 -> 'AA'). */
 export function columnNumberToName(value: number): string {
   if (!columnNumberSchema.safeParse(value).success) {
-    throw invalidTemplate();
+    throw invalidTemplate(
+      `Worksheet column number ${value} is out of range 1..${MAX_WORKSHEET_COLUMNS}`,
+    );
   }
   let name = '';
   let current = value;

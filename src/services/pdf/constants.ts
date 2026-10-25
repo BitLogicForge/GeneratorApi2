@@ -21,7 +21,6 @@ export const HIDE_IMAGES_CSS =
 
 export const PdfErrorMessage = {
   InvalidRoute: 'Route must belong to the configured webapp',
-  RenderBusy: 'Renderer is busy; retry shortly',
   RenderTimeout: 'Webapp rendering timed out',
   NavigationBlocked: 'Webapp navigation left the configured origin or opened another page',
   UpstreamError: 'Webapp returned an unsuccessful response',

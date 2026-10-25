@@ -3,6 +3,7 @@ import { AppError } from '@/errors';
 import { ExportFormat } from '@/http/constants';
 import { sendDownload } from '@/http/download';
 import { decodeExportInput } from '@/http/input';
+import { parseInternal } from '@/validation/internal';
 import { filenameSchema } from '@/validation/schema';
 
 import { ReportErrorMessage } from './constants.ts';
@@ -41,11 +42,15 @@ export function definePptxReport<Input, RenderInput = Input>(
           definition.notConfiguredMessage ?? ReportErrorMessage.PowerPointReportNotConfigured,
         );
       const prepared = definition.prepareInput(input, dependencies.config);
-      const filename = filenameSchema.parse(prepared.filename);
+      const filename = parseInternal(
+        filenameSchema,
+        prepared.filename,
+        `PPTX filename for ${req.route?.path ?? req.path}`,
+      );
       await sendDownload(
         res,
         dependencies.queues.presentations,
-        () => service.generate(prepared.input),
+        (signal) => service.generate(prepared.input, signal),
         filename,
         ExportFormat.Pptx,
       );

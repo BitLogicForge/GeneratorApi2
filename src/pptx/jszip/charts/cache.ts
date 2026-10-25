@@ -6,10 +6,13 @@ import type { Element } from '@xmldom/xmldom';
 export function fillCache(cache: Element, values: (string | number)[]) {
   const document = cache.ownerDocument!;
   const count = cache.getElementsByTagNameNS(chartNs, 'ptCount')[0];
-  if (!count) throw invalidTemplate();
+  if (!count) throw invalidTemplate(`Chart <c:${cache.localName}> is missing <c:ptCount>`);
   count.setAttribute('val', String(values.length));
   const levels = Array.from(cache.getElementsByTagNameNS(chartNs, 'lvl'));
-  if (levels.length > 1) throw invalidTemplate();
+  if (levels.length > 1)
+    throw invalidTemplate(
+      `Chart <c:${cache.localName}> has ${levels.length} category levels; only one is supported`,
+    );
   const container = levels[0] ?? cache;
   for (const point of Array.from(cache.getElementsByTagNameNS(chartNs, 'pt')))
     point.parentNode!.removeChild(point);

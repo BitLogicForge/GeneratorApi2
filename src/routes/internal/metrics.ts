@@ -13,7 +13,6 @@ const metrics: RouteFactory =
         presentations: queues.presentations.stats,
       },
       browser: pdf.stats ?? null,
-      requests: observability.snapshot(),
       endpoints: observability.endpointSnapshot(),
     });
   };

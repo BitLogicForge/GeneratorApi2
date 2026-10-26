@@ -11,13 +11,15 @@ using Syncfusion.Pdf.Parsing;
 public static class PdfOption5Merger
 {
     private static readonly Assembly SyncfusionAssembly = typeof(PdfLoadedDocument).Assembly;
-    private static readonly Type PdfCrossTableType = SyncfusionAssembly.GetType("Syncfusion.Pdf.Parsing.PdfCrossTable");
-    private static readonly Type PdfDictionaryType = SyncfusionAssembly.GetType("Syncfusion.Pdf.Primitives.PdfDictionary");
-    private static readonly Type PdfNameType = SyncfusionAssembly.GetType("Syncfusion.Pdf.Primitives.PdfName");
-    private static readonly Type PdfArrayType = SyncfusionAssembly.GetType("Syncfusion.Pdf.Primitives.PdfArray");
-    private static readonly MethodInfo DereferenceMethod = PdfCrossTableType?.GetMethod(
-        "Dereference",
-        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly Type PdfCrossTableType = RequireType("Syncfusion.Pdf.Parsing.PdfCrossTable");
+    private static readonly Type PdfDictionaryType = RequireType("Syncfusion.Pdf.Primitives.PdfDictionary");
+    private static readonly Type PdfNameType = RequireType("Syncfusion.Pdf.Primitives.PdfName");
+    private static readonly Type PdfArrayType = RequireType("Syncfusion.Pdf.Primitives.PdfArray");
+    private static readonly MethodInfo DereferenceMethod =
+        PdfCrossTableType.GetMethod("Dereference", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("Syncfusion internal PdfCrossTable.Dereference not found; font sanitizing would silently do nothing.");
+
+    private static readonly string[] EmbeddedFontFileKeys = { "FontFile", "FontFile2", "FontFile3" };
 
     /// <summary>
     /// Option 5: Merges multiple PDFs with OptimizeResources = true,
@@ -28,16 +30,20 @@ public static class PdfOption5Merger
     /// <returns>A MemoryStream containing the final PDF/A-2b document.</returns>
     public static MemoryStream MergeAndConvertToPdfA_Option5(Stream[] sourcePdfStreams, byte[] fallbackTtfBytes)
     {
+        if (sourcePdfStreams == null || sourcePdfStreams.Length == 0)
+            throw new ArgumentException("At least one source PDF stream is required.", nameof(sourcePdfStreams));
+        if (fallbackTtfBytes == null || fallbackTtfBytes.Length == 0)
+            throw new ArgumentException("Fallback TTF bytes are required for PDF/A font substitution.", nameof(fallbackTtfBytes));
+
         var sanitizedStreams = new List<MemoryStream>();
 
         try
         {
-            // 1. Sanitize and give unique prefixes to every font in each source PDF
+            // 1. Sanitize and give unique prefixes to every embedded font in each source PDF
             foreach (var stream in sourcePdfStreams)
             {
                 stream.Position = 0;
-                MemoryStream cleanStream = SanitizeAndFixFonts(stream);
-                sanitizedStreams.Add(cleanStream);
+                sanitizedStreams.Add(SanitizeAndFixFonts(stream));
             }
 
             // 2. Merge using OptimizeResources = true (deduplicates images/logos safely without font collisions)
@@ -58,21 +64,15 @@ public static class PdfOption5Merger
                     tempMergedStream.Position = 0;
 
                     // 3. Reload into PdfLoadedDocument and convert to PDF/A-2b
-                    using (var loadedMerged = new PdfLoadedDocument(tempMergedStream))
+                    try
                     {
-                        // Bulletproof SubstituteFont handler: always creates a fresh stream instance per invocation
-                        loadedMerged.SubstituteFont += (sender, args) =>
-                        {
-                            args.FontStream = new MemoryStream(fallbackTtfBytes, writable: false);
-                        };
-
-                        // Use PDF/A-2b (supports transparency and modern vector graphics without crashing)
-                        loadedMerged.Conformance = PdfConformanceLevel.Pdf_A2B;
-
-                        var finalOutput = new MemoryStream();
-                        loadedMerged.Save(finalOutput);
-                        finalOutput.Position = 0;
-                        return finalOutput;
+                        return ConvertToPdfA(tempMergedStream, fallbackTtfBytes);
+                    }
+                    catch (NullReferenceException ex) when (IsColorSpaceParserFailure(ex))
+                    {
+                        // The DeviceN/Separation parser hit a colour space it could not resolve.
+                        // Find out which source(s) trigger it so the failure is actionable.
+                        throw new InvalidOperationException(DescribeColorSpaceFailure(sanitizedStreams, fallbackTtfBytes), ex);
                     }
                 }
             }
@@ -87,17 +87,60 @@ public static class PdfOption5Merger
         }
     }
 
+    private static MemoryStream ConvertToPdfA(Stream source, byte[] fallbackTtfBytes)
+    {
+        using (var loaded = new PdfLoadedDocument(source))
+        {
+            // Always hand out a fresh stream instance per invocation
+            loaded.SubstituteFont += (sender, args) =>
+            {
+                args.FontStream = new MemoryStream(fallbackTtfBytes, writable: false);
+            };
+
+            // Use PDF/A-2b (supports transparency and modern vector graphics)
+            loaded.Conformance = PdfConformanceLevel.Pdf_A2B;
+
+            var output = new MemoryStream();
+            loaded.Save(output);
+            output.Position = 0;
+            return output;
+        }
+    }
+
+    private static bool IsColorSpaceParserFailure(Exception ex) =>
+        ex.StackTrace != null &&
+        (ex.StackTrace.Contains("DeviceN") || ex.StackTrace.Contains("Separation"));
+
+    private static string DescribeColorSpaceFailure(List<MemoryStream> sanitizedStreams, byte[] fallbackTtfBytes)
+    {
+        var failing = new List<int>();
+        for (int i = 0; i < sanitizedStreams.Count; i++)
+        {
+            try
+            {
+                using (var copy = new MemoryStream(sanitizedStreams[i].ToArray()))
+                using (ConvertToPdfA(copy, fallbackTtfBytes)) { }
+            }
+            catch (NullReferenceException ex) when (IsColorSpaceParserFailure(ex))
+            {
+                failing.Add(i);
+            }
+        }
+
+        return failing.Count > 0
+            ? $"PDF/A conversion failed in the DeviceN/Separation colour parser. Source PDF index(es) {string.Join(", ", failing)} fail on their own, so the colour space in those inputs is unsupported or malformed."
+            : "PDF/A conversion failed in the DeviceN/Separation colour parser only after merging. Every source converts on its own, so the merge's resource deduplication broke a shared colour space.";
+    }
+
     private static MemoryStream SanitizeAndFixFonts(Stream inputPdfStream)
     {
-        using (var loadedDoc = new PdfLoadedDocument(inputPdfStream))
+        // Pass 1: flatten forms and annotations. Flatten is applied during Save, so it must
+        // finish before /AcroForm is removed, otherwise flattened fields lose their /DR resources.
+        using (var flattened = FlattenInteractiveContent(inputPdfStream))
+        using (var loadedDoc = new PdfLoadedDocument(flattened))
         {
+            // Pass 2: drop the (now empty) AcroForm and prefix embedded fonts
             loadedDoc.FileStructure.IncrementalUpdate = false;
-
-            // Flatten interactive forms
-            if (loadedDoc.Form != null)
-            {
-                loadedDoc.Form.Flatten = true;
-            }
 
             var catalog = GetProperty(loadedDoc, "Catalog");
             if (DictContainsKey(catalog, "AcroForm"))
@@ -106,22 +149,37 @@ public static class PdfOption5Merger
             }
 
             string uniqueTag = GenerateSubsetPrefix();
+            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
 
-            // Process pages and resources
             for (int i = 0; i < loadedDoc.Pages.Count; i++)
             {
-                PdfPageBase page = loadedDoc.Pages[i];
+                var pageDict = GetProperty(loadedDoc.Pages[i], "Dictionary");
+                ProcessResources(GetInheritedResources(pageDict), uniqueTag, visited);
+            }
 
-                if (page is PdfLoadedPage loadedPage && loadedPage.Annotations != null)
+            var output = new MemoryStream();
+            loadedDoc.Save(output);
+            output.Position = 0;
+            return output;
+        }
+    }
+
+    private static MemoryStream FlattenInteractiveContent(Stream inputPdfStream)
+    {
+        using (var loadedDoc = new PdfLoadedDocument(inputPdfStream))
+        {
+            loadedDoc.FileStructure.IncrementalUpdate = false;
+
+            if (loadedDoc.Form != null)
+            {
+                loadedDoc.Form.Flatten = true;
+            }
+
+            for (int i = 0; i < loadedDoc.Pages.Count; i++)
+            {
+                if (loadedDoc.Pages[i] is PdfLoadedPage loadedPage && loadedPage.Annotations != null)
                 {
                     loadedPage.Annotations.Flatten = true;
-                }
-
-                var pageDict = GetProperty(page, "Dictionary");
-                if (DictContainsKey(pageDict, "Resources"))
-                {
-                    var resources = Dereference(GetDictItem(pageDict, "Resources"));
-                    ProcessResources(resources, uniqueTag);
                 }
             }
 
@@ -132,96 +190,138 @@ public static class PdfOption5Merger
         }
     }
 
-    private static void ProcessResources(object resources, string prefix)
+    // /Resources may be inherited from an ancestor /Pages node.
+    private static object GetInheritedResources(object pageDict)
     {
-        if (resources == null || !IsType(resources, PdfDictionaryType)) return;
-
-        if (DictContainsKey(resources, "Font"))
+        var node = pageDict;
+        for (int depth = 0; node != null && depth < 64; depth++)
         {
-            var fontDict = Dereference(GetDictItem(resources, "Font"));
-            if (IsType(fontDict, PdfDictionaryType))
-            {
-                foreach (var key in GetDictKeys(fontDict))
-                {
-                    var font = Dereference(GetDictItemByKeyObj(fontDict, key));
-                    if (IsType(font, PdfDictionaryType))
-                    {
-                        PrefixFontDictionary(font, prefix);
-                    }
-                }
-            }
+            if (DictContainsKey(node, "Resources"))
+                return Dereference(GetDictItem(node, "Resources"));
+
+            node = DictContainsKey(node, "Parent") ? Dereference(GetDictItem(node, "Parent")) : null;
+        }
+        return null;
+    }
+
+    private static void ProcessResources(object resources, string prefix, HashSet<object> visited)
+    {
+        if (!IsType(resources, PdfDictionaryType) || !visited.Add(resources)) return;
+
+        foreach (var font in GetResourceEntries(resources, "Font"))
+        {
+            PrefixFontDictionary(font, prefix, visited);
+
+            // Type3 glyph procedures carry their own resources
+            if (DictContainsKey(font, "Resources"))
+                ProcessResources(Dereference(GetDictItem(font, "Resources")), prefix, visited);
         }
 
-        if (DictContainsKey(resources, "XObject"))
+        // Form XObjects and tiling patterns can hold nested resources
+        foreach (var entry in GetResourceEntries(resources, "XObject").Concat(GetResourceEntries(resources, "Pattern")))
         {
-            var xObjectDict = Dereference(GetDictItem(resources, "XObject"));
-            if (IsType(xObjectDict, PdfDictionaryType))
-            {
-                foreach (var key in GetDictKeys(xObjectDict))
-                {
-                    var xObj = Dereference(GetDictItemByKeyObj(xObjectDict, key));
-                    if (IsType(xObj, PdfDictionaryType) && DictContainsKey(xObj, "Resources"))
-                    {
-                        var nestedRes = Dereference(GetDictItem(xObj, "Resources"));
-                        ProcessResources(nestedRes, prefix);
-                    }
-                }
-            }
+            if (DictContainsKey(entry, "Resources"))
+                ProcessResources(Dereference(GetDictItem(entry, "Resources")), prefix, visited);
         }
     }
 
-    private static void PrefixFontDictionary(object font, string prefix)
+    private static IEnumerable<object> GetResourceEntries(object resources, string category)
     {
-        if (DictContainsKey(font, "BaseFont"))
+        if (!DictContainsKey(resources, category)) yield break;
+
+        var dict = Dereference(GetDictItem(resources, category));
+        if (!IsType(dict, PdfDictionaryType)) yield break;
+
+        foreach (var key in GetDictKeys(dict))
         {
-            var baseFont = Dereference(GetDictItem(font, "BaseFont"));
-            if (IsType(baseFont, PdfNameType))
-            {
-                string currentVal = GetProperty(baseFont, "Value") as string ?? "";
-                string cleanName = StripExistingPrefix(currentVal);
-                SetDictItem(font, "BaseFont", CreatePdfName(prefix + cleanName));
-            }
+            var entry = Dereference(GetDictItemByKeyObj(dict, key));
+            if (IsType(entry, PdfDictionaryType))
+                yield return entry;
         }
+    }
+
+    private static void PrefixFontDictionary(object font, string prefix, HashSet<object> visited)
+    {
+        // Fonts shared between pages must only be prefixed once
+        if (!visited.Add(font)) return;
+
+        // Non-embedded fonts (e.g. standard 14 Helvetica) must keep their real name,
+        // otherwise Syncfusion no longer recognises them during PDF/A substitution.
+        if (!IsEmbeddedFont(font)) return;
+
+        RenameNameEntry(font, "BaseFont", prefix);
 
         if (DictContainsKey(font, "FontDescriptor"))
         {
             var descriptor = Dereference(GetDictItem(font, "FontDescriptor"));
-            if (IsType(descriptor, PdfDictionaryType) && DictContainsKey(descriptor, "FontName"))
+            if (IsType(descriptor, PdfDictionaryType))
             {
-                var fontName = Dereference(GetDictItem(descriptor, "FontName"));
-                if (IsType(fontName, PdfNameType))
-                {
-                    string currentVal = GetProperty(fontName, "Value") as string ?? "";
-                    string cleanName = StripExistingPrefix(currentVal);
-                    SetDictItem(descriptor, "FontName", CreatePdfName(prefix + cleanName));
-                }
+                RenameNameEntry(descriptor, "FontName", prefix);
             }
         }
 
-        if (DictContainsKey(font, "DescendantFonts"))
+        foreach (var cidFont in GetDescendantFonts(font))
         {
-            var descendants = Dereference(GetDictItem(font, "DescendantFonts"));
-            if (IsType(descendants, PdfArrayType) && descendants is IEnumerable enumerable)
-            {
-                foreach (var item in enumerable)
-                {
-                    var cidFont = Dereference(item);
-                    if (IsType(cidFont, PdfDictionaryType))
-                    {
-                        PrefixFontDictionary(cidFont, prefix);
-                    }
-                }
-            }
+            PrefixFontDictionary(cidFont, prefix, visited);
+        }
+    }
+
+    private static bool IsEmbeddedFont(object font)
+    {
+        if (DictContainsKey(font, "FontDescriptor"))
+        {
+            var descriptor = Dereference(GetDictItem(font, "FontDescriptor"));
+            if (IsType(descriptor, PdfDictionaryType) && EmbeddedFontFileKeys.Any(k => DictContainsKey(descriptor, k)))
+                return true;
+        }
+
+        // Type0 fonts keep the descriptor on the descendant CIDFont
+        return GetDescendantFonts(font).Any(IsEmbeddedFont);
+    }
+
+    private static IEnumerable<object> GetDescendantFonts(object font)
+    {
+        if (!DictContainsKey(font, "DescendantFonts")) yield break;
+
+        var descendants = Dereference(GetDictItem(font, "DescendantFonts"));
+        if (!IsType(descendants, PdfArrayType) || !(descendants is IEnumerable enumerable)) yield break;
+
+        foreach (var item in enumerable)
+        {
+            var cidFont = Dereference(item);
+            if (IsType(cidFont, PdfDictionaryType))
+                yield return cidFont;
+        }
+    }
+
+    private static void RenameNameEntry(object dict, string key, string prefix)
+    {
+        if (!DictContainsKey(dict, key)) return;
+
+        var name = Dereference(GetDictItem(dict, key));
+        if (!IsType(name, PdfNameType)) return;
+
+        string currentVal = GetProperty(name, "Value") as string;
+        if (string.IsNullOrEmpty(currentVal)) return;
+
+        var newName = CreatePdfName(prefix + StripExistingPrefix(currentVal));
+        if (newName != null)
+        {
+            SetDictItem(dict, key, newName);
         }
     }
 
     // --- Reflection & Primitive Helpers ---
 
+    private static Type RequireType(string fullName) =>
+        SyncfusionAssembly.GetType(fullName)
+        ?? throw new InvalidOperationException($"Syncfusion internal type '{fullName}' not found; this Syncfusion version is not supported by PdfOption5Merger.");
+
     private static object Dereference(object primitive) =>
-        primitive == null ? null : DereferenceMethod?.Invoke(null, new[] { primitive });
+        primitive == null ? null : DereferenceMethod.Invoke(null, new[] { primitive });
 
     private static bool IsType(object obj, Type targetType) =>
-        obj != null && targetType != null && targetType.IsInstanceOfType(obj);
+        obj != null && targetType.IsInstanceOfType(obj);
 
     private static object GetProperty(object target, string propName) =>
         target?.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(target);
@@ -248,13 +348,14 @@ public static class PdfOption5Merger
 
     private static object GetDictItemByKeyObj(object dict, object keyObj)
     {
+        if (dict == null || keyObj == null) return null;
         var indexer = dict.GetType().GetProperty("Item", new[] { keyObj.GetType() });
         return indexer?.GetValue(dict, new object[] { keyObj });
     }
 
     private static void SetDictItem(object dict, string key, object value)
     {
-        var indexer = dict.GetType().GetProperty("Item", new[] { typeof(string) });
+        var indexer = dict?.GetType().GetProperty("Item", new[] { typeof(string) });
         indexer?.SetValue(dict, value, new object[] { key });
     }
 
@@ -266,12 +367,12 @@ public static class PdfOption5Merger
     }
 
     private static object CreatePdfName(string name) =>
-        PdfNameType != null
-            ? Activator.CreateInstance(PdfNameType, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new object[] { name }, null)
-            : null;
+        Activator.CreateInstance(PdfNameType, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new object[] { name }, null);
 
     private static string StripExistingPrefix(string fontName) =>
-        fontName.Length > 7 && fontName[6] == '+' ? fontName.Substring(7) : fontName;
+        fontName.Length > 7 && fontName[6] == '+' && fontName.Take(6).All(c => c >= 'A' && c <= 'Z')
+            ? fontName.Substring(7)
+            : fontName;
 
     private static readonly Random Rng = new Random();
     private static string GenerateSubsetPrefix()

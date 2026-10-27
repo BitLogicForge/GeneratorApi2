@@ -29,3 +29,21 @@ export const documentTextSchema = z.string().refine((value) => {
   }
   return true;
 }, 'Text contains characters that XML 1.0 cannot represent');
+
+/** Parses a JSON array query value such as `["SAA","REPORTING"]`; other values pass through. */
+function parseJsonArray(value: unknown): unknown {
+  if (typeof value !== 'string' || !value.startsWith('[')) return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+/** Query list given once, repeated (`?K=a&K=b`), or as a JSON array (`?K=["a","b"]`). */
+export function queryListSchema<Item extends z.ZodType>(item: Item, max: number) {
+  return z.preprocess((value) => {
+    const parsed = parseJsonArray(value);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  }, z.array(item).min(1).max(max));
+}

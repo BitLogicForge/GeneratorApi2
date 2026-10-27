@@ -1,6 +1,7 @@
 import { compile } from 'path-to-regexp';
 
-type UrlValue = string | number | boolean;
+type UrlScalar = string | number | boolean;
+type UrlValue = UrlScalar | readonly UrlScalar[];
 
 /** Builds an absolute URL, encoding named placeholders and optional query values. */
 export function buildUrl(
@@ -14,7 +15,10 @@ export function buildUrl(
   const url = new URL(route, baseUrl);
   if (options.params !== undefined) url.pathname = compile(url.pathname)(options.params);
   for (const [name, value] of Object.entries(options.query ?? {})) {
-    if (value !== undefined) url.searchParams.set(name, String(value));
+    if (value === undefined) continue;
+    url.searchParams.delete(name);
+    for (const item of Array.isArray(value) ? value : [value])
+      url.searchParams.append(name, String(item));
   }
   return url;
 }

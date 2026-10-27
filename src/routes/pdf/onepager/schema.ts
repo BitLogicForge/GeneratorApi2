@@ -3,12 +3,16 @@ import { z } from 'zod';
 import { mapQuery } from '@/utils/url';
 import { documentIdSchema } from '@/validation/schema';
 
-// Public query parameters for this endpoint. Unknown and repeated values are rejected.
+const benchmarkSchema = z.enum(['SAA', 'REPORTING']);
+
+// Public query parameters for this endpoint. Unknown values are rejected; BENCHMARK may repeat.
 const querySchema = z
   .object({
     START: z.iso.date().optional(),
     END: z.iso.date().optional(),
-    BENCHMARK: z.enum(['SAA', 'REPORTING']).optional(),
+    BENCHMARK: z
+      .union([benchmarkSchema.transform((value) => [value]), z.array(benchmarkSchema).max(2)])
+      .optional(),
   })
   .strict();
 

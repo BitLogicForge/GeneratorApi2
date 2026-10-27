@@ -85,7 +85,15 @@ export const pdfRenderSchema = z
     params: z.record(z.string().max(100), z.string().max(2000)).optional(),
     // Internal transport values; each route validates its own allowed parameter names.
     query: z
-      .record(z.string().max(100), z.union([z.string().max(2000), z.number(), z.boolean()]))
+      .record(
+        z.string().max(100),
+        z.union([
+          z.string().max(2000),
+          z.number(),
+          z.boolean(),
+          z.array(z.string().max(2000)).max(100),
+        ]),
+      )
       .default({}),
     filename: filenameSchema.default('document'),
     waitForSelector: z.string().min(1).max(300).optional(),

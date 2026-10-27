@@ -31,6 +31,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     logIgnoreUnmatched: c.LOG_IGNORE_UNMATCHED,
     logExcludeRoutes: c.LOG_EXCLUDE_ROUTES,
     pdfLogRequests: c.PDF_LOG_REQUESTS,
+    corsAllowedOrigins: c.CORS_ALLOWED_ORIGINS,
   };
 }
 

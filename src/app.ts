@@ -6,6 +6,7 @@ import { loadConfig } from './config.ts';
 import { ErrorCode } from './constants.ts';
 import { AppError } from './errors.ts';
 import { HttpErrorMessage, HttpHeader } from './http/constants.ts';
+import { createCors } from './http/cors.ts';
 import { createErrorHandler } from './http/error-handler.ts';
 import { createObservability } from './http/observability.ts';
 import { createGenerationQueues } from './queue/generation-queue.ts';
@@ -34,6 +35,7 @@ export function createApp(options: AppOptions, routerFactory: typeof createRoute
     next();
   });
   app.use(observability.middleware);
+  app.use(createCors(config.corsAllowedOrigins ?? []));
   app.use(express.json({ limit: '100kb' }));
   app.use(routerFactory(dependencies));
   app.use((req, res, next) =>

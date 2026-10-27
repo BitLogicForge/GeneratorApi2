@@ -38,6 +38,29 @@ const dataApiBaseUrlSchema = z.preprocess(
     .optional(),
 );
 
+// Comma-separated browser origins allowed to call the API; empty disables CORS.
+const corsAllowedOriginsSchema = z.preprocess(
+  (value) =>
+    typeof value === 'string'
+      ? value
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : value,
+  z
+    .array(
+      z.url().refine((value) => {
+        const url = new URL(value);
+        return (
+          (HTTP_PROTOCOLS as readonly string[]).includes(url.protocol) &&
+          url.origin === value.replace(/\/$/, '')
+        );
+      }, 'CORS_ALLOWED_ORIGINS must list HTTP(S) origins without path, query, or credentials'),
+    )
+    .transform((origins) => [...new Set(origins.map((origin) => new URL(origin).origin))])
+    .default([]),
+);
+
 function booleanEnv(defaultValue: boolean) {
   return z.preprocess((value) => {
     if (value === undefined || value === '') return defaultValue;
@@ -105,6 +128,7 @@ export const environmentSchema = z
         .filter(Boolean);
     }, z.array(z.string()).default([])),
     PDF_LOG_REQUESTS: booleanEnv(true),
+    CORS_ALLOWED_ORIGINS: corsAllowedOriginsSchema,
   })
   .transform((c) => ({
     ...c,

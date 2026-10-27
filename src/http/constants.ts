@@ -16,7 +16,15 @@ export const HttpMethod = {
 } as const;
 
 export const HttpHeader = {
+  AccessControlAllowHeaders: 'Access-Control-Allow-Headers',
+  AccessControlAllowMethods: 'Access-Control-Allow-Methods',
+  AccessControlAllowOrigin: 'Access-Control-Allow-Origin',
+  AccessControlExposeHeaders: 'Access-Control-Expose-Headers',
+  AccessControlMaxAge: 'Access-Control-Max-Age',
+  AccessControlRequestMethod: 'Access-Control-Request-Method',
   CacheControl: 'Cache-Control',
+  ContentDisposition: 'Content-Disposition',
+  Origin: 'Origin',
   RequestId: 'X-Request-Id',
   RetryAfter: 'Retry-After',
 } as const;

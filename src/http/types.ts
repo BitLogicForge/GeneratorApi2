@@ -31,6 +31,7 @@ export interface AppOptions {
         | 'logIgnoreUnmatched'
         | 'logExcludeRoutes'
         | 'pdfLogRequests'
+        | 'corsAllowedOrigins'
       >
     >;
   queues?: GenerationQueues;

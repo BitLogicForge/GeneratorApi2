@@ -39,6 +39,7 @@ Configure the App Service with the following settings:
 | `PDF_ALLOW_HTTP_404`                  | `true`                       | Accept HTTP 404 from Azure Blob Storage React SPA routing |
 | `LOG_IGNORE_UNMATCHED`                | `true`                       | Suppress logs for Always On pings and bot scanner probes  |
 | `PDF_LOG_REQUESTS`                    | `true`                       | Verbose logging: log webapp target URL and status for PDF |
+| `CORS_ALLOWED_ORIGINS`                | `https://YOUR_WEBAPP_ORIGIN` | Comma-separated browser origins allowed to call the API   |
 
 The App Service startup command must be set to:
 
